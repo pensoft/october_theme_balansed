@@ -4,6 +4,8 @@ title = "Events"
 is_hidden = 0
 robot_index = "index"
 robot_follow = "follow"
+
+[siteSearchInclude]
 ==
 <?php
 use Pensoft\Calendar\Models\Entry;
@@ -161,6 +163,7 @@ function onStart()
 }
 ?>
 ==
+{% component 'siteSearchInclude' %}
 {#
     BALANSED Events (Figma: News & Events - Events views).
     year  - News / Events switch, the year and 12 month tiles
@@ -168,7 +171,7 @@ function onStart()
     event - same layout as a news article, with Related events
     Data: Pensoft.Calendar entries. Styles: assets/less/balansed/pages/events.less
 #}
-{% partial 'realise/page-hero' title='News & Events' heading=(view != 'event') %}
+{% partial 'balansed/page-hero' title='News & Events' heading=(view != 'event') %}
 
 <section class="bl-news-page bl-events-page">
     <div class="bl-wrap">

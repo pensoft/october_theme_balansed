@@ -18,8 +18,8 @@ use Pensoft\Jumbotron\Models\Jumbotron;
  * Site search, done by the theme (the OFFLINE.SiteSearch plugin needs PHP 8).
  *
  *   /search?q=<words>               results page, grouped by content type
- *   /search?q=<words>&format=json   top hits for the header search popup
- *                                   (assets/realise/js/realise.js, initSearch)
+ *   /search?q=<words>&format=json   top hits as JSON (not used at the moment:
+ *                                   the header search opens the results page)
  *
  * Every word must appear (case-insensitive) in at least one searched field.
  */
@@ -158,12 +158,11 @@ function runSearch($terms)
         })->all();
     $add('library', 'Library', $library);
 
-    // Partners open their details dialog: /partners?partners_pager=N#rl-partner-p<ID>
-    $order = Partners::where('type', 1)->orderBy('nest_left')->pluck('id')->all();
+    // Partners open their details panel on the Consortium page:
+    // /partners#partner-<ID> (initConsortium opens it from the hash).
     $partners = $this->matchAll(Partners::where('type', 1), ['title', 'instituion', 'content'], $terms)
-        ->orderBy('nest_left')->get()->map(function ($p) use ($terms, $order) {
-            $page = intdiv((int) array_search($p->id, $order), 12) + 1;
-            $url = $this->pageUrl('partners', [], false) . ($page > 1 ? '?partners_pager=' . $page : '') . '#rl-partner-p' . $p->id;
+        ->orderBy('nest_left')->get()->map(function ($p) use ($terms) {
+            $url = $this->pageUrl('partners', [], false) . '#partner-' . $p->id;
             return $this->item('Partner', $p->instituion ?: $p->title, $url, $p->content, $terms);
         })->all();
     $add('partners', 'Partners', $partners);
@@ -229,18 +228,22 @@ function onStart()
 }
 ?>
 ==
-{% partial 'realise/page-hero' crumb='Search' title=(q ? 'Search results' : 'Search') %}
+{# Search results (styles: assets/less/balansed/pages/search.less): the
+   search box, a status line, jump links per result type and the groups -
+   each result a row with its type and date, the linked title and an
+   excerpt. Matched words come wrapped in <mark> (highlight(), above). #}
+{% partial 'balansed/page-hero' crumb='Search' title=(q ? 'Search results' : 'Search') %}
 
-<section class="rl-band rl-search-page" aria-label="Search">
-    <div class="rl-wrap">
-        <form class="rl-search-form" action="{{ 'search'|page({}, false) }}" method="get" role="search" aria-label="Search again">
-            <label for="rl-search-page-input" class="sr-only">Search the site</label>
-            <span class="rl-search-form__icon">{% partial 'realise/icon' name='search' size=20 %}</span>
-            <input id="rl-search-page-input" class="rl-search-form__input" type="search" name="q" value="{{ q }}" placeholder="Search news, events, publications..." autocomplete="off" enterkeyhint="search">
-            <button type="submit" class="rl-btn rl-btn--sm">{% partial 'realise/roll' text='Search' %}<span class="rl-btn__sq">{% partial 'realise/icon' name='arrow-right' %}</span></button>
+<section class="bl-band bl-search-page" aria-label="Search">
+    <div class="bl-wrap bl-search-page__wrap">
+        <form class="bl-search-box" action="{{ 'search'|page({}, false) }}" method="get" role="search" aria-label="Search again">
+            <label for="bl-search-page-input" class="sr-only">Search the site</label>
+            <span class="bl-search-box__icon" aria-hidden="true">{% partial 'balansed/icon' name='search' size=22 %}</span>
+            <input id="bl-search-page-input" class="bl-search-box__input" type="search" name="q" value="{{ q }}" placeholder="Search news, events, publications..." autocomplete="off" enterkeyhint="search">
+            <button type="submit" class="bl-search-box__btn">Search</button>
         </form>
 
-        <p class="rl-search-page__status" role="status">
+        <p class="bl-lead bl-search-page__status" role="status">
             {% if not q %}
             Type a word or phrase to search the website.
             {% elseif total %}
@@ -251,27 +254,27 @@ function onStart()
         </p>
 
         {% if groups|length > 1 %}
-        <nav class="rl-search-page__jump" aria-label="Result types">
+        <nav class="bl-switch bl-search-page__jump" aria-label="Result types">
             {% for g in groups %}
-            <a href="#results-{{ g.key }}">{{ g.title }} <span>{{ g.items|length }}</span></a>
+            <a class="bl-btn bl-btn--tab" href="#results-{{ g.key }}">{{ g.title }}<span class="bl-search-page__n">{{ g.items|length }}</span></a>
             {% endfor %}
         </nav>
         {% endif %}
 
         {% for g in groups %}
-        <section class="rl-results" id="results-{{ g.key }}" aria-labelledby="results-{{ g.key }}-heading">
-            <h2 class="rl-results__title" id="results-{{ g.key }}-heading">{{ g.title }} <span class="rl-results__count">({{ g.items|length }})</span></h2>
-            <ul class="rl-results__list">
+        <section class="bl-hits" id="results-{{ g.key }}" aria-labelledby="results-{{ g.key }}-heading">
+            <h2 class="bl-hits__title" id="results-{{ g.key }}-heading">{{ g.title }} <span class="bl-hits__count">{{ g.items|length }}</span></h2>
+            <ul class="bl-hits__list">
                 {% for i in g.items %}
-                <li class="rl-result">
-                    <div class="rl-result__meta">
-                        <span class="rl-result__type">{{ i.type }}</span>
-                        {% if i.date %}<span class="rl-result__date">{{ i.date }}</span>{% endif %}
-                    </div>
-                    <h3 class="rl-result__title">
+                <li class="bl-hit">
+                    <p class="bl-hit__meta">
+                        <span class="bl-hit__type">{{ i.type }}</span>
+                        {% if i.date %}<span class="bl-hit__date">{{ i.date }}</span>{% endif %}
+                    </p>
+                    <h3 class="bl-hit__title">
                         <a href="{{ i.url }}" {% if i.external %}target="_blank" rel="noopener noreferrer"{% endif %}>{{ i.title|raw }}{% if i.external %}{% partial 'components/new-tab-hint' %}{% endif %}</a>
                     </h3>
-                    {% if i.excerpt %}<p class="rl-result__text">{{ i.excerpt|raw }}</p>{% endif %}
+                    {% if i.excerpt %}<p class="bl-hit__text">{{ i.excerpt|raw }}</p>{% endif %}
                 </li>
                 {% endfor %}
             </ul>

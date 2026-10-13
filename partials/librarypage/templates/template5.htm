@@ -46,9 +46,9 @@
         {% endif %}
         {% if record.file %}
         {# /download/<id>/<original file name>; PDFs open in a new tab, other files download. #}
-        <a class="rl-btn rl-btn--sm" {% partial 'realise/file-link' file=record.file %}>
-            {% partial 'realise/roll' text=('Download'|_) %}<span class="sr-only"> {{ record.title }} ({{ (record.file.file_size / 1024 / 1024)|round(2) }} MB{{ record.file.getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ', opens in a new tab' }})</span>
-            <span class="rl-btn__sq">{% partial 'realise/icon' name='download' %}</span>
+        <a class="rl-btn rl-btn--sm" {% partial 'balansed/file-link' file=record.file %}>
+            {% partial 'balansed/roll' text=('Download'|_) %}<span class="sr-only"> {{ record.title }} ({{ (record.file.file_size / 1024 / 1024)|round(2) }} MB{{ record.file.getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ', opens in a new tab' }})</span>
+            <span class="rl-btn__sq">{% partial 'balansed/icon' name='download' size=14 %}</span>
         </a>
         {% endif %}
     </div>

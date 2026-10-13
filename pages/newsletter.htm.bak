@@ -1,0 +1,41 @@
+url = "/newsletter"
+layout = "default"
+title = "Newsletter"
+meta_description = "Subscribe to the BALANSED newsletter to receive the latest results and updates directly in your inbox."
+is_hidden = 0
+robot_index = "index"
+robot_follow = "follow"
+==
+{#
+    Newsletter sign-up. Every Subscribe button links straight to the theme
+    setting "Subscribe link" (backend: Settings > Front-end theme > General
+    settings) - see partials/balansed/subscribe-link.htm. This page is the
+    fallback target while that setting is empty, and links to it once set.
+
+    Not to be confused with pages/newsletters.htm, the issue archive.
+#}
+{% set bl_sub = this.theme.subscribe|default('')|trim %}
+
+{% partial 'balansed/page-hero' crumb='Stay informed' title='Newsletter' %}
+
+<section class="rl-band" aria-labelledby="newsletter-form-heading">
+    <div class="rl-wrap rl-split">
+        <div class="rl-split__aside">
+            <h2 id="newsletter-form-heading">Subscribe to our newsletter</h2>
+        </div>
+        <div class="rl-split__body">
+            <p>Regular updates on BALANSED research, events and results, a few times a year.</p>
+            {% if bl_sub %}
+            <p>
+                <a class="rl-btn" {% partial 'balansed/subscribe-link' %}>
+                    {% partial 'balansed/roll' text='Subscribe' %}{% partial 'balansed/subscribe-link' hint=true %}
+                    <span class="rl-btn__sq">{% partial 'balansed/icon' name='arrow-right' size=16 %}</span>
+                </a>
+            </p>
+            {% else %}
+            <p class="rl-newsletter-soon">The newsletter sign-up form is coming soon. In the meantime, follow BALANSED on social media or check the <a href="{{ 'news'|page({}, false) }}">latest news</a>.</p>
+            {% endif %}
+            <p><a class="rl-link" href="{{ 'media-center'|page }}#media-news">{% partial 'balansed/roll' text='Read past issues' %} {% partial 'balansed/icon' name='arrow-right' size=14 %}</a></p>
+        </div>
+    </div>
+</section>

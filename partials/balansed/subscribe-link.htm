@@ -1,0 +1,15 @@
+{#
+    href (+ target) for every "Subscribe" button: the theme setting
+    "Subscribe link" (backend: Settings > Front-end theme > General settings),
+    used as-is. External links (http/https) open in a new tab; an empty
+    setting falls back to the /newsletter page.
+
+    Usage: <a {% partial 'balansed/subscribe-link' %} class="...">
+           ...link text...{% partial 'balansed/subscribe-link' hint=true %}</a>
+    With hint=true it prints only the screen-reader "(opens in a new tab)"
+    warning, and only when the link does open in a new tab.
+#}
+{% set bl_sub = this.theme.subscribe|default('')|trim %}
+{% set bl_sub_ext = bl_sub and bl_sub matches '{^https?://}i' %}
+{% if hint %}{% if bl_sub_ext %}{% partial 'components/new-tab-hint' %}{% endif %}
+{% elseif bl_sub %}href="{{ bl_sub }}"{% if bl_sub_ext %} target="_blank" rel="noopener noreferrer"{% endif %}{% else %}href="{{ 'newsletter'|page }}"{% endif %}

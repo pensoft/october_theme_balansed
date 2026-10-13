@@ -12,9 +12,9 @@ escape = 1
 {#
     BALANSED layout.
 
-    Pages in rl_designed render their own hero and sections. Every other page
+    Pages in bl_designed render their own hero and sections. Every other page
     (privacy, cookies, search, login, static pages...) gets the inner-page
-    banner with its title (partials/realise/page-hero.htm) and its content
+    banner with its title (partials/balansed/page-hero.htm) and its content
     inside .bl-legacy.
 
     The header (partials/site/header.htm) is laid over the top of every page;
@@ -24,8 +24,8 @@ escape = 1
     markup, then the BALANSED look in assets/less/balansed/.
     Behaviour: assets/js/balansed.js.
 #}
-{% set rl_designed = ['home', 'about', 'partners', 'news', 'events', 'library', 'study-regions', 'work-packages', 'contact', 'media-center', 'newsletter', 'search'] %}
-{% set rl_is_designed = this.page.id in rl_designed %}
+{% set bl_designed = ['home', 'about', 'partners', 'news', 'events', 'library', 'study-regions', 'work-packages', 'contact', 'media-center', 'newsletter', 'search'] %}
+{% set bl_is_designed = this.page.id in bl_designed %}
 <!DOCTYPE html>
 <html lang="{{ currentLang|default('en') }}">
 
@@ -133,13 +133,13 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
     %}
 
     <main id="layout-content" class="bl-main {{ this.page.id }}" tabindex="-1">
-        {% if rl_is_designed %}
+        {% if bl_is_designed %}
             {% page %}
         {% else %}
             {# These pages print their own <h1>; the banner title then renders
                as a visually identical non-heading so each page has one H1. #}
-            {% set rl_own_h1 = this.page.id in ['404', 'error'] %}
-            {% partial 'realise/page-hero' title=(this.page.title ?: this.theme.site_name) heading=(not rl_own_h1) %}
+            {% set bl_own_h1 = this.page.id in ['404', 'error'] %}
+            {% partial 'balansed/page-hero' title=(this.page.title ?: this.theme.site_name) heading=(not bl_own_h1) %}
             <div class="bl-band">
                 <div class="bl-wrap bl-legacy">
                     {% page %}

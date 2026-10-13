@@ -1,0 +1,157 @@
+url = "/partners"
+layout = "default"
+title = "Consortium"
+is_hidden = 0
+robot_index = "index"
+robot_follow = "follow"
+==
+<?php
+use Pensoft\Partners\Models\Partners;
+use Pensoft\Partners\Models\Topics;
+
+/*
+ * BALANSED Consortium: Pensoft.Partners (type 1, backend order).
+ *   Tile logo = Cover, name = Institution, text = Content, link =
+ *   Institution url, countries = Countries (or Country codes).
+ *   Topics: Partners > Topics in the backend (in their order) - the
+ *   "Select by topic" switches; each partner's Topic field puts it in one.
+ * Until partners are entered, the design's partner logos are shown.
+ */
+function onStart()
+{
+    // Topics (id -> slug) for the switches; slugs unique even if two
+    // topics share a title.
+    $topics = [];
+    $slugOf = [];
+    foreach (Topics::orderBy('sort_order')->orderBy('id')->get() as $t) {
+        $title = trim((string) $t->title);
+        if ($title === '') {
+            continue;
+        }
+        $slug = \Str::slug($title) ?: 'topic';
+        if (in_array($slug, $slugOf, true)) {
+            $slug .= '-' . $t->id;
+        }
+        $slugOf[$t->id] = $slug;
+        $topics[] = ['slug' => $slug, 'title' => $title];
+    }
+    $topicsOf = function ($topicId) use ($slugOf) {
+        return isset($slugOf[$topicId]) ? [$slugOf[$topicId]] : [];
+    };
+
+    $partners = Partners::with('country')->where('type', 1)->orderBy('nest_left')->get()->map(function ($p) use ($topicsOf) {
+        $codes = $p->country->pluck('code')->all() ?: array_filter(array_map('trim', explode(',', (string) $p->country_code)));
+        return [
+            'id' => 'partner-' . $p->id,
+            'short' => $p->title,
+            'name' => $p->instituion ?: $p->title,
+            'logo' => $p->cover ? $p->cover->getPath() : null,
+            'content' => $p->content,
+            'url' => trim((string) $p->instituion_url),
+            'countries' => array_values(array_unique(array_map('strtoupper', $codes))),
+            'topics' => $topicsOf($p->topic_id),
+        ];
+    })->all();
+
+    if (!$partners) {
+        $logo = function ($f) { return $this->controller->themeUrl('assets/images/balansed/logos/' . $f . '.svg'); };
+        foreach ([
+            ['zavod', 'ZGS', 'Slovenia Forest Service (Zavod za gozdove Slovenije)', ['SI']],
+            ['wageningen', 'WUR', 'Wageningen University & Research', ['NL']],
+            ['step', 'STEP', 'STEP', []],
+            ['pensoft', 'PENSOFT', 'Pensoft Publishers', ['BG']],
+            ['cooperativas-espana', 'CAE', 'Cooperativas Agro-alimentarias de España', ['ES']],
+            ['ogs', 'OGS', 'National Institute of Oceanography and Applied Geophysics (OGS)', ['IT']],
+            ['okoloogiliste', 'ETK', 'Ökoloogiliste Tehnoloogiate Keskus', ['EE']],
+            ['gozdarski', 'GIS', 'Slovenian Forestry Institute (Gozdarski inštitut Slovenije)', ['SI']],
+            ['urcacyl', 'URCACYL', 'URCACYL', ['ES']],
+        ] as list($file, $short, $name, $countries)) {
+            $partners[] = [
+                'id' => 'partner-' . $file, 'short' => $short, 'name' => $name, 'logo' => $logo($file),
+                'content' => null, 'url' => '', 'countries' => $countries, 'topics' => [],
+            ];
+        }
+    }
+
+    $this['topics'] = $topics;
+    $this['partners'] = $partners;
+    $this['partner_countries'] = array_values(array_unique(array_merge(...array_map(function ($p) {
+        return $p['countries'];
+    }, $partners ?: [['countries' => []]]))));
+}
+?>
+==
+{#
+    BALANSED Consortium (Figma: About / Consortium).
+    Topic switches filter the partner tiles; "Read more" swaps the grid for
+    the partner's panel. The map colours partner countries (brown), and while
+    a topic or partner is selected only the matching ones stay brown (others
+    turn sand). Behaviour: assets/js/balansed.js (initConsortium); without
+    JS every tile links to its panel, listed under the grid.
+    Styles: assets/less/balansed/pages/partners.less
+#}
+{% partial 'balansed/page-hero' title='Consortium' %}
+
+{# Partner countries: brown on the map; sand while a topic or partner is
+   selected and the country is not part of it (.is-active, see partners.less). #}
+{% if partner_countries|length %}
+<style>
+    {% for c in partner_countries %}.bl-map [data-country="{{ c }}"]{% if not loop.last %},{% endif %}{% endfor %} { fill: #6A4727; }
+    {% for c in partner_countries %}.bl-map.has-selection [data-country="{{ c }}"]{% if not loop.last %},{% endif %}{% endfor %} { fill: #D3C4B4; }
+</style>
+{% endif %}
+
+<section class="bl-news-page bl-consortium" data-bl-consortium>
+    <div class="bl-wrap bl-consortium__grid">
+        <div class="bl-consortium__main">
+            {% if topics|length %}
+            <fieldset class="bl-topics">
+                <legend class="bl-eyebrow">Select by topic</legend>
+                <div class="bl-topics__list">
+                    {% for t in topics %}
+                    <label class="bl-toggle">
+                        <input type="checkbox" value="{{ t.slug }}" data-bl-topic>
+                        <span class="bl-toggle__track" aria-hidden="true"></span>
+                        <span class="bl-toggle__label">{{ t.title }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+            </fieldset>
+            {% endif %}
+
+            <ul class="bl-partners" data-bl-partners>
+                {% for p in partners %}
+                <li data-topics="{{ p.topics|join(' ') }}" data-countries="{{ p.countries|join(' ') }}">
+                    <a class="bl-partner" href="#{{ p.id }}" data-bl-partner="{{ p.id }}">
+                        {% if p.logo %}<img src="{{ p.logo }}" alt="" loading="lazy">{% else %}<span class="bl-partner__name">{{ p.short }}</span>{% endif %}
+                        <span class="bl-partner__more">Read more<span class="sr-only"> about {{ p.name }}</span></span>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+            <p class="bl-empty bl-partners__empty" data-bl-partners-empty hidden>No partners for the selected topics yet.</p>
+
+            <div class="bl-partner-panels">
+                {% for p in partners %}
+                <article class="bl-partner-panel" id="{{ p.id }}" data-countries="{{ p.countries|join(' ') }}" tabindex="-1" aria-labelledby="{{ p.id }}-name">
+                    <button type="button" class="bl-partner-panel__close" data-bl-partner-close aria-label="Close {{ p.name }}">{% partial 'balansed/icon' name='close' size=16 %}</button>
+                    <div class="bl-partner-panel__head">
+                        {% if p.logo %}<img src="{{ p.logo }}" alt="" loading="lazy">{% endif %}
+                        <h2 class="bl-partner-panel__name" id="{{ p.id }}-name">{{ p.name }}</h2>
+                    </div>
+                    <div class="bl-partner-panel__text">
+                        {% if p.content %}{{ p.content|raw }}{% else %}<p>More about {{ p.name }} will follow soon.</p>{% endif %}
+                    </div>
+                    {% if p.url %}
+                    <a class="bl-partner-panel__link" href="{{ p.url }}" target="_blank" rel="noopener noreferrer">Visit website{% partial 'components/new-tab-hint' %} {% partial 'balansed/icon' name='arrow-up-right' size=16 %}</a>
+                    {% endif %}
+                </article>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="bl-consortium__map" data-bl-map>
+            {% partial 'balansed/europe-map' %}
+        </div>
+    </div>
+</section>

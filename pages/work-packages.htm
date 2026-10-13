@@ -4,6 +4,8 @@ title = "Work packages"
 is_hidden = 0
 robot_index = "index"
 robot_follow = "follow"
+
+[siteSearchInclude]
 ==
 <?php
 use Pensoft\Accordions\Models\Category;
@@ -60,6 +62,7 @@ function onStart()
 }
 ?>
 ==
+{% component 'siteSearchInclude' %}
 {#
     BALANSED Work packages (Figma: Work packages + WP popup).
     Cards on navy over the banner; each card opens its work package in a
@@ -67,7 +70,7 @@ function onStart()
     link targets the dialog and CSS shows it (:target).
     Styles: assets/less/balansed/pages/work-packages.less
 #}
-{% partial 'realise/page-hero' title='Work packages' fade=true %}
+{% partial 'balansed/page-hero' title='Work packages' fade=true %}
 
 <section class="bl-wps">
     <div class="bl-wrap">

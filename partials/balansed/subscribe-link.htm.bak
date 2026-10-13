@@ -4,8 +4,8 @@
     used as-is. External links (http/https) open in a new tab; an empty
     setting falls back to the /newsletter page.
 
-    Usage: <a {% partial 'realise/subscribe-link' %} class="...">
-           ...link text...{% partial 'realise/subscribe-link' hint=true %}</a>
+    Usage: <a {% partial 'balansed/subscribe-link' %} class="...">
+           ...link text...{% partial 'balansed/subscribe-link' hint=true %}</a>
     With hint=true it prints only the screen-reader "(opens in a new tab)"
     warning, and only when the link does open in a new tab.
 #}

@@ -1,0 +1,16 @@
+url = "/deliberation-toolkit"
+layout = "default"
+title = "Deliberation Toolkit"
+is_hidden = 0
+meta_description = "The BALANSED Deliberation Toolkit is coming soon."
+robot_index = "index"
+robot_follow = "follow"
+==
+{#
+    Deliberation Toolkit (linked from the main menu): a placeholder until the
+    toolkit is released, matching the "Deliberation Toolkit Coming Soon"
+    button on the homepage. The layout adds the banner and the sand band.
+#}
+<h2>Coming soon</h2>
+<p>The BALANSED Deliberation Toolkit will help communities, researchers and decision-makers weigh land and sea choices together, bringing scientific evidence and lived experience into the same conversation.</p>
+<p>Read how we are <a href="{{ 'news'|page({ id: 'building-the-balansed-deliberation-toolkit' }) }}">building the BALANSED Deliberation Toolkit</a>, or explore our <a href="{{ 'study-regions'|page({}, false) }}">study regions</a> in the meantime.</p>

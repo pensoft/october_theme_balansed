@@ -14,6 +14,8 @@ noRecordsMessage = "No records found"
 detailsPage = "-"
 detailsUrlParameter = "id"
 pageNumber = "{{ :page }}"
+
+[siteSearchInclude]
 ==
 <?php
 use Pensoft\Media\Models\Flyers;
@@ -63,6 +65,7 @@ return Response::download($pathToFile, $fileName, $headers);
 }
 ?>
 ==
+{% component 'siteSearchInclude' %}
 
 <div class="container">
     {% set records = mediaFlyersList %}
@@ -87,7 +90,7 @@ return Response::download($pathToFile, $fileName, $headers);
                 <div class="record_name">{{record.name}}</div>
                 <div class="links">
                     {% if record.file %}
-                    <a {% partial 'realise/file-link' file=record.file %} data-attach-loading class="btn btn-primary"><i aria-hidden="true"></i> Download<span class="sr-only"> {{record.name}}</span>{% partial 'components/new-tab-hint' %}</a>
+                    <a {% partial 'balansed/file-link' file=record.file %} data-attach-loading class="btn btn-primary"><i aria-hidden="true"></i> Download<span class="sr-only"> {{record.name}}</span>{% partial 'components/new-tab-hint' %}</a>
                     {% endif %}
                 </div>
             </div>

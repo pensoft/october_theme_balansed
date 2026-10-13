@@ -30,8 +30,9 @@ use Pensoft\Casestudies\Models\Data as CaseStudy;
  */
 function regions()
 {
-    if (isset($this->regionsCache)) {
-        return $this->regionsCache;
+    static $cache = null;   // onInit and onStart both ask
+    if ($cache !== null) {
+        return $cache;
     }
     $theme = function ($file) { return $this->controller->themeUrl('assets/images/balansed/' . $file); };
 
@@ -85,7 +86,7 @@ function regions()
             'url' => $this->pageUrl('study-regions', ['slug' => 'la-mancha-and-southern-spain']),
         ];
     }
-    return $this->regionsCache = $regions;
+    return $cache = $regions;
 }
 
 function onInit()
@@ -158,7 +159,7 @@ function onStart()
     Styles: assets/less/balansed/pages/regions.less
 #}
 {% set img = 'assets/images/balansed/regions/' %}
-{% partial 'realise/page-hero' title='Study regions' heading=(region is not defined) %}
+{% partial 'balansed/page-hero' title='Study regions' heading=(region is not defined) %}
 
 {% if region is defined %}
 {# ---------------------------------------------------------- REGION #}
@@ -180,17 +181,16 @@ function onStart()
 
             <div class="bl-region__text">
                 <h1 class="bl-eyebrow bl-region__name">{{ region.name }}</h1>
-                {% if region.title or region.text %}
-                <div>
-                    {% if region.title %}<h2 class="bl-region__h">{{ region.title }}</h2>{% endif %}
-                    {% if region.text %}<p class="bl-lead">{{ region.text|nl2br }}</p>{% endif %}
-                </div>
+                {# The case study's Description (rich text): headings + paragraphs.
+                   Editors use H3 (and H4) under the region name, which is the
+                   page's H1; they are lifted one level so no heading level is
+                   skipped. Styled alike (pages/regions.less). #}
+                {% if region.description|trim %}
+                {% set bl_desc = region.description %}
+                {% if '<h2' not in bl_desc %}
+                {% set bl_desc = bl_desc|replace({'<h3': '<h2', '</h3>': '</h2>', '<h4': '<h3', '</h4>': '</h3>'}) %}
                 {% endif %}
-                {% if region.question %}
-                <div>
-                    <h2 class="bl-region__h">The question</h2>
-                    <p class="bl-lead">{{ region.question|nl2br }}</p>
-                </div>
+                <div class="bl-region__body">{{ bl_desc|raw }}</div>
                 {% endif %}
             </div>
         </div>

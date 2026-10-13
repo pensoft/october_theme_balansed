@@ -4,6 +4,8 @@ title = "Media centre"
 is_hidden = 0
 robot_index = "index"
 robot_follow = "follow"
+
+[siteSearchInclude]
 ==
 <?php
 use Pensoft\Media\Models\MediaLogos;
@@ -20,6 +22,7 @@ function onStart()
 }
 ?>
 ==
+{% component 'siteSearchInclude' %}
 {#
     Media Centre: Brand Kit (Pensoft.Media logos + flyers), Newsletters and
     Press Releases, with a sticky tab bar that tracks the section in view.
@@ -28,9 +31,9 @@ function onStart()
     colour variants of the bundled BALANSED logo (each downloads the master
     PNG); print materials show their mock-ups marked "Coming soon".
 #}
-{% set rl_logo = 'assets/realise/img/realise-logo.png'|theme %}
+{% set bl_logo = 'assets/realise/img/realise-logo.png'|theme %}
 
-{% partial 'realise/page-hero' crumb='Resources' title='Media Centre' %}
+{% partial 'balansed/page-hero' crumb='Resources' title='Media Centre' %}
 
 <nav class="rl-band rl-tabs-band" aria-label="Media Centre sections">
     <div class="rl-wrap rl-tabs">
@@ -53,7 +56,7 @@ function onStart()
 
     <div class="rl-band">
         <div class="rl-wrap rl-subhead"><h3>Logos</h3></div>
-        <div class="rl-wrap rl-wrap--open-right rl-cards3" style="--rl-logo-mask:url('{{ rl_logo }}')">
+        <div class="rl-wrap rl-wrap--open-right rl-cards3" style="--rl-logo-mask:url('{{ bl_logo }}')">
             {% if logos|length %}
                 {#
                     Pensoft.Media logos. The Logo image is the card preview
@@ -71,14 +74,14 @@ function onStart()
                         <div><h4>{{ l.name }}</h4>{% if files|length %}<span class="rl-kit__meta">{{ files|map(f => f[0])|join(' · ') }}</span>{% endif %}</div>
                         {% if files|length %}
                         {% set main = files|first %}
-                        <a class="rl-btn rl-btn--sm rl-btn--block" {% partial 'realise/file-link' file=main[1] %}>
-                            {% partial 'realise/roll' text='Download' %}<span class="sr-only"> {{ l.name }} ({{ main[0] }}){{ main[1].getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ', opens in a new tab' }}</span>
-                            <span class="rl-btn__sq">{% partial 'realise/icon' name='download' %}</span>
+                        <a class="rl-btn rl-btn--sm rl-btn--block" {% partial 'balansed/file-link' file=main[1] %}>
+                            {% partial 'balansed/roll' text='Download' %}<span class="sr-only"> {{ l.name }} ({{ main[0] }}){{ main[1].getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ', opens in a new tab' }}</span>
+                            <span class="rl-btn__sq">{% partial 'balansed/icon' name='download' size=14 %}</span>
                         </a>
                         {% if files|length > 1 %}
                         <div class="rl-kit__files">
                             {% for f in files|slice(1) %}
-                            <a class="rl-ghost" {% partial 'realise/file-link' file=f[1] %}>{{ f[0] }}<span class="sr-only"> - {{ l.name }}{{ f[1].getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ', opens in a new tab' }}</span>{% partial 'realise/icon' name='download' size=12 %}</a>
+                            <a class="rl-ghost" {% partial 'balansed/file-link' file=f[1] %}>{{ f[0] }}<span class="sr-only"> - {{ l.name }}{{ f[1].getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ', opens in a new tab' }}</span>{% partial 'balansed/icon' name='download' size=12 %}</a>
                             {% endfor %}
                         </div>
                         {% endif %}
@@ -100,23 +103,23 @@ function onStart()
                 <article class="rl-kit">
                     <div class="rl-kit__preview {{ v.kind == 'img' ? 'rl-kit__preview--outline' }}" style="background:{{ v.bg }}">
                         {% if v.kind == 'img' %}
-                        <img src="{{ rl_logo }}" alt="">
+                        <img src="{{ bl_logo }}" alt="">
                         {% elseif v.kind == 'mask' %}
                         <div class="rl-kit__mask" style="background:{{ v.fg }}"></div>
                         {% elseif v.kind == 'split' %}
                         <div style="width:72%;aspect-ratio:1524/356;position:relative">
-                            <img src="{{ rl_logo }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;clip-path:inset(0 79.6% 0 0)">
+                            <img src="{{ bl_logo }}" alt="" style="position:absolute;inset:0;width:100%;height:100%;clip-path:inset(0 79.6% 0 0)">
                             <div class="rl-kit__mask" style="position:absolute;inset:0;width:100%;background:#04044D;clip-path:inset(0 0 0 20.4%)"></div>
                         </div>
                         {% else %}
-                        <div class="rl-kit__symbol"><img src="{{ rl_logo }}" alt=""></div>
+                        <div class="rl-kit__symbol"><img src="{{ bl_logo }}" alt=""></div>
                         {% endif %}
                     </div>
                     <div class="rl-kit__body">
                         <div><h4>{{ v.name }}</h4><span class="rl-kit__meta">PNG</span></div>
-                        <a class="rl-btn rl-btn--sm rl-btn--block" href="{{ rl_logo }}" download="BALANSED-logo.png">
-                            {% partial 'realise/roll' text='Download' %}<span class="sr-only"> {{ v.name }}</span>
-                            <span class="rl-btn__sq">{% partial 'realise/icon' name='download' %}</span>
+                        <a class="rl-btn rl-btn--sm rl-btn--block" href="{{ bl_logo }}" download="BALANSED-logo.png">
+                            {% partial 'balansed/roll' text='Download' %}<span class="sr-only"> {{ v.name }}</span>
+                            <span class="rl-btn__sq">{% partial 'balansed/icon' name='download' size=14 %}</span>
                         </a>
                     </div>
                 </article>
@@ -138,14 +141,14 @@ function onStart()
                     <div class="rl-kit__body">
                         <div><h4>{{ f.name }}</h4>{% if f.file %}<span class="rl-kit__meta">{{ f.file.extension|upper }} · {{ f.file.file_size >= 1048576 ? (f.file.file_size / 1048576)|round(1) ~ ' MB' : max(1, (f.file.file_size / 1024)|round) ~ ' KB' }}</span>{% endif %}</div>
                         {% if ffile %}
-                        <a class="rl-btn rl-btn--sm rl-btn--block" {% partial 'realise/file-link' file=ffile %}>
-                            {% partial 'realise/roll' text='Download' %}<span class="sr-only"> {{ f.name }}{{ ffile.getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ' (opens in a new tab)' }}</span>
-                            <span class="rl-btn__sq">{% partial 'realise/icon' name='download' %}</span>
+                        <a class="rl-btn rl-btn--sm rl-btn--block" {% partial 'balansed/file-link' file=ffile %}>
+                            {% partial 'balansed/roll' text='Download' %}<span class="sr-only"> {{ f.name }}{{ ffile.getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ' (opens in a new tab)' }}</span>
+                            <span class="rl-btn__sq">{% partial 'balansed/icon' name='download' size=14 %}</span>
                         </a>
                         {% elseif f.url %}
                         <a class="rl-btn rl-btn--sm rl-btn--block" href="{{ f.url }}" target="_blank" rel="noopener noreferrer">
-                            {% partial 'realise/roll' text='Open' %}<span class="sr-only"> {{ f.name }} (opens in a new tab)</span>
-                            <span class="rl-btn__sq">{% partial 'realise/icon' name='external' %}</span>
+                            {% partial 'balansed/roll' text='Open' %}<span class="sr-only"> {{ f.name }} (opens in a new tab)</span>
+                            <span class="rl-btn__sq">{% partial 'balansed/icon' name='external' size=14 %}</span>
                         </a>
                         {% endif %}
                     </div>
@@ -156,18 +159,18 @@ function onStart()
                 <article class="rl-kit">
                     <div class="rl-kit__preview" style="background:{{ m.kind == 'manual' ? '#DAE7FF' : '#121289' }}">
                         {% if m.kind == 'rollup' %}
-                        <div class="rl-mock-rollup"><div><img src="{{ rl_logo }}" alt=""><s></s><s></s><u></u></div><i></i></div>
+                        <div class="rl-mock-rollup"><div><img src="{{ bl_logo }}" alt=""><s></s><s></s><u></u></div><i></i></div>
                         {% elseif m.kind == 'sticker' %}
-                        <div class="rl-mock-sticker"><div class="rl-kit__symbol"><img src="{{ rl_logo }}" alt=""></div></div>
+                        <div class="rl-mock-sticker"><div class="rl-kit__symbol"><img src="{{ bl_logo }}" alt=""></div></div>
                         {% else %}
-                        <div class="rl-mock-manual"><img src="{{ rl_logo }}" alt=""><span>Brand<br>Manual</span></div>
+                        <div class="rl-mock-manual"><img src="{{ bl_logo }}" alt=""><span>Brand<br>Manual</span></div>
                         {% endif %}
                     </div>
                     <div class="rl-kit__body">
                         <div><h4>{{ m.name }}</h4><span class="rl-kit__meta">{{ m.meta }}</span></div>
                         <span class="rl-btn rl-btn--sm rl-btn--block" aria-disabled="true">
                             Coming soon
-                            <span class="rl-btn__sq">{% partial 'realise/icon' name='download' %}</span>
+                            <span class="rl-btn__sq">{% partial 'balansed/icon' name='download' size=14 %}</span>
                         </span>
                     </div>
                 </article>
@@ -185,9 +188,9 @@ function onStart()
                 <h2 class="rl-h2 rl-h2--sm" id="media-news-heading">Newsletters</h2>
                 <p class="rl-copy">Regular updates on BALANSED research, events and results. Subscribe to receive new issues by email.</p>
             </div>
-            <a class="rl-btn rl-btn--sm" {% partial 'realise/subscribe-link' %}>
-                {% partial 'realise/roll' text='Subscribe' %}{% partial 'realise/subscribe-link' hint=true %}
-                <span class="rl-btn__sq">{% partial 'realise/icon' name='arrow-right' %}</span>
+            <a class="rl-btn rl-btn--sm" {% partial 'balansed/subscribe-link' %}>
+                {% partial 'balansed/roll' text='Subscribe' %}{% partial 'balansed/subscribe-link' hint=true %}
+                <span class="rl-btn__sq">{% partial 'balansed/icon' name='arrow-right' size=14 %}</span>
             </a>
         </div>
     </div>
@@ -201,7 +204,7 @@ function onStart()
                     <img src="{{ nl.newsletter_image.getThumb(420, null, { mode: 'auto' }) }}" alt="">
                     {% else %}
                     <div class="rl-nl__paper" aria-hidden="true">
-                        <div class="rl-nl__paper-head"><img src="{{ rl_logo }}" alt=""><div><span>Newsletter</span><span>{{ nl.date ? nl.date|date('M Y') }}</span></div></div>
+                        <div class="rl-nl__paper-head"><img src="{{ bl_logo }}" alt=""><div><span>Newsletter</span><span>{{ nl.date ? nl.date|date('M Y') }}</span></div></div>
                         <div class="rl-nl__paper-body"><b>{{ nl.name }}</b><i></i><s></s><s></s><s></s></div>
                     </div>
                     {% endif %}
@@ -209,9 +212,9 @@ function onStart()
                 {% if nl.date %}<time class="rl-date" datetime="{{ nl.date|date('Y-m-d') }}">{{ nl.date|date('F Y') }}</time>{% endif %}
                 <h3>{{ nl.name }}</h3>
                 {% if nl.file or nl.url %}
-                <a class="rl-btn rl-btn--sm" {% if nl.file %}{% partial 'realise/file-link' file=nl.file %}{% else %}href="{{ nl.url }}" target="_blank" rel="noopener noreferrer"{% endif %}>
-                    {% partial 'realise/roll' text='Read the newsletter' %}<span class="sr-only">: {{ nl.name }}{{ not nl.file or nl.file.getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ' (opens in a new tab)' }}</span>
-                    <span class="rl-btn__sq">{% partial 'realise/icon' name='arrow-right' %}</span>
+                <a class="rl-btn rl-btn--sm" {% if nl.file %}{% partial 'balansed/file-link' file=nl.file %}{% else %}href="{{ nl.url }}" target="_blank" rel="noopener noreferrer"{% endif %}>
+                    {% partial 'balansed/roll' text='Read the newsletter' %}<span class="sr-only">: {{ nl.name }}{{ not nl.file or nl.file.getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ' (opens in a new tab)' }}</span>
+                    <span class="rl-btn__sq">{% partial 'balansed/icon' name='arrow-right' size=14 %}</span>
                 </a>
                 {% endif %}
             </article>
@@ -251,7 +254,7 @@ function onStart()
                 {% if links|length %}
                 <div class="rl-press__links">
                     {% for l in links %}
-                    <a class="rl-ghost" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">{{ l.text ?: 'Read the release' }}<span class="sr-only">: {{ pr.name }} (opens in a new tab)</span>{% partial 'realise/icon' name='external' size=12 %}</a>
+                    <a class="rl-ghost" href="{{ l.url }}" target="_blank" rel="noopener noreferrer">{{ l.text ?: 'Read the release' }}<span class="sr-only">: {{ pr.name }} (opens in a new tab)</span>{% partial 'balansed/icon' name='external' size=12 %}</a>
                     {% endfor %}
                 </div>
                 {% endif %}

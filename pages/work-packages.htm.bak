@@ -1,0 +1,112 @@
+url = "/work-packages"
+layout = "default"
+title = "Work packages"
+is_hidden = 0
+robot_index = "index"
+robot_follow = "follow"
+==
+<?php
+use Pensoft\Accordions\Models\Category;
+use Pensoft\Accordions\Models\Item;
+
+/*
+ * BALANSED Work packages: Pensoft.Accordions items in the category with
+ * slug "work-packages", in backend order.
+ *   Prefix = "WP1", Title = the title, Description = the popup text
+ *   (a bulleted list in the design), Partner = the lead partner (its Cover
+ *   is the logo, its Countries the country in the popup).
+ * Until a work package has a Partner linked, the design's lead partner for
+ * that WP number is shown (logo + country) - see designLeads().
+ */
+// The design's lead partner per work package: used for a WP whose item has
+// no Partner linked yet (the partners are not in Pensoft.Partners yet).
+function designLeads()
+{
+    $logo = function ($file) { return $this->controller->themeUrl('assets/images/balansed/logos/' . $file . '.svg'); };
+    $wur = ['Wageningen University & Research', $logo('wageningen'), 'Netherlands'];
+    return [
+        'WP1' => $wur,
+        'WP2' => ['GFZ Helmholtz Centre for Geosciences', $logo('gfz'), 'Germany'],
+        'WP3' => $wur,
+        'WP4' => ['National Institute of Oceanography and Applied Geophysics (OGS)', $logo('ogs'), 'Italy'],
+        'WP5' => ['International Institute for Applied Systems Analysis (IIASA)', $logo('iiasa'), 'Austria'],
+        'WP6' => ['Pensoft Publishers', $logo('pensoft'), 'Bulgaria'],
+        'WP7' => $wur,
+    ];
+}
+
+function onStart()
+{
+    $leads = $this->designLeads();
+    $category = Category::where('slug', 'work-packages')->first();
+    $items = $category
+        ? Item::with('partner.country')->where('category_id', $category->id)->orderBy('sort_order')->get()
+        : collect();
+
+    $this['wps'] = $items->values()->map(function ($i, $n) use ($leads) {
+        $prefix = trim((string) $i->prefix);
+        $p = $i->partner;
+        $lead = !$p && isset($leads[strtoupper($prefix)]) ? $leads[strtoupper($prefix)] : [null, null, null];
+        return [
+            'id' => 'wp-' . ($n + 1),
+            'prefix' => $prefix,
+            'title' => trim(strip_tags((string) $i->title)),
+            'body' => $i->body,
+            'partner' => $p ? ($p->instituion ?: $p->title) : $lead[0],
+            'logo' => $p ? ($p->cover ? $p->cover->getPath() : null) : $lead[1],
+            'country' => $p ? $p->country->pluck('name')->implode(', ') : $lead[2],
+        ];
+    })->all();
+}
+?>
+==
+{#
+    BALANSED Work packages (Figma: Work packages + WP popup).
+    Cards on navy over the banner; each card opens its work package in a
+    popup (<dialog>, assets/js/balansed.js initDialogs). Without JS the card
+    link targets the dialog and CSS shows it (:target).
+    Styles: assets/less/balansed/pages/work-packages.less
+#}
+{% partial 'balansed/page-hero' title='Work packages' fade=true %}
+
+<section class="bl-wps">
+    <div class="bl-wrap">
+        <ul class="bl-wps__list">
+            {% for wp in wps %}
+            <li>
+                <a class="bl-wp" href="#{{ wp.id }}" data-bl-dialog="{{ wp.id }}" aria-haspopup="dialog">
+                    <span class="bl-wp__top">
+                        {% if wp.prefix %}<span class="bl-wp__prefix">{{ wp.prefix }}</span>{% endif %}
+                        {% if wp.logo %}<img class="bl-wp__logo" src="{{ wp.logo }}" alt="{{ wp.partner ? 'Led by ' ~ wp.partner }}" loading="lazy">{% endif %}
+                    </span>
+                    <span class="bl-wp__title">{{ wp.title }}</span>
+                    <span class="bl-wp__badge" aria-hidden="true">{% partial 'balansed/icon' name='arrow-up-right' size=22 stroke=1.5 %}</span>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+
+{% for wp in wps %}
+<dialog class="bl-dialog bl-wp-dialog" id="{{ wp.id }}" aria-labelledby="{{ wp.id }}-title">
+    <div class="bl-dialog__panel">
+        <a class="bl-dialog__close" href="#" data-bl-dialog-close aria-label="Close">{% partial 'balansed/icon' name='close' size=20 %}</a>
+        {% if wp.logo or wp.country %}
+        <div class="bl-wp-dialog__meta">
+            {% if wp.logo %}<img class="bl-wp__logo" src="{{ wp.logo }}" alt="{{ wp.partner ? 'Led by ' ~ wp.partner }}">{% endif %}
+            {% if wp.country %}
+            <span class="bl-wp-dialog__country">
+                <span class="bl-wp-dialog__pin" aria-hidden="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M12 21s-7-5.6-7-11.5a7 7 0 1 1 14 0C19 15.4 12 21 12 21Z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span>
+                <span class="sr-only">Country: </span>{{ wp.country }}
+            </span>
+            {% endif %}
+        </div>
+        {% endif %}
+        <h2 class="bl-wp-dialog__title" id="{{ wp.id }}-title">{{ wp.prefix }} {{ wp.title }}</h2>
+        <div class="bl-wp-dialog__body">
+            {% if wp.body %}{{ wp.body|raw }}{% else %}<p>More about this work package will follow soon.</p>{% endif %}
+        </div>
+    </div>
+</dialog>
+{% endfor %}

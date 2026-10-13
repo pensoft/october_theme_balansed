@@ -108,13 +108,13 @@ function onStart()
 {# ------------------------------------------------------- LAND AND SEA #}
 {#
     Three slides, drawn as the visitor scrolls (assets/js/balansed.js,
-    initDrawing; styles in pages/home.less): the section stays in view
-    while its lines are sketched in step with the scroll - land and sea,
+    initDrawing; styles in pages/home.less): as the section scrolls past,
+    its lines are sketched in step with the scroll - land and sea,
     then evidence and lived experience, then the conversation (the blob
     wobbles like a voice). Scrolling simply carries on past it at any time.
     Without JS: the first slide, fully drawn.
 #}
-<section class="bl-drawing" data-bl-drawing aria-labelledby="land-sea-heading">
+<section class="bl-drawing" data-bl-drawing data-bl-hold="1" aria-labelledby="land-sea-heading">
     <div class="bl-drawing__stage">
         <div class="bl-drawing__canvas">
             {% partial 'balansed/drawing-art' %}
@@ -247,14 +247,14 @@ function onStart()
 {# --------------------------------------------- WHAT SUCCESS LOOKS LIKE #}
 {#
     Four goals on a ring of 96 ticks (Figma: 4 states). As the visitor
-    scrolls, the section stays in view and the ticks light up one by one
+    scrolls past the section, the ticks light up one by one
     around the ring like a loading indicator, a quarter per goal: the goal
     text changes and a photo pops in as each quarter completes
     (assets/js/balansed.js, initSuccess; styles in pages/home.less).
     Texts: Jumbotron home-success-goal ("By 2030 ...") and home-success-1..4.
     Without JS: the first goal with its quarter lit.
 #}
-<section class="bl-success" data-bl-success aria-labelledby="success-heading">
+<section class="bl-success" data-bl-success data-bl-hold="1.2" aria-labelledby="success-heading">
     <div class="bl-success__stage">
         <h2 class="bl-success__title" id="success-heading">{% component 'jumbo' jumbotron='home-success-title' %}</h2>
         <div class="bl-success__ring">

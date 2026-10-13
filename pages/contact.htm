@@ -18,32 +18,28 @@ use Pensoft\Cardprofiles\Models\Profiles;
 function onStart()
 {
     // Contacts are Pensoft.Cardprofiles profiles in the "Contacts" category
-    // (slug "contacts"), in backend order; until there are any, the design's
-    // coordinator and project manager.
+    // (slug "contacts"), in backend order. Until there are any, the
+    // contacts block is not shown.
     $category = \Pensoft\Cardprofiles\Models\Category::where('slug', 'contacts')->first();
     $profiles = $category
         ? Profiles::where('category_id', $category->id)->orderBy('sort_order')->get()
         : collect();
-    if ($profiles->count()) {
-        $this['contacts'] = $profiles->map(function ($p) {
-            return [
-                'name' => $p->names,
-                'role' => $p->position,
-                'email' => $p->email,
-                'photo' => $p->avatar ? $p->avatar->getThumb(320, 320, ['mode' => 'crop']) : null,
-            ];
-        })->all();
-    } else {
-        $data = include themes_path(\Cms\Classes\Theme::getActiveThemeCode() . '/meta/realise-data.php');
-        $this['contacts'] = $data['contacts'];
-    }
+    $this['contacts'] = $profiles->map(function ($p) {
+        return [
+            'name' => $p->names,
+            'role' => $p->position,
+            'email' => $p->email,
+            'photo' => $p->avatar ? $p->avatar->getThumb(320, 320, ['mode' => 'crop']) : null,
+        ];
+    })->all();
 }
 ?>
 ==
 {% component 'siteSearchInclude' %}
 
-{% partial 'realise/page-hero' crumb='Get in touch' title='Contact' %}
+{% partial 'balansed/page-hero' crumb='Get in touch' title='Contact' %}
 
+{% if contacts|length %}
 <section class="rl-band" aria-label="Project contacts">
     <div class="rl-wrap rl-wrap--open-right rl-contacts">
         {% for c in contacts %}
@@ -53,21 +49,22 @@ function onStart()
                 {% if c.role %}<span class="rl-eyebrow">{{ c.role }}</span>{% endif %}
                 <h2>{{ c.name }}</h2>
                 {% if c.email %}
-                <a href="mailto:{{ c.email }}">{% partial 'realise/icon' name='mail' size=16 %}{{ c.email }}</a>
+                <a href="mailto:{{ c.email }}">{% partial 'balansed/icon' name='mail' size=16 %}{{ c.email }}</a>
                 {% endif %}
             </div>
         </article>
         {% endfor %}
     </div>
 </section>
+{% endif %}
 
 {# Only shown when the contact-form component actually renders a form. #}
-{% set rl_form %}{% component 'SimpleContactFormComponent' %}{% endset %}
-{% if rl_form|trim %}
+{% set bl_form %}{% component 'SimpleContactFormComponent' %}{% endset %}
+{% if bl_form|trim %}
 <section class="rl-band" aria-labelledby="contact-form-heading">
     <div class="rl-wrap rl-split">
         <div class="rl-split__aside"><h2 id="contact-form-heading">Send us a message</h2></div>
-        <div class="rl-split__body rl-contact-form">{{ rl_form|raw }}</div>
+        <div class="rl-split__body rl-contact-form">{{ bl_form|raw }}</div>
     </div>
 </section>
 {% endif %}

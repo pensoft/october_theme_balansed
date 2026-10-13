@@ -5,6 +5,7 @@ is_hidden = 0
 robot_index = "index"
 robot_follow = "follow"
 
+[siteSearchInclude]
 ==
 <?php
 use Pensoft\Articles\Models\Category;
@@ -166,6 +167,7 @@ if ($this['is_detail_page']) {
 }
 ?>
 ==
+{% component 'siteSearchInclude' %}
 {#
     BALANSED News (Figma: News & Events / News Open).
     List: News / Events switch + 3-column card grid + pager.
@@ -174,7 +176,7 @@ if ($this['is_detail_page']) {
     Data comes from Pensoft.Articles, see the code section above.
     Styles: assets/less/balansed/pages/news.less
 #}
-{% partial 'realise/page-hero' title='News & Events' heading=(not is_detail_page) %}
+{% partial 'balansed/page-hero' title='News & Events' heading=(not is_detail_page) %}
 
 <section class="bl-news-page">
     <div class="bl-wrap">

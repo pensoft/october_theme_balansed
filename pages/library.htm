@@ -4,6 +4,8 @@ title = "Results"
 is_hidden = 0
 robot_index = "index"
 robot_follow = "follow"
+
+[siteSearchInclude]
 ==
 <?php
 use Pensoft\Library\Models\Library;
@@ -72,12 +74,13 @@ function onStart()
 }
 ?>
 ==
+{% component 'siteSearchInclude' %}
 {#
     BALANSED Results (Figma: Results): tabs + 3-column document cards.
     Each card is partials/balansed/doc-card.htm.
     Styles: assets/less/balansed/pages/results.less
 #}
-{% partial 'realise/page-hero' title='Results' %}
+{% partial 'balansed/page-hero' title='Results' %}
 
 <section class="bl-news-page bl-results-page">
     <div class="bl-wrap">

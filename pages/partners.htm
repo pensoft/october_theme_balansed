@@ -4,6 +4,8 @@ title = "Consortium"
 is_hidden = 0
 robot_index = "index"
 robot_follow = "follow"
+
+[siteSearchInclude]
 ==
 <?php
 use Pensoft\Partners\Models\Partners;
@@ -81,6 +83,7 @@ function onStart()
 }
 ?>
 ==
+{% component 'siteSearchInclude' %}
 {#
     BALANSED Consortium (Figma: About / Consortium).
     Topic switches filter the partner tiles; "Read more" swaps the grid for
@@ -90,7 +93,7 @@ function onStart()
     JS every tile links to its panel, listed under the grid.
     Styles: assets/less/balansed/pages/partners.less
 #}
-{% partial 'realise/page-hero' title='Consortium' %}
+{% partial 'balansed/page-hero' title='Consortium' %}
 
 {# Partner countries: brown on the map; sand while a topic or partner is
    selected and the country is not part of it (.is-active, see partners.less). #}

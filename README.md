@@ -9,16 +9,18 @@ by Pensoft from the BALANSED website design.
   for content pages that are not individually designed.
 - `pages/` – home, about, partners, news, events, library, media centre,
   contact, newsletter, and the content pages (privacy, accessibility, ...).
-- `partials/realise/` – shared pieces (page hero, news card, icons, socials,
-  subscribe link). `partials/site/` – header and footer.
+- `partials/balansed/` – shared pieces (page hero, icons, cards, socials,
+  share row, subscribe link, logo). `partials/site/` – header and footer.
 - `partials/menu/default.htm` – Menu Manager template for the header nav.
 - `partials/librarypage/templates/template5.htm` – library document card.
-- `meta/realise-data.php` – static data with no CMS model (globe
-  coordinates, deliverable icons) and fallbacks.
-- `assets/realise/` – the BALANSED look: `css/realise.css`, `js/realise.js`,
-  fonts (Plus Jakarta Sans), images, logos, flags, favicon, hero video.
-- `assets/less/theme.less` – base Pensoft styles for plugin component markup
-  (grid, jumbotron, library, forms); loaded before `realise.css`.
+- `assets/less/theme.less` – the stylesheet: base Pensoft styles for plugin
+  component markup (grid, jumbotron, library, forms), then the BALANSED look
+  from `assets/less/balansed/` (imported last, so it wins).
+- `assets/js/balansed.js` – the BALANSED behaviour (menu drawer, search,
+  scroll reveals, section stacking, sliders, scroll-drawn illustrations);
+  `assets/js/accessibility.js` – shared accessibility helpers.
+- `assets/fonts/balansed/` – Sora and Figtree. `assets/images/balansed/` –
+  images and logos. `assets/videos/balansed/` – the section videos.
 
 ## Content
 

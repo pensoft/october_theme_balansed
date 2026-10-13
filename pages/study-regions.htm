@@ -12,6 +12,8 @@ jumbotron = "regions-label"
 background = "transperant"
 templates = "template3"
 description_limit = 0
+
+[siteSearchInclude]
 ==
 <?php
 use Pensoft\Casestudies\Models\Data as CaseStudy;
@@ -143,6 +145,7 @@ function onStart()
 }
 ?>
 ==
+{% component 'siteSearchInclude' %}
 {#
     BALANSED Study regions (Figma: About / Study regions).
     Overview - region photos on a ring around the globe; the active region
@@ -159,7 +162,7 @@ function onStart()
     Styles: assets/less/balansed/pages/regions.less
 #}
 {% set img = 'assets/images/balansed/regions/' %}
-{% partial 'realise/page-hero' title='Study regions' heading=(region is not defined) %}
+{% partial 'balansed/page-hero' title='Study regions' heading=(region is not defined) %}
 
 {% if region is defined %}
 {# ---------------------------------------------------------- REGION #}

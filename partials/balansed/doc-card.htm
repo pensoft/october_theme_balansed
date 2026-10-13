@@ -27,7 +27,7 @@
     {% endif %}
 
     {% if record.file %}
-    <a class="bl-doc__link" {% partial 'realise/file-link' file=record.file %}>
+    <a class="bl-doc__link" {% partial 'balansed/file-link' file=record.file %}>
         <span class="bl-doc__btn" aria-hidden="true">{% partial 'balansed/icon' name='arrow-down' size=22 stroke=1.5 %}</span>
         <span class="sr-only">Download {{ record.title }} ({{ record.file.getExtension()|upper }}, {{ (record.file.file_size / 1024 / 1024)|round(2) }} MB{{ record.file.getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ', opens in a new tab' }})</span>
     </a>

@@ -14,6 +14,8 @@ noRecordsMessage = "No records found"
 detailsPage = "-"
 detailsUrlParameter = "id"
 pageNumber = "{{ :page }}"
+
+[siteSearchInclude]
 ==
 <?php
 use Pensoft\Media\Models\MediaLogos;
@@ -63,6 +65,7 @@ return Response::download($pathToFile, $fileName, $headers);
 }
 ?>
 ==
+{% component 'siteSearchInclude' %}
 <div class="container">
     {% set records = mediaLogosList %}
     {% set displayColumn = mediaLogosList.displayColumn %}
@@ -88,19 +91,19 @@ return Response::download($pathToFile, $fileName, $headers);
 <!--                <div class="record_name">{{record.name}}</div>-->
                 <div class="links">
                     {% if record.file_jpg %}
-                    <a {% partial 'realise/file-link' file=record.file_jpg %} class="btn btn-primary"><i aria-hidden="true"></i> JPG</a>
+                    <a {% partial 'balansed/file-link' file=record.file_jpg %} class="btn btn-primary"><i aria-hidden="true"></i> JPG</a>
                     {% endif %}
 
                     {% if record.file_png %}
-                    <a {% partial 'realise/file-link' file=record.file_png %} class="btn btn-primary"><i aria-hidden="true"></i> PNG<span class="sr-only"> - {{record.name}}</span></a>
+                    <a {% partial 'balansed/file-link' file=record.file_png %} class="btn btn-primary"><i aria-hidden="true"></i> PNG<span class="sr-only"> - {{record.name}}</span></a>
                     {% endif %}
 
                     {% if record.file_eps %}
-                    <a {% partial 'realise/file-link' file=record.file_eps %} class="btn btn-primary"><i aria-hidden="true"></i> SVG<span class="sr-only"> - {{record.name}}</span></a>
+                    <a {% partial 'balansed/file-link' file=record.file_eps %} class="btn btn-primary"><i aria-hidden="true"></i> SVG<span class="sr-only"> - {{record.name}}</span></a>
                     {% endif %}
 
                     {% if record.file_pdf %}
-                    <a {% partial 'realise/file-link' file=record.file_pdf %} class="btn btn-primary"><i aria-hidden="true"></i> PDF<span class="sr-only"> - {{record.name}}</span>{% partial 'components/new-tab-hint' %}</a>
+                    <a {% partial 'balansed/file-link' file=record.file_pdf %} class="btn btn-primary"><i aria-hidden="true"></i> PDF<span class="sr-only"> - {{record.name}}</span>{% partial 'components/new-tab-hint' %}</a>
                     {% endif %}
                 </div>
             </div>

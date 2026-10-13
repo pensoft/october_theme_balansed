@@ -1,0 +1,123 @@
+url = "/about"
+layout = "default"
+title = "About"
+is_hidden = 0
+meta_description = "About BALANSED: why the project exists, what it sets out to do and how."
+robot_index = "index"
+robot_follow = "follow"
+
+[siteSearchInclude]
+
+; Static texts: Pensoft.Jumbotron entries (backend > Jumbotron), rendered
+; with {% component 'jumbo' jumbotron='<slug>' %} - see partials/jumbo/default.htm.
+[jumbotron jumbo]
+jumbotron = "about-why-label"
+background = "transperant"
+templates = "template3"
+description_limit = 0
+==
+<?php
+use Pensoft\Jumbotron\Models\Jumbotron;
+
+// "BALANSED will" cards: Jumbotron entries about-will-1, about-will-2, ...
+// in number order, so adding about-will-7 adds a card. The text that
+// expands under a card on hover is about-will-N-more (optional).
+function onStart()
+{
+    $this['will_slugs'] = Jumbotron::where('slug', 'like', 'about-will-%')->pluck('slug')->filter(function ($s) {
+        return preg_match('/^about-will-\d+$/', $s);
+    })->sortBy(function ($s) {
+        return (int) substr($s, strlen('about-will-'));
+    })->values()->all();
+
+    $this['will_more'] = Jumbotron::whereIn('slug', array_map(function ($s) {
+        return $s . '-more';
+    }, $this['will_slugs']))->pluck('slug')->all();
+}
+?>
+==
+{% component 'siteSearchInclude' %}
+
+{#
+    BALANSED "About the project" (Figma: About / Background & Objectives).
+    Banner, then: Why BALANSED exists, The result, What we're setting out
+    to do, BALANSED will (six numbered cards).
+    Styles: assets/less/balansed/pages/about.less
+#}
+{% set img = 'assets/images/balansed/about/' %}
+
+{% partial 'realise/page-hero' title='About the project' %}
+
+{# --------------------------------------------- WHY BALANSED EXISTS #}
+<section class="bl-why" aria-labelledby="why-heading">
+    <div class="bl-wrap">
+        <div class="bl-about-head">
+            <p class="bl-eyebrow">{% component 'jumbo' jumbotron='about-why-label' %}</p>
+            <h2 class="bl-statement" id="why-heading">{% component 'jumbo' jumbotron='about-why-title' %}</h2>
+        </div>
+
+        <div class="bl-why__collage">
+            {# Decorative videos: no autoplay attribute - initReveal (balansed.js)
+               plays each one while it is on screen; with "reduce motion" or
+               without JS the poster (the former photo) shows instead. #}
+            <video class="bl-why__img bl-why__img--1" src="{{ 'assets/videos/balansed/fields-coast.mp4'|theme }}" poster="{{ (img ~ 'why-1.jpg')|theme }}" muted loop playsinline preload="none" aria-hidden="true"></video>
+            <video class="bl-why__img bl-why__img--2" src="{{ 'assets/videos/balansed/vineyard-people.mp4'|theme }}" poster="{{ (img ~ 'why-2.jpg')|theme }}" muted loop playsinline preload="none" aria-hidden="true"></video>
+            <div class="bl-lead bl-why__text bl-why__text--1">{% component 'jumbo' jumbotron='about-why-text-1' %}</div>
+            <div class="bl-lead bl-why__text bl-why__text--2">{% component 'jumbo' jumbotron='about-why-text-2' %}</div>
+        </div>
+    </div>
+</section>
+
+{# ------------------------------------------------------- THE RESULT #}
+<section class="bl-result" aria-labelledby="result-heading">
+    <div class="bl-result__inner">
+        <div class="bl-result__head">
+            <p class="bl-eyebrow">{% component 'jumbo' jumbotron='about-result-label' %}</p>
+            <h2 class="bl-statement" id="result-heading">{% component 'jumbo' jumbotron='about-result-title' %}</h2>
+        </div>
+
+        <div class="bl-result__banner">
+            <img class="bl-result__img" src="{{ (img ~ 'result.jpg')|theme }}" alt="" loading="lazy">
+            <div class="bl-result__banner-text">
+                <p class="bl-result__claim">{% component 'jumbo' jumbotron='about-result-claim' %}</p>
+                <div class="bl-lead">{% component 'jumbo' jumbotron='about-result-text' %}</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# --------------------------------------- WHAT WE'RE SETTING OUT TO DO #}
+<section class="bl-aims" aria-labelledby="aims-heading">
+    {% partial 'balansed/about-people' %}
+    <div class="bl-wrap">
+        <div class="bl-about-head bl-aims__head">
+            <p class="bl-eyebrow">{% component 'jumbo' jumbotron='about-aims-label' %}</p>
+            <h2 class="bl-statement" id="aims-heading">{% component 'jumbo' jumbotron='about-aims-title' %}</h2>
+        </div>
+        <div class="bl-lead bl-aims__text">{% component 'jumbo' jumbotron='about-aims-text' %}</div>
+    </div>
+</section>
+
+{# ---------------------------------------------------- BALANSED WILL #}
+<section class="bl-will" aria-labelledby="will-heading">
+    {% partial 'balansed/about-scale' %}
+    <div class="bl-wrap">
+        <h2 class="bl-h2" id="will-heading">{% component 'jumbo' jumbotron='about-will-title' %}</h2>
+        {# One card per Jumbotron entry about-will-1, about-will-2, ...; its
+           about-will-N-more text expands under it on hover and stays open
+           until the pointer leaves the list (assets/js/balansed.js, initWill). #}
+        <ol class="bl-will__list" data-bl-will>
+            {% for slug in will_slugs %}
+            <li class="bl-will__card">
+                <span class="bl-will__num">{{ '%02d'|format(loop.index) }}</span>
+                <span class="bl-will__text">{% component 'jumbo' jumbotron=slug %}</span>
+                {% if (slug ~ '-more') in will_more %}
+                <div class="bl-will__more">
+                    <div class="bl-will__more-inner">{% component 'jumbo' jumbotron=(slug ~ '-more') %}</div>
+                </div>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ol>
+    </div>
+</section>

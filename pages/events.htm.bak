@@ -1,0 +1,277 @@
+url = "/events/:slug?/:month?"
+layout = "default"
+title = "Events"
+is_hidden = 0
+robot_index = "index"
+robot_follow = "follow"
+==
+<?php
+use Pensoft\Calendar\Models\Entry;
+use Carbon\Carbon;
+
+/*
+ * URLs:  /events                    year calendar (current year), ?year=2027
+ *        /events/month/2026-02      the events of one month
+ *        /events/<event slug>       an event
+ * Old category URLs (/events/category/<slug>, ?category=<id>) redirect (301)
+ * to /events - the design has no category filter.
+ */
+
+// Month view: "2026-02" -> Carbon (first day), or null when malformed.
+function monthParam()
+{
+    $m = (string) $this->param('month');
+    if ($this->param('slug') !== 'month' || !preg_match('/^(\d{4})-(0[1-9]|1[0-2])$/', $m, $x)) {
+        return null;
+    }
+    return Carbon::create((int) $x[1], (int) $x[2], 1)->startOfDay();
+}
+
+// <title>: set before the layout's SEO component reads it.
+function onInit()
+{
+    $slug = $this->param('slug');
+    if ($slug === 'month') {
+        if ($month = $this->monthParam()) {
+            $this->page->title = $month->format('F Y') . ' - Events';
+        }
+    } elseif ($slug && $slug !== 'category') {
+        $entry = Entry::where('slug', $slug)->first();
+        if ($entry) {
+            $this->page->title = trim(strip_tags($entry->title));
+        }
+    }
+}
+
+function onStart()
+{
+    $listUrl = $this->pageUrl('events', ['slug' => null, 'month' => null], false);
+    $this['events_url'] = $listUrl;
+    $slug = $this->param('slug');
+
+    if ($slug === 'category' || input('category') !== null) {
+        return Redirect::to($listUrl, 301);
+    }
+
+    // ---------------------------------------------------------- month view
+    if ($slug === 'month') {
+        $month = $this->monthParam();
+        if (!$month) {
+            return Redirect::to($listUrl, 301);
+        }
+        $this['view'] = 'month';
+        $this['month'] = $month;
+        // 12 per page; the pager keeps the clean month URL (?page=2).
+        $entries = Entry::with('categories')
+            ->whereBetween('start', [$month, $month->copy()->endOfMonth()])
+            ->orderBy('start', 'asc')
+            ->paginate(12);
+        $entries->withPath($this->pageUrl('events', ['slug' => 'month', 'month' => $month->format('Y-m')], false));
+        $this['entries'] = $entries;
+        return;
+    }
+
+    // ---------------------------------------------------------- event page
+    if ($slug) {
+        $entry = Entry::with('categories', 'galleries.images')->where('slug', $slug)->first();
+        if (!$entry) {
+            $this->setStatusCode(404);
+            return $this->controller->run('404');
+        }
+        $this['view'] = 'event';
+        $this['entry'] = $entry;
+        $this['page_url'] = $this->pageUrl('');
+        $this['gallery'] = $entry->galleries->flatMap(function ($g) {
+            return $g->images;
+        })->values();
+
+        // Related events: same category first, then the nearest upcoming,
+        // then the latest past ones, so the sidebar always has three.
+        $catIds = $entry->categories->pluck('id')->all();
+        $related = collect();
+        if ($catIds) {
+            $related = Entry::where('id', '!=', $entry->id)
+                ->whereHas('categories', function ($q) use ($catIds) {
+                    $q->whereIn('christophheich_calendar_categories.id', $catIds);
+                })
+                ->orderByRaw('CASE WHEN "end" >= ? THEN 0 ELSE 1 END', [Carbon::now()])
+                ->orderBy('start', 'asc')
+                ->take(3)->get();
+        }
+        foreach ([['>=', 'asc'], ['<', 'desc']] as list($op, $dir)) {
+            if ($related->count() >= 3) {
+                break;
+            }
+            $related = $related->concat(Entry::where('id', '!=', $entry->id)
+                ->whereNotIn('id', $related->pluck('id')->all())
+                ->where('end', $op, Carbon::now())
+                ->orderBy('start', $dir)
+                ->take(3 - $related->count())->get());
+        }
+        $this['related'] = $related;
+
+        if (class_exists('\BennoThommo\Meta\Meta')) {
+            $desc = str_limit(Html::strip($entry->description), 255);
+            \BennoThommo\Meta\Meta::set('twitter:card', 'summary_large_image');
+            \BennoThommo\Meta\Meta::set('twitter:title', $entry->title);
+            \BennoThommo\Meta\Meta::set('twitter:description', $desc);
+            \BennoThommo\Meta\Meta::set('og:title', $entry->title);
+            \BennoThommo\Meta\Meta::set('og:description', $desc);
+            \BennoThommo\Meta\Meta::set('og:type', 'article');
+            \BennoThommo\Meta\Meta::set('og:url', $this->pageUrl(''));
+            if ($entry->cover_image) {
+                \BennoThommo\Meta\Meta::set('twitter:image', $entry->cover_image->getThumb(600, null, ['mode' => 'auto']));
+                \BennoThommo\Meta\Meta::set('og:image', $entry->cover_image->getThumb(600, 314, ['mode' => 'crop']));
+                \BennoThommo\Meta\Meta::set('og:image:width', 600);
+                \BennoThommo\Meta\Meta::set('og:image:height', 314);
+            }
+        }
+        return;
+    }
+
+    // ----------------------------------------------------------- year view
+    $year = (int) input('year', Carbon::now()->year);
+    if ($year < 2000 || $year > 2100) {
+        return Redirect::to($listUrl, 301);
+    }
+    $from = Carbon::create($year, 1, 1)->startOfDay();
+    $counts = array_fill(1, 12, 0);
+    foreach (Entry::whereBetween('start', [$from, $from->copy()->endOfYear()])->pluck('start') as $start) {
+        $counts[Carbon::parse($start)->month]++;
+    }
+    $months = [];
+    foreach ($counts as $m => $n) {
+        $date = Carbon::create($year, $m, 1);
+        $months[] = [
+            'short' => $date->format('M'),
+            'name' => $date->format('F'),
+            'count' => $n,
+            'url' => $this->pageUrl('events', ['slug' => 'month', 'month' => $date->format('Y-m')], false),
+        ];
+    }
+    $this['view'] = 'year';
+    $this['year'] = $year;
+    $this['months'] = $months;
+
+    // Year arrows only lead to years that have events.
+    $prev = Entry::where('start', '<', $from)->orderBy('start', 'desc')->value('start');
+    $next = Entry::where('start', '>', $from->copy()->endOfYear())->orderBy('start', 'asc')->value('start');
+    $this['prev_year'] = $prev ? Carbon::parse($prev)->year : null;
+    $this['next_year'] = $next ? Carbon::parse($next)->year : null;
+}
+?>
+==
+{#
+    BALANSED Events (Figma: News & Events - Events views).
+    year  - News / Events switch, the year and 12 month tiles
+    month - Back to events, the month bar and that month's event cards
+    event - same layout as a news article, with Related events
+    Data: Pensoft.Calendar entries. Styles: assets/less/balansed/pages/events.less
+#}
+{% partial 'balansed/page-hero' title='News & Events' heading=(view != 'event') %}
+
+<section class="bl-news-page bl-events-page">
+    <div class="bl-wrap">
+{% if view == 'year' %}
+
+        <div class="bl-events-bar">
+            <nav class="bl-switch" aria-label="News and events">
+                <a class="bl-btn bl-btn--tab" href="{{ 'news'|page({}, false) }}">News</a>
+                <a class="bl-btn bl-btn--tab is-active" href="{{ events_url }}" aria-current="page">Events</a>
+            </nav>
+            <div class="bl-events-year">
+                {% if prev_year %}<a class="bl-events-year__step bl-events-year__step--prev" href="{{ events_url }}?year={{ prev_year }}" aria-label="Events in {{ prev_year }}">{% partial 'balansed/icon' name='arrow-right' size=20 %}</a>{% endif %}
+                <h2 class="bl-events-year__label">{{ year }}</h2>
+                {% if next_year %}<a class="bl-events-year__step" href="{{ events_url }}?year={{ next_year }}" aria-label="Events in {{ next_year }}">{% partial 'balansed/icon' name='arrow-right' size=20 %}</a>{% endif %}
+            </div>
+        </div>
+
+        <ul class="bl-months">
+            {% for m in months %}
+            <li class="bl-month {{ m.count ? 'bl-month--has' }}">
+                <h3 class="bl-month__name"><abbr title="{{ m.name }} {{ year }}">{{ m.short }}</abbr></h3>
+                {% if m.count %}
+                <p class="bl-month__count">{{ m.count }} {{ m.count == 1 ? 'event' : 'events' }}</p>
+                <a class="bl-month__link" href="{{ m.url }}">See events<span class="sr-only"> in {{ m.name }} {{ year }}</span></a>
+                <span class="bl-card__badge" aria-hidden="true">{% partial 'balansed/icon' name='arrow-up-right' size=22 stroke=1.5 %}</span>
+                {% else %}
+                <p class="bl-month__link">No events yet</p>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+
+{% elseif view == 'month' %}
+
+        <div class="bl-events-bar">
+            <a class="bl-btn bl-btn--ghost" href="{{ events_url }}?year={{ month|date('Y') }}">Back to events</a>
+            <p class="bl-events-year__label">{{ month|date('Y') }}</p>
+        </div>
+
+        <h2 class="bl-month-bar">{{ month|date('F') }}</h2>
+
+        {% if entries|length %}
+        <div class="bl-cards bl-cards--page" id="events-list">
+            {% for entry in entries %}
+                {% partial 'balansed/event-card' entry=entry %}
+            {% endfor %}
+        </div>
+        {% partial 'balansed/pager' p=entries label=(month|date('F Y') ~ ' event pages') hash='events-list' %}
+        {% else %}
+        <p class="bl-empty">No events in {{ month|date('F Y') }}.</p>
+        {% endif %}
+
+{% else %}
+
+        <a class="bl-btn bl-btn--ghost bl-news-page__back" href="{{ events_url }}/month/{{ entry.start|date('Y-m') }}">Back to events</a>
+
+        <div class="bl-article">
+            <article class="bl-article__main" aria-labelledby="event-title">
+                <header class="bl-article__head">
+                    {% if entry.cover_image %}<img class="bl-article__cover" src="{{ (entry.cover_image.getThumb(1670, 540, { mode: 'crop' }) ?: entry.cover_image.path) }}" alt="">{% endif %}
+                    <div class="bl-article__head-text">
+                        <p class="bl-eyebrow">
+                            {% partial 'balansed/event-date' entry=entry %}{% if entry.place %} · {{ entry.place }}{% endif %}
+                        </p>
+                        <h1 class="bl-statement" id="event-title">{{ entry.title|striptags }}</h1>
+                    </div>
+                </header>
+
+                {% if entry.categories|length %}
+                <ul class="bl-tags" aria-label="Event type">
+                    {% for c in entry.categories %}<li>{{ c.title }}</li>{% endfor %}
+                </ul>
+                {% endif %}
+
+                <div class="bl-prose">{{ entry.description|raw }}</div>
+
+                {% if entry.url %}
+                <p><a class="bl-btn bl-btn--green bl-btn--auto" href="{{ entry.url }}" target="_blank" rel="noopener noreferrer">Event website{% partial 'components/new-tab-hint' %}</a></p>
+                {% endif %}
+
+                {% if gallery|length %}
+                <div class="bl-article__gallery">
+                    {% for image in gallery %}
+                    <a href="{{ image.path }}" target="_blank" rel="noopener noreferrer">
+                        <img src="{{ (image.getThumb(810, 540, { mode: 'crop' }) ?: image.path) }}" alt="{{ image.title ?: image.description }}" loading="lazy">{% partial 'components/new-tab-hint' %}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% partial 'balansed/share' label='Share event' url=page_url title=entry.title %}
+            </article>
+
+            {% if related|length %}
+            <aside class="bl-article__related" aria-labelledby="related-heading">
+                <h2 class="bl-article__related-title" id="related-heading">Related events</h2>
+                {% for r in related %}
+                    {% partial 'balansed/event-card' entry=r %}
+                {% endfor %}
+            </aside>
+            {% endif %}
+        </div>
+
+{% endif %}
+    </div>
+</section>

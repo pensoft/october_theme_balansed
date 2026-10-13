@@ -1,0 +1,102 @@
+url = "/results/:tab?"
+layout = "default"
+title = "Results"
+is_hidden = 0
+robot_index = "index"
+robot_follow = "follow"
+==
+<?php
+use Pensoft\Library\Models\Library;
+
+/*
+ * BALANSED Results (Pensoft.Library records), one tab per document group:
+ *   /results                     Deliverables (first tab)
+ *   /results/publications        BALANSED publications
+ *   /results/policy-briefs       Policy briefs
+ *   /results/relevant-reading    Relevant reading (non-project publications)
+ * Each tab is a Pensoft.Library "sort type", queried with the model's own
+ * scopes (isVisible, filterBy, sortBy) - the same rules as the plugin's
+ * LibraryPage component, whose markup is not used here.
+ */
+function resultTabs()
+{
+    return [
+        'deliverables'      => ['label' => 'Deliverables',     'type' => Library::SORT_TYPE_DELIVERABLES,          'sort' => ['title', 'asc']],
+        'publications'      => ['label' => 'Publications',     'type' => Library::SORT_TYPE_PROJECT_PUBLICATIONS,  'sort' => ['year', 'desc']],
+        'policy-briefs'     => ['label' => 'Policy briefs',    'type' => Library::SORT_TYPE_TECHNICAL_BRIEFS,      'sort' => ['title', 'asc']],
+        'relevant-reading'  => ['label' => 'Relevant reading', 'type' => Library::SORT_TYPE_RELEVANT_PUBLICATIONS, 'sort' => ['year', 'desc']],
+    ];
+}
+
+// <title>: "<tab> - Results" on a tab other than the first.
+function onInit()
+{
+    $tabs = $this->resultTabs();
+    $tab = $this->param('tab');
+    if ($tab && isset($tabs[$tab]) && $tab !== array_key_first($tabs)) {
+        $this->page->title = $tabs[$tab]['label'] . ' - ' . $this->page->title;
+    }
+}
+
+function onStart()
+{
+    $tabs = $this->resultTabs();
+    $first = array_key_first($tabs);
+    $base = $this->pageUrl('library', ['tab' => null], false);
+
+    $tab = $this->param('tab') ?: $first;
+    if (!isset($tabs[$tab])) {
+        return Redirect::to($base, 301);
+    }
+    if ($this->param('tab') === $first) {
+        return Redirect::to($base, 301);
+    }
+
+    $current = $tabs[$tab];
+    $records = Library::isVisible()
+        ->filterBy($current['type'])
+        ->sortBy($current['sort'][0], $current['sort'][1])
+        ->orderBy('id', 'asc')
+        ->paginate(12);
+    $records->withPath($tab === $first ? $base : $base . '/' . $tab);
+
+    $this['tabs'] = array_map(function ($t, $slug) use ($base, $first, $tab) {
+        return [
+            'label' => $t['label'],
+            'url' => $slug === $first ? $base : $base . '/' . $slug,
+            'active' => $slug === $tab,
+        ];
+    }, $tabs, array_keys($tabs));
+    $this['tab'] = $current;
+    $this['records'] = $records;
+}
+?>
+==
+{#
+    BALANSED Results (Figma: Results): tabs + 3-column document cards.
+    Each card is partials/balansed/doc-card.htm.
+    Styles: assets/less/balansed/pages/results.less
+#}
+{% partial 'balansed/page-hero' title='Results' %}
+
+<section class="bl-news-page bl-results-page">
+    <div class="bl-wrap">
+        <nav class="bl-switch" aria-label="Result types">
+            {% for t in tabs %}
+            <a class="bl-btn bl-btn--tab {{ t.active ? 'is-active' }}" href="{{ t.url }}" {% if t.active %}aria-current="page"{% endif %}>{{ t.label }}</a>
+            {% endfor %}
+        </nav>
+
+        <h2 class="sr-only" id="results-heading">{{ tab.label }}</h2>
+        {% if records|length %}
+        <div class="bl-docs" id="results-list" aria-labelledby="results-heading">
+            {% for record in records %}
+                {% partial 'balansed/doc-card' record=record %}
+            {% endfor %}
+        </div>
+        {% partial 'balansed/pager' p=records label=(tab.label ~ ' pages') hash='results-list' %}
+        {% else %}
+        <p class="bl-empty">{{ tab.label }} will follow soon - keep posted!</p>
+        {% endif %}
+    </div>
+</section>
