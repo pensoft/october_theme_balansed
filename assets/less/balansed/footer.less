@@ -1,0 +1,214 @@
+// ===========================================================================
+//  Footer (same on every page) - partials/site/footer.htm
+// ===========================================================================
+
+.bl-footer {
+    position: relative;
+    background: @bl-navy;
+    color: @bl-sky;
+
+    &__inner {
+        display: flex;
+        flex-direction: column;
+        gap: 35px;
+        max-width: 1287px + 2 * 65px;
+        margin: 0 auto;
+        padding: 65px;
+    }
+
+    &__top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 40px;
+    }
+
+    &__brand {
+        display: inline-flex;
+        flex: none;
+        color: @bl-sky;
+        text-decoration: none;
+
+        &:hover,
+        &:focus-visible {
+            color: @bl-white;
+            text-decoration: none;
+        }
+
+        // Footer logo is the 80% size (50.5px ring).
+        .bl-logo {
+            gap: 5px;
+        }
+
+        .bl-logo__mark {
+            width: 50.5px;
+            height: 50.5px;
+            border-width: 2.77px;
+
+            svg {
+                width: 29px;
+                height: 31.5px;
+            }
+        }
+
+        .bl-logo__word {
+            font-size: 30px;
+            letter-spacing: -0.9px;
+        }
+    }
+
+    &__nav {
+        flex: 0 1 920px;
+
+        ul {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 12px 32px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        a {
+            font-family: @bl-font-display;
+            font-size: 14px;
+            font-weight: 500;
+            line-height: 1.55;
+            color: @bl-white;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: color .2s ease;
+
+            &:hover,
+            &:focus-visible {
+                color: @bl-sand;
+                text-decoration: underline;
+                text-underline-offset: 4px;
+            }
+        }
+    }
+
+    &__fund {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 40px;
+
+        img {
+            flex: none;
+            width: 220px;
+            height: auto;
+        }
+    }
+
+    &__disclaimer {
+        flex: 0 1 920px;
+        font-family: @bl-font-body;
+        font-size: 14px;
+        line-height: 1.55;
+        color: #FBFDFF;
+        opacity: .65;
+
+        // Jumbotron component markup
+        p,
+        div,
+        .container,
+        .row,
+        [class*="col-"] {
+            margin: 0;
+            padding: 0;
+            max-width: none;
+            font-size: inherit;
+            line-height: inherit;
+            color: inherit;
+            background: none;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: underline;
+        }
+    }
+
+    &__legal {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 12px 25px;
+        font-family: @bl-font-body;
+        font-size: 16px;
+        color: @bl-sky;
+
+        a {
+            color: @bl-sky;
+            text-decoration: none;
+
+            &:hover,
+            &:focus-visible {
+                text-decoration: underline;
+                text-underline-offset: 4px;
+            }
+        }
+    }
+
+    &__credit {
+        display: inline-flex;
+        align-items: center;
+        gap: 25px;
+
+        a {
+            display: inline-flex;
+        }
+
+        img {
+            display: block;
+            width: 130px;
+            height: auto;
+        }
+    }
+}
+
+@media @bl-lg {
+    .bl-footer {
+        &__inner {
+            padding: 56px @bl-gutter;
+        }
+
+        &__top,
+        &__fund {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 28px;
+        }
+
+        &__nav {
+            flex-basis: auto;
+
+            ul {
+                justify-content: flex-start;
+            }
+        }
+
+        &__disclaimer {
+            flex-basis: auto;
+        }
+
+        &__legal {
+            justify-content: flex-start;
+        }
+    }
+}
+
+@media @bl-sm {
+    .bl-footer__nav ul {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .bl-footer__credit {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+}

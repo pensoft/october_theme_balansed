@@ -1,0 +1,16 @@
+{#
+    One event card: photo, pills (date, place, categories), title and the
+    teal arrow badge. entry = Pensoft\Calendar\Models\Entry. Wraps balansed/card.
+#}
+{% set bl_date %}{% partial 'balansed/event-date' entry=entry %}{% endset %}
+{% set bl_tags = [bl_date|trim] %}
+{% if entry.place %}{% set bl_tags = bl_tags|merge([entry.place]) %}{% endif %}
+{% for c in entry.categories %}{% set bl_tags = bl_tags|merge([c.title]) %}{% endfor %}
+{% partial 'balansed/card'
+    variant='event'
+    url=('events'|page({ slug: entry.slug, month: null }))
+    title=entry.title
+    date=entry.start
+    tags=bl_tags
+    image=(entry.cover_image ? (entry.cover_image.getThumb(820, 540, { mode: 'crop' }) ?: entry.cover_image.path) : ('assets/images/balansed/news-card.jpg'|theme))
+%}

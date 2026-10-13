@@ -1,0 +1,45 @@
+{#
+    Pagination for a Laravel/October paginator (pill buttons). Renders
+    nothing for a single page. Page URLs come from the paginator, so clean
+    URLs set with ->withPath() are kept.
+
+    p     - the paginator (LengthAwarePaginator)
+    label - accessible name, e.g. "News pages"
+    hash  - optional #fragment added to every link (scroll back to the list)
+#}
+{% if p and p.lastPage > 1 %}
+{% set cur = p.currentPage %}
+{% set last = p.lastPage %}
+{% set frag = hash ? '#' ~ hash : '' %}
+<nav class="bl-pager" aria-label="{{ label|default('Pages') }}">
+    <ul>
+        <li>
+            {% if cur > 1 %}
+            <a class="bl-pager__item" href="{{ p.url(cur - 1) ~ frag }}" rel="prev"><span class="bl-pager__flip" aria-hidden="true">{% partial 'balansed/icon' name='arrow-right' size=18 %}</span><span class="sr-only">Previous page</span></a>
+            {% else %}
+            <span class="bl-pager__item is-disabled" aria-hidden="true"><span class="bl-pager__flip">{% partial 'balansed/icon' name='arrow-right' size=18 %}</span></span>
+            {% endif %}
+        </li>
+        {% for n in 1..last %}
+            {% if n == 1 or n == last or (n >= cur - 1 and n <= cur + 1) %}
+            <li>
+                {% if n == cur %}
+                <span class="bl-pager__item is-current" aria-current="page"><span class="sr-only">Page </span>{{ n }}</span>
+                {% else %}
+                <a class="bl-pager__item" href="{{ p.url(n) ~ frag }}"><span class="sr-only">Page </span>{{ n }}</a>
+                {% endif %}
+            </li>
+            {% elseif n == cur - 2 or n == cur + 2 %}
+            <li><span class="bl-pager__gap" aria-hidden="true">&hellip;</span></li>
+            {% endif %}
+        {% endfor %}
+        <li>
+            {% if cur < last %}
+            <a class="bl-pager__item" href="{{ p.url(cur + 1) ~ frag }}" rel="next"><span aria-hidden="true">{% partial 'balansed/icon' name='arrow-right' size=18 %}</span><span class="sr-only">Next page</span></a>
+            {% else %}
+            <span class="bl-pager__item is-disabled" aria-hidden="true">{% partial 'balansed/icon' name='arrow-right' size=18 %}</span>
+            {% endif %}
+        </li>
+    </ul>
+</nav>
+{% endif %}

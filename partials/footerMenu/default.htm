@@ -1,0 +1,18 @@
+{#
+    Theme override of plugins/benfreke/menumanager/components/menu/default.htm
+    for the footer links (alias "footerMenu" in partials/site/footer.htm).
+
+    Items, order, labels and links: backend > Menu Manager > "Footer menu".
+    One level, styled by .bl-footer__nav (assets/less/balansed/footer.less).
+#}
+{% if parentNode and parentNode.getChildCount %}
+<ul>
+    {% for item in parentNode.getChildren|filter(i => i.enabled) %}
+    {% set active = item.getListItemClasses(activeLeft, activeRight) == 'active' %}
+    {% set target = item.getLinkTarget %}
+    <li>
+        <a href="{{ item.getLinkHref }}" {% if active %}aria-current="page"{% endif %} {% if target != '_self' %}target="{{ target }}" rel="noopener noreferrer"{% endif %}>{{ item.title }}{% if target != '_self' %}{% partial 'components/new-tab-hint' %}{% endif %}</a>
+    </li>
+    {% endfor %}
+</ul>
+{% endif %}

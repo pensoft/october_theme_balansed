@@ -1,0 +1,307 @@
+// ===========================================================================
+//  News & Events: events year calendar, month list and event page
+//  - pages/events.htm (shares .bl-news-page / .bl-article with news.less)
+// ===========================================================================
+
+@bl-green-35: rgba(69, 140, 99, 0.35);
+
+// On the Events views the switch is teal; News is the green outline.
+.bl-events-page {
+    .bl-switch {
+        margin-bottom: 0;
+
+        .bl-btn--tab {
+            border-color: @bl-green-35;
+            color: @bl-green;
+
+            &:hover,
+            &:focus-visible {
+                border-color: @bl-green;
+            }
+        }
+
+        .bl-btn--tab.is-active {
+            border-color: @bl-teal;
+            background: @bl-teal;
+            color: @bl-sand;
+        }
+    }
+}
+
+// Switch / back button on the left, the year on the right.
+.bl-events-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.bl-events-year {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    &__label {
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: 36px;
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -0.36px;
+        color: @bl-navy;
+    }
+
+    &__step {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+        border: 1px solid rgba(39, 85, 106, .35);
+        border-radius: 50%;
+        color: @bl-teal;
+        transition: border-color .2s ease;
+
+        &:hover,
+        &:focus-visible {
+            border-color: @bl-teal;
+            color: @bl-teal;
+        }
+
+        &--prev svg {
+            transform: scaleX(-1);
+        }
+    }
+}
+
+// -- Year calendar: 12 month tiles ---------------------------------------------
+.bl-months {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 15px 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.bl-month {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    min-height: 150px;
+    margin: 0;
+    padding: 17px 20px 16px;
+    border: 1px solid rgba(39, 85, 106, .35);
+    border-radius: @bl-radius-card;
+    color: @bl-teal;
+
+    &__name {
+        font-size: 28px;
+        line-height: 1.25;
+        letter-spacing: -1.4px;
+
+        abbr {
+            text-decoration: none;
+            cursor: inherit;
+        }
+    }
+
+    &__count {
+        margin-top: 5px;
+        font-family: @bl-font-display;
+        font-size: 20px;
+        line-height: 1.25;
+        letter-spacing: -1px;
+    }
+
+    &__link {
+        margin-top: auto;
+        font-family: @bl-font-display;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.45;
+        letter-spacing: -0.24px;
+        color: inherit;
+        text-decoration: none;
+    }
+
+    // Months with events: teal tile, the whole tile is the link.
+    &--has {
+        border-color: @bl-teal;
+        background: @bl-teal;
+        color: @bl-sand;
+
+        &::after {
+            content: "";
+            position: absolute;
+            top: -1px;
+            right: -1px;
+            width: 64px;
+            height: 59px;
+            border-radius: 0 0 32px 32px;
+            background: @bl-sand;
+        }
+
+        .bl-card__badge {
+            top: 6px;
+            right: 12px;
+            z-index: 1;
+            background: @bl-teal;
+            color: @bl-sky;
+        }
+
+        .bl-month__link {
+            color: @bl-sand;
+
+            &::before {
+                content: "";
+                position: absolute;
+                inset: 0;
+                z-index: 2;
+                border-radius: @bl-radius-card;
+            }
+
+            &:focus-visible {
+                outline: 0;
+
+                &::before {
+                    outline: 2px solid @bl-navy;
+                    outline-offset: 3px;
+                }
+            }
+        }
+
+        &:hover .bl-card__badge {
+            .bl-arrow-btn-hover(#3B6E86; rgba(212, 226, 233, .35));
+        }
+    }
+}
+
+// -- Month view -------------------------------------------------------------------
+.bl-month-bar {
+    margin: 5px 0 25px;
+    padding: 20px;
+    border-radius: @bl-radius-card;
+    background: @bl-teal;
+    font-size: 28px;
+    line-height: 1.25;
+    letter-spacing: -0.28px;
+    color: @bl-sand;
+}
+
+// Event card: teal badge, pills on the photo, two-line title, no date line.
+.bl-card--event {
+    .bl-card__badge {
+        background: @bl-teal;
+    }
+
+    &:hover .bl-card__badge {
+        .bl-arrow-btn-hover(#3B6E86; rgba(212, 226, 233, .35));
+    }
+
+    .bl-card__caption {
+        right: 23px;
+        bottom: 24px;
+        left: 23px;
+    }
+
+    .bl-card__title {
+        letter-spacing: -0.8px;
+        line-height: 1.25;
+
+        a {
+            display: -webkit-box;
+            white-space: normal;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+        }
+    }
+}
+
+.bl-card__tags,
+.bl-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        margin: 0;
+        padding: 4px 10px;
+        border-radius: @bl-pill;
+        background: @bl-teal;
+        font-family: @bl-font-display;
+        font-size: 10px;
+        font-weight: 500;
+        line-height: 1.25;
+        letter-spacing: -0.1px;
+        color: @bl-sand;
+        white-space: nowrap;
+    }
+}
+
+.bl-card__tags {
+    position: absolute;
+    top: 23px;
+    left: 23px;
+    right: 80px;   // clear of the badge notch
+    z-index: 1;
+}
+
+// Event page: category pills under the header.
+.bl-tags li {
+    padding: 6px 14px;
+    font-size: 13px;
+}
+
+.bl-btn--auto {
+    width: auto;
+}
+
+// ===========================================================================
+//  Responsive
+// ===========================================================================
+@media @bl-xl {
+    .bl-months {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media @bl-md {
+    .bl-months {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 10px;
+    }
+
+    .bl-month {
+        min-height: 120px;
+        padding: 14px 14px 12px;
+
+        &__name { font-size: 22px; }
+        &__count { font-size: 16px; }
+
+        &--has::after {
+            width: 52px;
+            height: 50px;
+        }
+
+        &--has .bl-card__badge {
+            top: 5px;
+            right: 7px;
+        }
+    }
+
+    .bl-events-year__label {
+        font-size: 28px;
+    }
+}
+
+@media @bl-sm {
+    .bl-months {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}

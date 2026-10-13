@@ -1,0 +1,89 @@
+// ===========================================================================
+//  BALANSED design tokens (Figma "BALANSED Website").
+//  Note: less.php evaluates maths inside calc()/clamp(), so those are always
+//  written escaped: ~"calc(...)".
+// ===========================================================================
+
+// -- Colours (Figma styles) -------------------------------------------------
+@bl-navy:        #001629;  // Darkest Blue
+@bl-sand:        #E8DDD2;  // Light brown
+@bl-sky:         #D4E2E9;  // Light blue
+@bl-brown:       #6A4727;  // Brown
+@bl-green:       #458C63;  // Dark Green
+@bl-blue:        #0167BF;  // Dark Blue
+@bl-teal:        #27556A;  // Blue2
+@bl-white:       #ffffff;
+
+@bl-sand-35:     rgba(232, 221, 210, 0.35);
+@bl-sky-35:      rgba(212, 226, 233, 0.35);
+@bl-navy-35:     rgba(0, 22, 41, 0.35);
+@bl-navy-15:     rgba(0, 22, 41, 0.15);
+
+// Radial "earth" glow used at 10% over the dark sections.
+@bl-glow: radial-gradient(ellipse 144% 75% at 55% 0%,
+    rgba(1, 103, 191, 1) 0%,
+    rgba(18, 112, 168, 1) 13%,
+    rgba(35, 122, 145, 1) 26%,
+    rgba(69, 140, 99, 1) 53%,
+    rgba(52, 111, 85, 1) 65%,
+    rgba(35, 81, 70, 1) 76%,
+    rgba(17, 52, 56, 1) 88%,
+    rgba(0, 22, 41, 1) 100%);
+
+// -- Type -------------------------------------------------------------------
+@bl-font-display: 'Sora', system-ui, -apple-system, 'Segoe UI', sans-serif;
+@bl-font-body:    'Figtree', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+// Fluid sizes: design value at 1440px, floor on phones.
+@bl-fs-hero:      ~"clamp(32px, 3.2vw, 46px)";   // 46px
+@bl-fs-statement: ~"clamp(24px, 2.5vw, 36px)";   // 36px
+@bl-fs-lead:      ~"clamp(17px, 1.4vw, 20px)";   // 20px
+
+// -- Layout -----------------------------------------------------------------
+@bl-radius-section: 50px;
+@bl-radius-card:    15px;
+@bl-pill:           900px;
+@bl-gutter:         ~"clamp(20px, 5.5vw, 80px)";  // 80px side padding
+@bl-wrap:           1280px;
+
+// -- Breakpoints (max-width) ------------------------------------------------
+@bl-xl: ~"(max-width: 1279px)";
+@bl-lg: ~"(max-width: 1023px)";
+@bl-md: ~"(max-width: 767px)";
+@bl-sm: ~"(max-width: 479px)";
+
+@bl-ease: cubic-bezier(.2, .7, .2, 1);
+
+// Section with the design's rounded top corners, overlapping the previous one.
+.bl-section-top(@overlap: 50px) {
+    position: relative;
+    margin-top: -@overlap;
+    border-radius: @bl-radius-section @bl-radius-section 0 0;
+}
+
+.bl-reduced-motion(@rules) {
+    @media (prefers-reduced-motion: reduce) {
+        @rules();
+    }
+}
+
+// Round arrow buttons (Figma "Arrow button"): at rest a flat circle, on
+// hover a lighter fill, a soft glow in the button's colour and the arrow
+// turned 20deg clockwise. Apply .bl-arrow-btn() to the button and
+// .bl-arrow-btn-hover(...) in its hover state.
+.bl-arrow-btn() {
+    transition: background-color .3s ease, box-shadow .3s ease;
+
+    svg {
+        transition: transform .35s @bl-ease;
+    }
+}
+
+.bl-arrow-btn-hover(@bg; @glow) {
+    background: @bg;
+    box-shadow: 0 .5px 25px 0 @glow;
+
+    svg {
+        transform: rotate(20deg);
+    }
+}

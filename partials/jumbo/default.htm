@@ -1,0 +1,17 @@
+{#
+    Theme override of plugins/pensoft/jumbotron/components/jumbotron/default.htm
+    for the BALANSED static texts (component alias "jumbo"):
+        {% component 'jumbo' jumbotron='home-hero-title' %}
+    Prints only the entry's text (backend > Jumbotron > Body); the template
+    around the tag gives it its element and style. A body that is a single
+    paragraph is printed without its <p>, so it can sit inside a heading.
+#}
+{% set entry = __SELF__.getJumbotron() %}
+{% if entry %}
+    {%- set body = entry.body|trim -%}
+    {%- if body starts with '<p>' and body ends with '</p>' and body|slice(3)|split('<p')|length == 1 -%}
+        {{ body|slice(3, body|length - 7)|raw }}
+    {%- else -%}
+        {{ body|raw }}
+    {%- endif -%}
+{% endif %}

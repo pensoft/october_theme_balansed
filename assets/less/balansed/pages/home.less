@@ -1,0 +1,1429 @@
+// ===========================================================================
+//  Homepage - pages/home.htm
+//  Sections stack with the design's 50px rounded tops, each overlapping the
+//  one before by the amount measured in Figma.
+// ===========================================================================
+
+// -- Hero ----------------------------------------------------------------------
+.bl-hero {
+    position: relative;
+    height: 890px;
+    background: @bl-navy;
+
+    &__photo {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 48%;           // 691 / 1440
+        height: 721px;
+        object-fit: cover;
+        opacity: .65;
+    }
+
+    &__panel {
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 1;
+        width: 56.46%;        // 813 / 1440
+        height: 873px;
+        overflow: hidden;
+        border-radius: 0 @bl-radius-section 0 0;
+        background: @bl-navy;
+    }
+
+    &__map {
+        position: absolute;
+        top: 10.42%;
+        left: 10%;
+        width: 107.05%;
+        height: 64.4%;
+        max-width: none;
+        pointer-events: none;
+    }
+
+    &__content {
+        position: absolute;
+        top: 410px;
+        left: 70px;
+        right: 40px;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 21px;
+        max-width: 658px;
+    }
+
+    &__title {
+        max-width: 570px;
+        font-family: @bl-font-display;
+        font-size: @bl-fs-hero;
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -0.8px;
+        color: @bl-sand;
+    }
+
+    &__actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+
+    &__aim {
+        position: absolute;
+        bottom: 0;
+        left: 56.46%;
+        right: 0;
+        height: 344px;
+        padding: 48px 20px 0 92px;
+        border-radius: @bl-radius-section 0 0 0;
+        background: @bl-sand;
+
+        p,
+        &-text {
+            max-width: 409px;
+            font-family: @bl-font-body;
+            font-size: @bl-fs-lead;
+            font-weight: 300;
+            line-height: 1.55;
+            letter-spacing: -0.8px;
+            color: @bl-navy;
+        }
+    }
+}
+
+// -- "BALANSED brings land and sea": three scroll-drawn slides ---------------
+// The section is as tall as its canvas; assets/js/balansed.js (initDrawing)
+// draws the lines (stroke-dashoffset) in step with the scroll as it passes.
+// Without JS it is the first slide, fully drawn.
+// Positions below are the Figma ones as % of the 1440 x 710 canvas.
+.bl-drawing {
+    position: relative;
+    z-index: 2;
+    margin-top: -71px;
+    overflow: clip;            // rounds the top
+    border-radius: @bl-radius-section @bl-radius-section 0 0;
+    background: @bl-brown;
+    color: @bl-sand;
+
+    &__stage {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;           // as tall as the canvas: no empty bands
+        background: @bl-brown;
+    }
+
+    &__canvas {
+        position: relative;
+        flex: none;
+        width: ~"min(100%, 202.8vh)";   // the whole 1440 x 710 canvas fits the screen
+        aspect-ratio: 1440 / 710;
+        container-type: inline-size;
+    }
+
+    &__slide {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        transition: opacity .7s ease;
+
+        &.is-active {
+            opacity: 1;
+        }
+    }
+
+    &__art {
+        position: absolute;
+        height: auto;
+        overflow: visible;
+        color: @bl-sand;
+        opacity: .35;
+
+        &--wave   { top: 27.29%; left: -12.76%; width: 56.59%; }
+        &--plant  { top: 18.77%; right: -6.18%; width: 54.51%; }
+        &--woman  { top: 5.68%;  left: -10.9%;  width: 56.59%; }
+        &--farmer { top: 20.3%;  right: 0;      width: 54.51%; }
+        &--scale  { top: 4.8%;   left: -.83%;   width: 125.6%; }
+    }
+
+    // Lines are drawn with stroke-dashoffset (1 = hidden, 0 = drawn).
+    .bl-line {
+        stroke-dasharray: 1;
+        stroke-dashoffset: 0;
+    }
+
+    // Circle (slides 1-2) - 470px, centred on the canvas at 46.96% height.
+    &__ring {
+        position: absolute;
+        top: 6.83cqw;
+        left: 33.68%;
+        z-index: 1;
+        width: 32.64%;
+        overflow: visible;
+        transition: opacity .6s ease;
+
+        circle {
+            fill: @bl-brown;
+            stroke: @bl-sand;
+            stroke-width: 1;
+            vector-effect: non-scaling-stroke;
+        }
+    }
+
+    // "Conversation" blob (slide 3) with two echoes rippling outward.
+    &__blob {
+        position: absolute;
+        top: 4.05cqw;
+        left: 30.9%;
+        z-index: 1;
+        width: 38.2%;
+        overflow: visible;
+        opacity: 0;
+        transition: opacity .6s ease;
+    }
+
+    &__blob-line {
+        fill: @bl-brown;
+        stroke: @bl-sand;
+        stroke-width: 1;
+        vector-effect: non-scaling-stroke;
+    }
+
+    &__echo {
+        fill: none;
+        stroke: @bl-sand;
+        stroke-width: 1;
+        vector-effect: non-scaling-stroke;
+        opacity: 0;
+        transform-box: view-box;
+        transform-origin: 50% 50%;
+    }
+
+    &[data-active="2"] {
+        .bl-drawing__ring { opacity: 0; }
+        .bl-drawing__blob { opacity: 1; }
+    }
+
+    // The echoes ripple once the blob is fully drawn.
+    &[data-active="2"].is-blob-drawn {
+        .bl-drawing__echo {
+            animation: bl-echo 3.6s ease-out infinite;
+
+            &--2 { animation-delay: 1.8s; }
+        }
+    }
+
+    // Texts in the circle, one per slide.
+    &__texts {
+        position: absolute;
+        top: 6.83cqw;
+        left: 33.68%;
+        z-index: 2;
+        width: 32.64%;
+        aspect-ratio: 1;
+        pointer-events: none;
+    }
+
+    &__text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 79%;
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: ~"max(19px, 2.5cqw)";
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -0.05em;
+        text-align: center;
+        color: @bl-sand;
+        opacity: 0;
+        transform: translate(-50%, -50%);
+        translate: 0 14px;
+        transition: opacity .6s ease, translate .8s @bl-ease;
+
+        &.is-active {
+            opacity: 1;
+            translate: 0 0;
+        }
+
+        // (.bl-drawing prefix: beats the base "p { font-weight: inherit }")
+        .bl-drawing &--thin {
+            width: 87%;
+            font-weight: 100;
+        }
+    }
+}
+
+@keyframes bl-echo {
+    0%   { opacity: .45; transform: scale(1); }
+    100% { opacity: 0;   transform: scale(1.28); }
+}
+
+// The section is only as tall as its canvas (no scroll track): the slides
+// are drawn as it scrolls up the screen and on while the next section
+// slides over it (initDrawing; the pin comes from the stacking, initStack).
+
+// Phones / portrait: the circle is centred and the illustrations move above
+// and below it instead of beside it. They span the centre -97vw .. +89vw,
+// so the canvas is 206vw tall (a screen at most, on tablets).
+@media (max-aspect-ratio: 4/5) {
+    .bl-drawing__canvas {
+        width: 100%;
+        height: ~"min(206vw, 100vh)";
+        aspect-ratio: auto;
+    }
+
+    .bl-drawing__ring,
+    .bl-drawing__texts {
+        top: ~"calc(50% - 36cqw)";
+        left: 14%;
+        width: 72%;
+    }
+
+    .bl-drawing__blob {
+        top: ~"calc(50% - 42.1cqw)";
+        left: 7.85%;
+        width: 84.3%;
+    }
+
+    .bl-drawing__text {
+        font-size: ~"max(18px, 5.5cqw)";
+    }
+
+    // Left-hand art above the circle, right-hand art below it.
+    .bl-drawing__art {
+        &--wave,
+        &--woman {
+            top: auto;
+            bottom: ~"calc(50% + 34cqw)";
+            left: -12%;
+            width: 120%;
+        }
+
+        &--plant,
+        &--farmer {
+            top: ~"calc(50% + 30cqw)";
+            right: -12%;
+            width: 120%;
+        }
+
+        // The long line + scales: the scales sit under the circle.
+        &--scale {
+            top: ~"calc(50% + 30cqw)";
+            left: -150%;
+            width: 255%;
+        }
+    }
+}
+
+.bl-reduced-motion({
+    .bl-drawing__slide,
+    .bl-drawing__text,
+    .bl-drawing__ring,
+    .bl-drawing__blob {
+        transition: none;
+    }
+
+    .bl-drawing[data-active="2"].is-blob-drawn .bl-drawing__echo {
+        animation: none;
+    }
+});
+
+// -- Introduction -------------------------------------------------------------
+.bl-intro {
+    .bl-section-top(53px);
+    z-index: 3;
+    padding: 56px 0 94px;
+    background: @bl-sand;
+    color: @bl-navy;
+
+    .bl-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 55px;
+    }
+
+    &__row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 40px;
+        width: 100%;
+
+        .bl-statement {
+            flex: 0 1 596px;
+        }
+
+        &--reverse {
+            flex-direction: row-reverse;
+        }
+    }
+
+    &__img {
+        flex: 0 1 585px;
+        width: 585px;
+        height: 205px;
+        object-fit: cover;
+        border-radius: @bl-radius-card;
+    }
+
+    &__last {
+        max-width: 494px;
+        text-align: center;
+    }
+}
+
+// -- Bringing together -------------------------------------------------------
+// The design has an earth-at-night photo (45%) under this section; until
+// that file is supplied the section shows the navy canvas with the glow.
+.bl-together {
+    position: relative;
+    z-index: 3;
+    min-height: 745px;
+    padding: 226px @bl-gutter 105px;
+    overflow: hidden;
+    background: @bl-navy;
+    color: @bl-sky;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: @bl-glow;
+        opacity: .1;
+        pointer-events: none;
+    }
+
+    // The turning Earth behind the section. "screen" drops the clip's
+    // black space into the navy, so only the globe and the stars show; the
+    // content sits above it. The clip has letterbox bars (12.8% of its
+    // height, top and bottom): it reaches 18% past the section's top and
+    // bottom so they are cropped off (the section clips its overflow).
+    &__video {
+        position: absolute;
+        inset: -18% 0;
+        width: 100%;
+        height: 136%;
+        object-fit: cover;
+        mix-blend-mode: screen;
+        opacity: .6;
+        pointer-events: none;
+    }
+
+    &__grid {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 40px;
+        max-width: 1114px;
+        margin: 0 auto;
+    }
+
+    &__title {
+        font-size: @bl-fs-statement;
+        line-height: 1.25;
+        letter-spacing: -1.8px;
+    }
+
+    &__stats {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+        width: 292px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+
+        li {
+            margin: 0;
+            font-family: @bl-font-display;
+            font-size: @bl-fs-statement;
+            line-height: 1.25;
+            letter-spacing: -1.8px;
+        }
+    }
+}
+
+// Partner logos: an endless carousel. The track holds the list twice and
+// slides left by one list (-50%) in a loop; hover / keyboard focus pauses
+// it and shows the institution's name under the logo. Full width of the
+// section, with the edges fading out.
+@keyframes bl-marquee {
+    from { translate: 0 0; }
+    to   { translate: -50% 0; }
+}
+
+.bl-logos {
+    --gap: 56px;
+    position: relative;
+    margin: 186px ~"calc(clamp(20px, 5.5vw, 80px) * -1)" 0;
+    padding: 12px 0 44px;     // room for the name under the logos
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 8%, #000 92%, transparent 100%);
+
+    &__track {
+        display: flex;
+        width: max-content;
+        animation: bl-marquee ~"calc(var(--count, 10) * 3.4s)" linear infinite;
+    }
+
+    &:hover &__track,
+    &:focus-within &__track {
+        animation-play-state: paused;
+    }
+
+    &__list {
+        display: flex;
+        align-items: center;
+        gap: var(--gap);
+        margin: 0;
+        padding: 0 var(--gap) 0 0;   // keeps the gap between the two copies
+        list-style: none;
+    }
+
+    &__item {
+        flex: none;
+        margin: 0;
+    }
+
+    &__link {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 44px;
+        color: @bl-sky;
+        text-decoration: none;
+        transition: opacity .3s ease;
+    }
+
+    img {
+        display: block;
+        width: auto;
+        max-width: 125px;
+        height: auto;
+        max-height: 34px;
+        filter: brightness(0) invert(1);   // white, as in the design
+        transition: transform .35s @bl-ease;
+    }
+
+    &__text {
+        font-family: @bl-font-display;
+        font-size: 18px;
+        font-weight: 500;
+        letter-spacing: -0.4px;
+        color: @bl-white;
+        white-space: nowrap;
+    }
+
+    // Institution name, shown under the hovered / focused logo.
+    &__name {
+        position: absolute;
+        top: ~"calc(100% + 8px)";
+        left: 50%;
+        width: max-content;
+        max-width: 260px;
+        padding: 4px 10px;
+        border-radius: @bl-pill;
+        background: rgba(212, 226, 233, .12);
+        font-family: @bl-font-display;
+        font-size: 12px;
+        line-height: 1.3;
+        letter-spacing: -0.1px;
+        text-align: center;
+        color: @bl-sky;
+        white-space: normal;
+        opacity: 0;
+        pointer-events: none;
+        transform: translate(-50%, -4px);
+        transition: opacity .25s ease, transform .3s @bl-ease;
+    }
+
+    // Others dim while one is pointed at.
+    &:hover &__link {
+        opacity: .45;
+    }
+
+    &__link:hover,
+    &__link:focus-visible {
+        opacity: 1 !important;
+
+        img {
+            transform: scale(1.06);
+        }
+
+        .bl-logos__name {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+    }
+
+    a.bl-logos__link:focus-visible {
+        outline: 2px solid @bl-sand;
+        outline-offset: 6px;
+        border-radius: 4px;
+    }
+
+    // Pause button (WCAG 2.2.2): stops the loop until pressed again.
+    &.is-paused .bl-logos__track {
+        animation-play-state: paused;
+    }
+
+    // Reduced motion: a still, wrapped row (no copy).
+    .bl-reduced-motion({
+        & {
+            -webkit-mask-image: none;
+            mask-image: none;
+        }
+
+        .bl-logos__track {
+            width: auto;
+            animation: none;
+        }
+
+        .bl-logos__list {
+            flex-wrap: wrap;
+            justify-content: center;
+            row-gap: 40px;
+            padding: 0 @bl-gutter;
+
+            &[aria-hidden] {
+                display: none;
+            }
+        }
+    });
+}
+
+// -- Evidence, both ways: endless slider ---------------------------------------------
+// Four slides stacked in one spot; the current one fades in over the others
+// (assets/js/balansed.js, initSlider). Entrances in motion.less.
+.bl-evidence {
+    position: relative;
+    z-index: 3;
+    overflow: hidden;
+    background: @bl-navy;
+    color: @bl-sky;
+
+    &__slides {
+        display: grid;
+        min-height: 805px;
+    }
+
+    &__slide {
+        position: relative;
+        grid-area: ~"1 / 1";
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 1.2s ease, visibility 0s linear 1.2s;
+
+        &.is-current {
+            z-index: 1;
+            opacity: 1;
+            visibility: visible;
+            transition: opacity 1.2s ease, visibility 0s linear 0s;
+        }
+
+        &.is-leaving {
+            visibility: visible;
+
+            // The outgoing text clears quickly so the two titles don't overlap.
+            .bl-evidence__inner {
+                opacity: 0;
+                transition: opacity .35s ease;
+            }
+        }
+    }
+
+    &__media {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+
+        // The design's gradient over the photos.
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(180deg, @bl-navy 0%, fade(@bl-navy, 0%) 126.67%),
+                rgba(0, 0, 0, .3);
+        }
+    }
+
+    &__img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+
+        &--flip {
+            transform: scaleX(-1);
+        }
+
+        // Slide 2: two photo panels (forest left, coast right).
+        &--1 {
+            inset: auto;
+            top: 9.44%;
+            left: 0;
+            width: 37.43%;
+            height: 90.56%;
+        }
+
+        &--2 {
+            inset: auto;
+            top: 0;
+            right: 0;
+            width: 61.04%;
+            height: 100%;
+        }
+    }
+
+    &__inner {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        grid-template-columns: 365px 75px minmax(0, 735px);
+        column-gap: 0;
+        align-items: start;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding: 80px @bl-gutter 200px;
+    }
+
+    &__title {
+        font-size: @bl-fs-hero;
+        line-height: 1.25;
+        letter-spacing: -0.8px;
+
+        span {
+            display: block;
+        }
+
+        // The design's staggered lines.
+        span:nth-child(2) { padding-left: 3.4em; }
+        span:nth-child(3) { padding-left: 1.75em; }
+    }
+
+    &__slide--short &__title span:nth-child(2) {
+        padding-left: 1.1em;
+    }
+
+    .bl-round-arrow {
+        margin-top: 68px;
+        background: none;
+        cursor: pointer;
+    }
+
+    &__text {
+        margin-left: 80px;
+        font-family: @bl-font-display;
+        font-size: @bl-fs-statement;
+        line-height: 1.35;
+        letter-spacing: -1.8px;
+    }
+
+    .bl-reduced-motion({
+        .bl-evidence__slide,
+        .bl-evidence__slide.is-current {
+            transition: none;
+        }
+    });
+}
+
+// Pause buttons: under the logo strip, and in the slider's bottom right.
+.bl-logos__pause {
+    display: flex;
+    margin: 4px auto 0;
+    color: @bl-sky;
+}
+
+// Clear of the 48px the next section (.bl-success) overlaps it by.
+.bl-evidence__pause {
+    position: absolute;
+    right: @bl-gutter;
+    bottom: (48px + 40px);
+    z-index: 3;
+    color: @bl-sky;
+}
+
+// -- What success looks like ------------------------------------------------------
+// -- What success looks like ------------------------------------------------------
+// Four goals on a ring of 96 ticks. The section is as tall as its content;
+// assets/js/balansed.js (initSuccess) lights the ticks one by
+// one in step with the scroll (.is-lit, smoothed by the opacity transition
+// so it reads like a loading indicator), switches the goal text per quarter
+// and pops in each quarter's photo. Without JS: the first goal, its quarter lit.
+.bl-success {
+    .bl-section-top(48px);
+    z-index: 4;
+    background: @bl-sky;
+    color: @bl-navy;
+
+    &__stage {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px @bl-gutter 80px;
+    }
+
+    &__title {
+        max-width: 558px;
+        margin: 0 auto;
+        font-size: @bl-fs-statement;
+        line-height: 1.25;
+        letter-spacing: -1.8px;
+        text-align: center;
+    }
+
+    &__ring {
+        position: relative;
+        width: 543px;
+        max-width: 100%;
+        aspect-ratio: 543 / 554;
+        margin: 43px auto 0;
+    }
+
+    &__ticks {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        overflow: visible;
+    }
+
+    .bl-tick {
+        stroke: @bl-navy;
+        stroke-width: 3.9;
+        stroke-linecap: round;
+        opacity: .2;
+        transition: opacity .35s ease;
+
+        &.is-lit {
+            opacity: 1;
+        }
+    }
+
+    &__goal {
+        position: absolute;
+        top: percentage(167 / 554);
+        left: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        width: 280px;
+        max-width: 56%;
+        text-align: center;
+        transform: translateX(-50%);
+    }
+
+    &__by {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: 20px;
+        line-height: 1.25;
+        letter-spacing: -1px;
+
+        strong {
+            font-size: 46px;
+            font-weight: 400;
+            letter-spacing: -0.46px;
+        }
+    }
+
+    // The four goal texts share one spot and crossfade.
+    &__whats {
+        display: grid;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    &__what {
+        grid-area: ~"1 / 1";
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: 20px;
+        line-height: 1.35;
+        letter-spacing: -1px;
+        opacity: 0;
+        translate: 0 10px;
+        transition: opacity .5s ease, translate .6s @bl-ease;
+
+        &.is-active {
+            opacity: 1;
+            translate: 0 0;
+        }
+    }
+
+    // A photo per quarter (positions from Figma, % of the 543 x 554 ring).
+    &__thumb {
+        position: absolute;
+        width: percentage(120 / 543);
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: @bl-radius-card;
+        background: @bl-white;
+        opacity: 0;
+        scale: .6;
+        transition: opacity .5s ease, scale .7s @bl-ease;
+
+        &--1 { top: percentage(414 / 554); left: percentage(1.17 / 543); object-position: 70% 50%; }
+        &--2 { top: percentage(86 / 554);  left: percentage(-83.8 / 543); }
+        &--3 { top: percentage(41 / 554);  left: percentage(455.2 / 543); }
+        &--4 { top: percentage(389 / 554); left: percentage(445.2 / 543); }
+
+        &.is-on {
+            opacity: 1;
+            scale: 1;
+        }
+    }
+}
+
+// Without JS: the first quarter lit, as in the design's first state.
+html:not(.bl-js) .bl-success .bl-tick[data-q="0"] {
+    opacity: 1;
+}
+
+// With JS the section stays as tall as its content (no scroll track): the
+// quarters fill as it scrolls up the screen and on while the next section
+// slides over it (initSuccess; the pin comes from the stacking). The ring
+// is kept small enough for the whole section to fit the screen.
+html.bl-js .bl-success__ring {
+    width: ~"min(543px, 100%, calc((100vh - 200px) * 543 / 554))";
+}
+
+.bl-reduced-motion({
+    .bl-success .bl-tick,
+    .bl-success__what,
+    .bl-success__thumb {
+        transition: none;
+    }
+});
+
+// -- Latest news + upcoming events ---------------------------------------------
+.bl-updates {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    gap: 55px;
+    // Extra bottom space for .bl-follow's rounded top, which overlaps it.
+    padding: 55px @bl-gutter (55px + @bl-radius-section);
+    background: @bl-navy;
+    color: @bl-sky;
+
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: @bl-glow;
+        opacity: .1;
+        pointer-events: none;
+    }
+
+    &__group {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 35px;
+        width: 100%;
+        max-width: 1225px;
+        margin: 0 auto;
+    }
+}
+
+.bl-cards {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 15px;
+    width: 100%;
+    max-width: 1215px;
+}
+
+.bl-card {
+    position: relative;
+    aspect-ratio: 395 / 270;
+    border-radius: @bl-radius-card;
+
+    &__img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        border-radius: @bl-radius-card;
+        transition: filter .3s ease;
+    }
+
+    // Navy notch that holds the arrow badge in the top-right corner.
+    &::after {
+        content: "";
+        position: absolute;
+        top: 0;
+        right: -7px;
+        width: 64px;
+        height: 59px;
+        border-radius: 0 0 32px 32px;
+        background: var(--bl-notch, @bl-navy);   // set to the section colour
+    }
+
+    &__badge {
+        position: absolute;
+        top: 7px;
+        right: 6px;
+        z-index: 1;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: @bl-green;
+        color: @bl-sky;
+        .bl-arrow-btn();
+    }
+
+    &__caption {
+        position: absolute;
+        right: 15px;
+        bottom: 17px;
+        left: 16px;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        padding: 12px 20px;
+        overflow: hidden;
+        border-radius: 5px;
+        background: linear-gradient(90deg, rgba(26, 115, 233, 0) 0%, rgba(26, 115, 233, .3) 115%);
+        -webkit-backdrop-filter: blur(21px);
+        backdrop-filter: blur(21px);
+        color: @bl-sky;
+    }
+
+    &__date {
+        font-family: @bl-font-body;
+        font-size: 12px;
+        font-weight: 300;
+        line-height: normal;
+        letter-spacing: -0.24px;
+        opacity: .35;
+    }
+
+    &__title {
+        font-size: 16px;
+        line-height: 1.3;
+        letter-spacing: -0.32px;
+
+        a {
+            display: block;
+            overflow: hidden;
+            color: @bl-sky;
+            text-decoration: none;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+
+            &:focus-visible {
+                outline: 0;
+            }
+        }
+    }
+
+    // Mouse target over the whole card (see partials/balansed/card.htm).
+    &__link {
+        position: absolute;
+        inset: 0;
+        z-index: 3;
+        border-radius: @bl-radius-card;
+    }
+
+    // Keyboard focus on the title link rings the whole card.
+    &:focus-within {
+        outline: 2px solid @bl-sand;
+        outline-offset: 3px;
+    }
+
+    &:hover {
+        .bl-card__img {
+            filter: brightness(1.08);
+        }
+
+        .bl-card__badge {
+            .bl-arrow-btn-hover(#4BA16F; rgba(82, 189, 127, .35));
+        }
+    }
+}
+
+// -- Follow us -------------------------------------------------------------------
+.bl-follow {
+    position: relative;
+    z-index: 5;
+    margin-top: -@bl-radius-section;   // steps over the bottom of .bl-updates
+    padding: 80px 0;
+    border-radius: @bl-radius-section @bl-radius-section 0 0;
+    background: @bl-sky;
+    color: @bl-navy;
+
+    .bl-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: 30px;
+    }
+
+    &__text {
+        max-width: 1225px;
+        font-size: @bl-fs-statement;
+        line-height: 1.35;
+        letter-spacing: -1.8px;
+    }
+
+    &__row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 15px;
+
+        .bl-social a,
+        .bl-social a:hover,
+        .bl-social a:focus-visible {
+            color: @bl-white;
+        }
+
+        .bl-social svg {
+            fill: @bl-white;
+        }
+    }
+
+    &__label {
+        font-family: @bl-font-display;
+        font-size: @bl-fs-statement;
+        font-weight: 100;
+        line-height: 1.35;
+        letter-spacing: -1.8px;
+    }
+}
+
+// ===========================================================================
+//  Responsive
+// ===========================================================================
+@media @bl-xl {
+    .bl-hero {
+        &__content {
+            top: auto;
+            bottom: 240px;
+            left: @bl-gutter;
+        }
+
+        &__aim {
+            padding-left: 56px;
+        }
+    }
+
+
+    .bl-evidence__inner {
+        grid-template-columns: auto 75px minmax(0, 1fr);
+        column-gap: 48px;
+    }
+
+    .bl-evidence__text {
+        margin-left: 0;
+    }
+}
+
+@media @bl-lg {
+    // Hero stacks: text panel, photo, aim box.
+    .bl-hero {
+        display: flex;
+        flex-direction: column;
+        height: auto;
+
+        &__panel {
+            position: relative;
+            width: 100%;
+            height: auto;
+            min-height: 600px;
+            border-radius: 0 0 @bl-radius-section 0;
+        }
+
+        &__map {
+            top: 12%;
+            left: 4%;
+            width: 110%;
+            height: auto;
+        }
+
+        &__content {
+            position: relative;
+            inset: auto;
+            max-width: 640px;
+            padding: 260px @bl-gutter 80px;
+        }
+
+        &__photo {
+            position: relative;
+            width: 100%;
+            height: 380px;
+            margin-top: -@bl-radius-section;
+        }
+
+        &__aim {
+            position: relative;
+            inset: auto;
+            height: auto;
+            margin-top: -@bl-radius-section;
+            padding: 48px @bl-gutter 120px;
+        }
+    }
+
+
+    .bl-intro__row .bl-statement {
+        flex-basis: 50%;
+    }
+
+    .bl-intro__img {
+        flex-basis: 45%;
+        width: 45%;
+        height: auto;
+        aspect-ratio: 585 / 205;
+    }
+
+    .bl-together {
+        padding-top: 140px;
+    }
+
+    .bl-logos {
+        margin-top: 120px;
+    }
+
+    .bl-evidence {
+        &__slides {
+            min-height: 640px;
+        }
+
+        &__inner {
+            grid-template-columns: auto 75px;
+            row-gap: 32px;
+        }
+
+        &__text {
+            grid-column: ~"1 / -1";
+            max-width: 735px;
+        }
+    }
+
+    .bl-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media @bl-md {
+    .bl-hero {
+        &__panel {
+            min-height: 0;
+            border-radius: 0 0 32px 0;
+        }
+
+        &__content {
+            padding-top: 180px;
+            padding-bottom: 64px;
+        }
+
+        &__photo {
+            height: 280px;
+            margin-top: -32px;
+        }
+
+        &__aim {
+            margin-top: -32px;
+            padding-top: 36px;
+            padding-bottom: 100px;
+            border-radius: 32px 0 0 0;
+        }
+    }
+
+    .bl-hero__actions .bl-btn {
+        white-space: normal;
+        height: auto;
+        min-height: 50px;
+        padding-top: 10px;
+        padding-bottom: 10px;
+    }
+
+    .bl-drawing__stage {
+        border-radius: 32px 32px 0 0;
+    }
+
+    .bl-intro,
+    .bl-success {
+        border-radius: 32px 32px 0 0;
+    }
+
+    .bl-intro {
+        margin-top: -40px;
+        padding: 48px 0 64px;
+
+        .bl-wrap {
+            gap: 40px;
+        }
+
+        &__row,
+        &__row--reverse {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 24px;
+        }
+
+        &__img {
+            width: 100%;
+            flex-basis: auto;
+        }
+    }
+
+    .bl-together {
+        min-height: 0;
+        padding: 80px @bl-gutter 72px;
+
+        &__grid {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 28px;
+        }
+
+        &__stats {
+            width: auto;
+            gap: 14px;
+        }
+    }
+
+    .bl-logos {
+        --gap: 36px;
+        margin-top: 64px;
+
+        img {
+            max-width: 110px;
+            max-height: 30px;
+        }
+    }
+
+    // Phones: the title keeps the full width beside a smaller arrow, its
+    // staggered lines step in less, the text loosens up and the two photo
+    // panels of slide 2 split the width evenly.
+    .bl-evidence {
+        &__slides {
+            min-height: 520px;
+        }
+
+        &__inner {
+            grid-template-columns: minmax(0, 1fr) auto;
+            column-gap: 16px;
+            row-gap: 28px;
+            padding-top: 48px;
+            padding-bottom: 120px;
+        }
+
+        &__title {
+            span:nth-child(2) { padding-left: 1.6em; }
+            span:nth-child(3) { padding-left: .8em; }
+        }
+
+        &__slide--short &__title span:nth-child(2) {
+            padding-left: .8em;
+        }
+
+        .bl-round-arrow {
+            width: 56px;
+            height: 56px;
+            margin-top: 4px;
+
+            svg {
+                width: 24px;
+                height: 24px;
+            }
+        }
+
+        &__text {
+            max-width: none;
+            line-height: 1.3;
+            letter-spacing: -0.6px;
+        }
+
+        &__img {
+            &--1 {
+                top: 0;
+                width: 50%;
+                height: 100%;
+            }
+
+            &--2 {
+                width: 50%;
+            }
+        }
+    }
+
+    .bl-evidence__pause {
+        bottom: (40px + 28px);
+    }
+
+    .bl-success {
+        margin-top: -40px;
+
+        &__stage {
+            padding-top: 48px;
+            padding-bottom: 56px;
+        }
+
+        &__goal {
+            gap: 8px;
+        }
+
+        &__by,
+        &__what {
+            font-size: 15px;
+        }
+
+        &__by strong {
+            font-size: 32px;
+        }
+    }
+
+    .bl-cards {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 420px;
+    }
+
+    .bl-updates {
+        padding-bottom: (55px + 32px);
+    }
+
+    .bl-follow {
+        margin-top: -32px;
+        padding: 56px 0;
+        border-radius: 32px 32px 0 0;
+    }
+}
+
+@media @bl-sm {
+    .bl-success__by,
+    .bl-success__what {
+        font-size: 13px;
+        letter-spacing: -0.5px;
+    }
+
+    .bl-success__by strong {
+        font-size: 26px;
+    }
+}

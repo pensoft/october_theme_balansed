@@ -1,0 +1,110 @@
+// ===========================================================================
+//  Inner-page banner - partials/realise/page-hero.htm
+//  Photo at 65% over navy, centred title; the header sits over its top and
+//  the content band (.bl-band) overlaps its bottom with rounded corners.
+// ===========================================================================
+
+.bl-page-hero {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    min-height: 436px;
+    padding: 195px @bl-gutter 140px;
+    overflow: hidden;
+    background: @bl-navy;
+    color: @bl-white;
+    text-align: center;
+
+    // Scoped under the section so legacy page rules matching
+    // <main class="bl-main {page id}"> (e.g. ".events img") cannot resize it.
+    & &__img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        opacity: .65;
+    }
+
+    // fade=true (Work packages): the photo melts into the navy below it, so
+    // the cards overlapping the banner sit on one continuous navy ground.
+    // A mask (not an overlay) as ::after is the stacking veil (motion.less).
+    &--fade &__img {
+        -webkit-mask-image: linear-gradient(180deg, #000 30%, transparent 85%);
+        mask-image: linear-gradient(180deg, #000 30%, transparent 85%);
+    }
+
+    // Keeps the header readable over bright photos.
+    &::before {
+        content: "";
+        position: absolute;
+        inset: 0 0 auto;
+        z-index: 1;
+        height: 200px;
+        background: linear-gradient(180deg, fade(@bl-navy, 45%) 0%, fade(@bl-navy, 0%) 100%);
+    }
+
+    &__inner {
+        position: relative;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        max-width: 900px;
+    }
+
+    &__crumb {
+        font-family: @bl-font-display;
+        font-size: 15px;
+        font-weight: 300;
+        letter-spacing: .3px;
+        text-transform: uppercase;
+        color: @bl-sand;
+
+        a {
+            color: inherit;
+            text-decoration: none;
+
+            &:hover,
+            &:focus-visible {
+                text-decoration: underline;
+            }
+        }
+    }
+
+    &__title {
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: @bl-fs-hero;
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -0.8px;
+        color: @bl-white;
+    }
+}
+
+// The title stays white over every page's own heading rules (the reset
+// "body.bl h1", legacy page styles) - including the word spans that
+// .bl-words splits it into for the reveal animation.
+body.bl .bl-page-hero .bl-page-hero__title {
+    &,
+    .bl-w,
+    .bl-w > span {
+        color: @bl-white;
+    }
+}
+
+@media @bl-xl {
+    .bl-page-hero {
+        padding-top: 170px;
+    }
+}
+
+@media @bl-md {
+    .bl-page-hero {
+        min-height: 340px;
+        padding: 130px @bl-gutter 100px;
+    }
+}

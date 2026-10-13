@@ -1,0 +1,426 @@
+// ===========================================================================
+//  BALANSED base: fonts, page canvas, wrappers, buttons, shared text styles.
+// ===========================================================================
+
+// Sora (display) and Figtree (body), self-hosted variable fonts.
+@font-face {
+    font-family: 'Sora';
+    font-style: normal;
+    font-weight: 100 800;
+    font-display: swap;
+    src: url('../fonts/balansed/sora-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+    font-family: 'Sora';
+    font-style: normal;
+    font-weight: 100 800;
+    font-display: swap;
+    src: url('../fonts/balansed/sora-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+@font-face {
+    font-family: 'Figtree';
+    font-style: normal;
+    font-weight: 300 500;
+    font-display: swap;
+    src: url('../fonts/balansed/figtree-latin-ext.woff2') format('woff2');
+    unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+}
+@font-face {
+    font-family: 'Figtree';
+    font-style: normal;
+    font-weight: 300 500;
+    font-display: swap;
+    src: url('../fonts/balansed/figtree-latin.woff2') format('woff2');
+    unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+html.bl-drawer-open {
+    overflow: hidden;
+}
+
+body.bl {
+    margin: 0;
+    background: @bl-navy;
+    color: @bl-navy;
+    font-family: @bl-font-body;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+
+    *,
+    *::before,
+    *::after {
+        box-sizing: border-box;
+    }
+
+    img {
+        max-width: 100%;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        margin: 0;
+        font-family: @bl-font-display;
+        font-weight: 400;
+        color: inherit;
+    }
+
+    p {
+        margin: 0;
+        font-weight: inherit;
+    }
+
+    a {
+        color: inherit;
+    }
+
+    strong {
+        font-weight: 600;
+    }
+}
+
+.bl-site {
+    overflow-x: clip;
+}
+
+.bl-main {
+    display: block;
+    outline: 0;
+}
+
+.bl-wrap {
+    width: 100%;
+    max-width: @bl-wrap + 160px;
+    margin: 0 auto;
+    padding: 0 @bl-gutter;
+}
+
+// Sora Thin run-in used across the design ("who live on them").
+.bl-thin {
+    font-weight: 100;
+}
+
+// 36px Sora statement used by most homepage sections.
+.bl-statement,
+.bl-h2 {
+    font-family: @bl-font-display;
+    font-size: @bl-fs-statement;
+    font-weight: 400;
+    line-height: 1.25;
+    letter-spacing: -0.8px;
+}
+
+.bl-h2 {
+    line-height: 1.35;
+    text-align: center;
+}
+
+// Uppercase section label ("WHY BALANSED EXISTS").
+.bl-eyebrow {
+    font-family: @bl-font-body;
+    font-size: @bl-fs-lead;
+    font-weight: 300;
+    line-height: 1.35;
+    letter-spacing: -0.4px;
+    text-transform: uppercase;
+}
+
+// 20px Figtree Light body copy.
+.bl-lead {
+    font-family: @bl-font-body;
+    font-size: @bl-fs-lead;
+    font-weight: 300;
+    line-height: 1.45;
+    letter-spacing: -0.8px;
+}
+
+.bl-empty {
+    font-family: @bl-font-body;
+    font-size: 18px;
+    text-align: center;
+    opacity: .7;
+}
+
+// -- Buttons: 50px pills ----------------------------------------------------
+.bl-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    height: 50px;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: @bl-pill;
+    font-family: @bl-font-display;
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 1.25;
+    letter-spacing: -0.16px;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease, box-shadow .3s ease, filter .3s ease;
+
+    &:hover,
+    &:focus-visible {
+        text-decoration: none;
+    }
+
+    &--sand {
+        background: @bl-sand;
+        color: @bl-navy;
+
+        &:hover,
+        &:focus-visible {
+            background: @bl-white;
+            color: @bl-navy;
+        }
+    }
+
+    &--outline {
+        border-color: @bl-sand-35;
+        color: @bl-sand;
+
+        // Figma "Deliberation Toolkit button": brown rim + sand glow.
+        &:hover,
+        &:focus-visible {
+            border-color: @bl-brown;
+            box-shadow: 0 .5px 25px 0 @bl-sand-35;
+            color: @bl-sand;
+        }
+    }
+
+    &[aria-disabled="true"] {
+        cursor: default;
+    }
+
+    &--green {
+        width: 395px;
+        max-width: 100%;
+        background: @bl-green;
+        color: @bl-sky;
+
+        &:hover,
+        &:focus-visible {
+            background: #4BA16F;
+            color: @bl-sky;
+            filter: drop-shadow(0 .5px 12.5px rgba(82, 189, 127, .35));
+        }
+    }
+}
+
+// Round outline arrow (75px) - "Evidence, both ways".
+.bl-round-arrow {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 75px;
+    height: 75px;
+    border: 2px solid @bl-sky-35;
+    border-radius: 50%;
+    color: @bl-sky;
+    transition: box-shadow .3s ease;
+
+    // Figma "Outline arrow": a green glow around the ring.
+    &:hover,
+    &:focus-visible {
+        color: @bl-sky;
+        box-shadow: 0 .5px 25px 0 rgba(82, 189, 127, .65);
+    }
+}
+
+// -- Pause / play toggle for moving content (WCAG 2.2.2) --------------------------
+// A 44px outline circle in the text colour; .is-paused swaps the icon.
+// Rendered hidden and shown by assets/js/balansed.js, so it never appears
+// without the script that makes it work.
+.bl-motion-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    width: 44px;
+    height: 44px;
+    margin: 0;
+    padding: 0;
+    border: 1.5px solid currentColor;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+    opacity: .8;
+    transition: opacity .2s ease;
+
+    &:hover,
+    &:focus-visible {
+        opacity: 1;
+    }
+
+    &__pause,
+    &__play {
+        display: inline-flex;
+    }
+
+    &__play,
+    &.is-paused &__pause {
+        display: none;
+    }
+
+    &.is-paused &__play {
+        display: inline-flex;
+    }
+}
+
+// Beats the placement rules (.bl-logos__pause { display: flex }).
+.bl-motion-toggle[hidden] {
+    display: none;
+}
+
+// -- Social buttons (50px blue circles) -------------------------------------
+.bl-social {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+
+    a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: @bl-blue;
+        color: @bl-white;
+        transition: background-color .25s ease, box-shadow .3s ease;
+
+        &:hover,
+        &:focus-visible {
+            background: #0577DA;
+            box-shadow: 0 .5px 25px 0 @bl-sky-35;
+            color: @bl-white;
+        }
+    }
+}
+
+// White icons wherever the buttons sit (Follow us, Share news / Share event):
+// scoped to body.bl so page and legacy link colours cannot tint them.
+body.bl .bl-social a {
+    &,
+    &:hover,
+    &:focus-visible,
+    &:visited {
+        color: @bl-white;
+    }
+
+    svg {
+        fill: @bl-white;
+    }
+}
+
+// -- Logo -------------------------------------------------------------------
+.bl-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 6.5px;
+    color: inherit;
+
+    &__mark {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: none;
+        width: 63px;
+        height: 63px;
+        border: 3.45px solid currentColor;
+        border-radius: 50%;
+
+        svg {
+            width: 36px;
+            height: 39px;
+            margin-top: .5px;
+        }
+    }
+
+    &__word {
+        font-family: @bl-font-display;
+        font-size: 37.5px;
+        font-weight: 400;
+        line-height: 1;
+        letter-spacing: -1.12px;
+        white-space: nowrap;
+    }
+}
+
+// -- Inner-page content band (non-designed pages) ---------------------------
+.bl-band {
+    position: relative;
+    margin-top: -86px;
+    padding: 80px 0 100px;
+    border-radius: @bl-radius-section @bl-radius-section 0 0;
+    background: @bl-sand;
+    color: @bl-navy;
+}
+
+.bl-legacy {
+    font-size: 18px;
+    line-height: 1.6;
+
+    h1, h2, h3 {
+        margin: 1.4em 0 .5em;
+        line-height: 1.25;
+        letter-spacing: -0.5px;
+    }
+
+    h2 { font-size: 30px; }
+    h3 { font-size: 22px; }
+
+    p,
+    ul,
+    ol {
+        margin: 0 0 1em;
+    }
+
+    a {
+        color: @bl-blue;
+        text-decoration: underline;
+    }
+}
+
+// Privacy policy: Matomo's opt-out box (pages/privacy-policy.htm). Its
+// warnings are inline bright red (3:1 on sand); a darker red reads 5.5:1.
+.bl-matomo-opt-out {
+    margin-top: 1.5em;
+
+    p[style*="color: red"] {
+        color: #B00020 !important;
+    }
+
+    input[type="checkbox"] {
+        margin-right: .5em;
+    }
+}
+
+@media @bl-md {
+    .bl-logo {
+        &__mark {
+            width: 48px;
+            height: 48px;
+            border-width: 2.6px;
+
+            svg {
+                width: 27px;
+                height: 30px;
+            }
+        }
+
+        &__word {
+            font-size: 28px;
+        }
+    }
+
+    .bl-band {
+        margin-top: -50px;
+        padding: 56px 0 72px;
+        border-radius: 32px 32px 0 0;
+    }
+}

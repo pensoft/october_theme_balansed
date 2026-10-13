@@ -1,0 +1,395 @@
+// ===========================================================================
+//  Scroll-triggered motion (assets/js/balansed.js, initReveal).
+//
+//  html.bl-motion is set in the layout <head> when motion is allowed (JS on,
+//  IntersectionObserver available, no "reduce motion"), so the hidden
+//  "before" states apply from the first paint. Each section / the footer
+//  gets .is-inview when it scrolls into view, and its animations start:
+//    - the section rises into place,
+//    - content items fade + slide in one after another (--d from JS),
+//    - headings and statements rise word by word (.bl-w, --w from JS),
+//    - illustrations play their own entrance.
+//  Animations (not transitions) are used so hover transitions are kept, and
+//  the individual translate / scale / rotate properties so existing
+//  transforms (e.g. translateX(-50%)) are untouched.
+//
+//  Keep the item / word selector lists in step with REVEAL_ITEMS and
+//  REVEAL_WORDS in balansed.js.
+// ===========================================================================
+
+@bl-motion-ease: cubic-bezier(.16, .84, .3, 1);
+
+@keyframes bl-rise {
+    from { opacity: 0; translate: 0 28px; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+@keyframes bl-section-rise {
+    from { translate: 0 56px; }
+    to   { translate: 0 0; }
+}
+
+@keyframes bl-word {
+    from { translate: 0 110%; }
+    to   { translate: 0 0; }
+}
+
+// To the element's own opacity (no "to" frame).
+@keyframes bl-appear {
+    from { opacity: 0; }
+}
+
+@keyframes bl-zoom-out {
+    from { scale: 1.14; }
+    to   { scale: 1; }
+}
+
+@keyframes bl-pop {
+    from { opacity: 0; scale: .6; }
+    to   { opacity: 1; scale: 1; }
+}
+
+@keyframes bl-spin-in {
+    from { opacity: 0; rotate: -28deg; scale: .86; }
+    to   { opacity: 1; rotate: 0deg; scale: 1; }
+}
+
+@keyframes bl-arc-in {
+    from { opacity: 0; rotate: -14deg; scale: .94; }
+    to   { opacity: 1; rotate: 0deg; scale: 1; }
+}
+
+@keyframes bl-wipe-x {
+    from { clip-path: inset(0 100% 0 0 round 15px); }
+    to   { clip-path: inset(0 0 0 0 round 15px); }
+}
+
+// The same wipe, opening from the right edge toward the left.
+@keyframes bl-wipe-x-rtl {
+    from { clip-path: inset(0 0 0 100% round 15px); }
+    to   { clip-path: inset(0 0 0 0 round 15px); }
+}
+
+@keyframes bl-draw-x {
+    from { clip-path: inset(0 100% 0 0); }
+    to   { clip-path: inset(0 0 0 0); }
+}
+
+@keyframes bl-draw-center {
+    from { clip-path: inset(0 50% 0 50%); }
+    to   { clip-path: inset(0 0 0 0); }
+}
+
+// -- Words ----------------------------------------------------------------------
+// Each word clips its own inner span, which rises into view.
+.bl-words .bl-w {
+    display: inline-block;
+    overflow: hidden;
+    padding-bottom: .12em;
+    margin-bottom: -.12em;
+    vertical-align: bottom;
+
+    > span {
+        display: inline-block;
+    }
+}
+
+// -- Lines ------------------------------------------------------------------------
+// Statements in .bl-lines (homepage introduction) rise line by line: all
+// words of a line (--l from JS) move together, lines follow top to bottom.
+// Each statement starts when it is itself on screen (.bl-lines.is-inview).
+html.bl-motion {
+    .bl-lines:not(.is-inview) .bl-w > span {
+        translate: 0 110%;
+        animation: none;
+    }
+
+    .bl-lines.is-inview .bl-w > span {
+        animation: bl-word 1.05s @bl-motion-ease ~"calc(var(--l, 0) * 140ms + 80ms)" both;
+    }
+}
+
+// -- "Bringing together" (homepage) ------------------------------------------------
+// The two title words fade in one after the other (no rise); then the
+// figures ("12 organisations", "8 EU Countries", ...) drift up from below
+// with a soft fade, one by one.
+@keyframes bl-soft-rise {
+    from { opacity: 0; translate: 0 26px; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+html.bl-motion .bl-together {
+    .bl-together__title .bl-w {
+        overflow: visible;
+    }
+
+    &:not(.is-inview) .bl-together__title .bl-w > span {
+        translate: none;
+        opacity: 0;
+    }
+
+    &.is-inview .bl-together__title .bl-w > span {
+        translate: none;
+        animation: bl-appear 1.3s ease ~"calc(var(--w, 0) * 450ms + 250ms)" both;
+    }
+
+    &.is-inview .bl-together__stats li {
+        animation: bl-soft-rise 1.1s @bl-motion-ease both;
+
+        &:nth-child(1) { animation-delay: 1.15s; }
+        &:nth-child(2) { animation-delay: 1.45s; }
+        &:nth-child(3) { animation-delay: 1.75s; }
+        &:nth-child(n+4) { animation-delay: 2.05s; }
+    }
+}
+
+// -- "Evidence, both ways." (homepage) ---------------------------------------------
+// The three lines of the title arrive one after another, each from its own
+// side: the first rises from below, the second slides in from the right,
+// the third from the left - all with a fade.
+@keyframes bl-from-below {
+    from { opacity: 0; translate: 0 60px; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+@keyframes bl-from-right {
+    from { opacity: 0; translate: 90px 0; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+@keyframes bl-from-left {
+    from { opacity: 0; translate: -90px 0; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+// Evidence slider: the current slide's title lines arrive (below / right /
+// left), its text rises in after them, and its photo slowly settles. They
+// replay every time a slide becomes current (.is-current from initSlider).
+html.bl-motion .bl-evidence {
+    // Waiting: before the section is reached, and on slides not shown.
+    &:not(.is-inview),
+    .bl-evidence__slide:not(.is-current):not(.is-leaving) {
+        .bl-evidence__title > span,
+        .bl-evidence__text .bl-w > span {
+            opacity: 0;
+        }
+    }
+
+    &.is-inview .bl-evidence__slide.is-current {
+        .bl-evidence__title > span {
+            &:nth-child(1) { animation: bl-from-below 1.1s @bl-motion-ease .2s both; }
+            &:nth-child(2) { animation: bl-from-right 1.1s @bl-motion-ease .6s both; }
+            &:nth-child(3) { animation: bl-from-left 1.1s @bl-motion-ease 1s both; }
+        }
+
+        // The sentence beside it: words rise with a soft fade, after the title.
+        .bl-evidence__text .bl-w > span {
+            animation: bl-word-fade 1.1s @bl-motion-ease ~"calc(var(--w, 0) * 45ms + 1.2s)" both;
+        }
+
+        // Slow settle of the photo while the slide is shown.
+        .bl-evidence__img {
+            animation: bl-zoom-out 9s ease-out both;
+        }
+    }
+}
+
+@keyframes bl-word-fade {
+    from { opacity: 0; translate: 0 110%; }
+    to   { opacity: 1; translate: 0 0; }
+}
+
+// ===========================================================================
+//  BEFORE: sections not yet in view
+// ===========================================================================
+html.bl-motion {
+    .bl-main > section:not(.is-inview),
+    .bl-main > .bl-band:not(.is-inview),
+    .bl-footer:not(.is-inview) {
+        // Content items
+        .bl-eyebrow, .bl-lead, .bl-btn, .bl-switch, .bl-topics, .bl-empty, .bl-pager,
+        .bl-card, .bl-wp, .bl-doc, .bl-partner, .bl-month, .bl-month-bar, .bl-will__card,
+        .bl-intro__img, .bl-why__img, .bl-result__banner, .bl-round-arrow, .bl-logos li,
+        .bl-together__stats li, .bl-follow__row, .bl-article__head, .bl-prose, .bl-share,
+        .bl-article__gallery, .bl-tags, .bl-region__photo, .bl-region__text > *, .bl-events-bar,
+        .bl-success__ring, .bl-regions__stage, .bl-hero__actions, .bl-hero__aim, .bl-page-hero__crumb,
+        .bl-footer__top, .bl-footer__fund, .bl-footer__legal {
+            opacity: 0;
+        }
+
+        // Headings: hidden until split into words, then each word waits below.
+        .bl-hero__title, .bl-page-hero__title, .bl-statement, .bl-h2, .bl-together__title,
+        .bl-success__title, .bl-follow__text, .bl-evidence__text,
+        .bl-regions__lead, .bl-result__claim, .bl-will__text,
+        .bl-article__related-title, .bl-region__h {
+            &:not(.bl-words) {
+                opacity: 0;
+            }
+        }
+
+        .bl-w > span {
+            translate: 0 110%;
+        }
+
+        // Illustrations
+        .bl-hero__map,
+        .bl-regions__globe, .bl-regions__land, .bl-regions__dot, .bl-regions__pin, .bl-regions__label,
+        .bl-region__globe, .bl-region__land, .bl-map [data-country] {
+            opacity: 0;
+        }
+
+    }
+
+    // The footer waits a little lower (page sections stack instead - see
+    // "Stacking sections" below).
+    .bl-footer:not(.is-inview) {
+        translate: 0 56px;
+    }
+}
+
+// ===========================================================================
+//  AFTER: section in view - play the entrances
+// ===========================================================================
+html.bl-motion {
+    .bl-footer.is-inview {
+        animation: bl-section-rise 1s @bl-motion-ease both;
+    }
+
+    .is-inview {
+        // Content items, one after another
+        .bl-eyebrow, .bl-lead, .bl-btn, .bl-switch, .bl-topics, .bl-empty, .bl-pager,
+        .bl-card, .bl-wp, .bl-doc, .bl-partner, .bl-month, .bl-month-bar, .bl-will__card,
+        .bl-result__banner, .bl-round-arrow, .bl-logos li,
+        .bl-together__stats li, .bl-follow__row, .bl-article__head, .bl-prose, .bl-share,
+        .bl-article__gallery, .bl-tags, .bl-region__text > *, .bl-events-bar,
+        .bl-success__ring, .bl-regions__stage, .bl-hero__actions, .bl-hero__aim, .bl-page-hero__crumb,
+        .bl-footer__top, .bl-footer__fund, .bl-footer__legal {
+            animation: bl-rise .85s @bl-motion-ease ~"calc(var(--d, 0ms) + 150ms)" both;
+        }
+
+        // Words rise one after another
+        .bl-w > span {
+            animation: bl-word .9s @bl-motion-ease ~"calc(var(--w, 0) * 45ms + 120ms)" both;
+        }
+
+        // Photos wipe open from the left
+        .bl-intro__img,
+        .bl-why__img {
+            animation: bl-wipe-x 1.3s @bl-motion-ease ~"calc(var(--d, 0ms) + 250ms)" both;
+        }
+
+        // ...except the homepage's first intro photo: from the right
+        .bl-intro__row:first-child .bl-intro__img {
+            animation-name: bl-wipe-x-rtl;
+        }
+
+        // Region page photos pop in
+        .bl-region__photo {
+            animation: bl-pop .9s @bl-motion-ease ~"calc(var(--d, 0ms) + 200ms)" both;
+        }
+
+        // The About line drawings are sketched on scroll (initScrollDraw).
+
+        // Slow photo settle
+        .bl-hero__photo,
+        .bl-page-hero__img,
+        .bl-result__img {
+            animation: bl-zoom-out 2.4s @bl-motion-ease both;
+        }
+
+        .bl-hero__map {
+            animation: bl-appear 2.2s ease .4s both;
+        }
+
+        // "What success looks like" has its own scroll engine (initSuccess).
+
+        // Study regions: the globe turns in, dots and label follow
+        .bl-regions__globe,
+        .bl-region__globe {
+            animation: bl-spin-in 1.4s @bl-motion-ease .2s both;
+        }
+
+        .bl-regions__land,
+        .bl-region__land {
+            animation: bl-spin-in 1.6s @bl-motion-ease .35s both;
+        }
+
+        .bl-regions__dot,
+        .bl-regions__pin {
+            animation: bl-appear .6s ease 1.1s both;
+        }
+
+        .bl-regions__label {
+            animation: bl-appear .6s ease 1.4s both;
+        }
+
+        // Consortium map: countries fade in one after another (--d from JS)
+        .bl-map [data-country] {
+            animation: bl-appear .6s ease ~"calc(var(--d, 0ms) + 300ms)" both;
+        }
+    }
+}
+
+// ===========================================================================
+//  Stacking sections (designer's reference: each section slides up over the
+//  previous one, which stays pinned and dims a little as it is covered;
+//  no shrinking, which would bare the page background at the sides).
+//  html.bl-stack and each section's sticky "top" (0, or negative for
+//  sections taller than the screen, so they stick at their bottom edge) and
+//  z-index are set by assets/js/balansed.js (initStack); --cover (0..1) is
+//  how far the next section has slid over this one.
+// ===========================================================================
+html.bl-stack {
+    .bl-main > section,
+    .bl-main > .bl-band {
+        position: sticky;
+        // Recedes a little (up to 3.5%) as it is covered: --stack-scale is
+        // set by initStack, rounded to whole pixels; the strips this opens
+        // at the sides are filled with the section's own colour.
+        scale: var(--stack-scale, 1);
+        transform-origin: 50% 0;
+
+        // The dimming veil over a covered section.
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            z-index: 40;
+            border-radius: inherit;
+            background: @bl-navy;
+            opacity: ~"calc(var(--cover, 0) * .55)";
+            pointer-events: none;
+        }
+    }
+
+    // The homepage hero's photo runs to its right edge: it recedes toward
+    // that edge, so the strip opens on the plain navy side instead.
+    .bl-main > .bl-hero {
+        transform-origin: 100% 0;
+        // Its section background is sand on phones, but its edges are navy.
+        --bl-stack-tint: rgb(0, 22, 41);
+    }
+
+    // Fully hidden behind later sections (initStack): not painted at all.
+    // A clip, not visibility, so its links stay in the keyboard order.
+    .bl-main > .is-buried {
+        clip-path: inset(0 0 100% 0);
+    }
+
+    // Not pinned (data-bl-nostack): scrolls along with its neighbours, so it
+    // is never covered or dimmed.
+    .bl-main > [data-bl-nostack] {
+        position: relative;
+        scale: none;
+
+        &::after {
+            content: none;
+        }
+    }
+
+    // Work packages: the cards' strip over the banner stays see-through, the
+    // rest is navy so the pinned banner does not show through below it.
+    .bl-wps {
+        background: linear-gradient(transparent 87px, @bl-navy 87px);
+    }
+}

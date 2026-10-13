@@ -1,0 +1,339 @@
+url = "/"
+layout = "default"
+title = "BALANSED"
+is_hidden = 0
+meta_description = "BALANSED - balancing what Europe needs from its land and seas with the people who live on them."
+robot_index = "index"
+robot_follow = "follow"
+
+; Static texts: Pensoft.Jumbotron entries (backend > Jumbotron), rendered
+; with {% component 'jumbo' jumbotron='<slug>' %} - see partials/jumbo/default.htm.
+[jumbotron jumbo]
+jumbotron = "home-hero-title"
+background = "transperant"
+templates = "template3"
+description_limit = 0
+==
+<?php
+use Carbon\Carbon;
+use Pensoft\Articles\Models\Article;
+use Pensoft\Calendar\Models\Entry;
+use Pensoft\Partners\Models\Partners;
+
+function onStart()
+{
+    $this['news'] = Article::news()
+        ->where('published', 'true')
+        ->where('published_at', '<=', 'now')
+        ->orderBy('published_at', 'desc')
+        ->take(3)
+        ->get();
+
+    // Same "upcoming" rule as the Events page: not yet finished.
+    $this['events'] = Entry::where('end', '>=', Carbon::now())
+        ->orderBy('start', 'asc')
+        ->take(3)
+        ->get();
+
+    // "Bringing together": the consortium from Pensoft.Partners (type 1).
+    // Logos link to the partner's "Institution url"; the counts follow the
+    // partners and their countries. Until the consortium is entered, the
+    // design's logos and numbers are shown.
+    $partners = Partners::with('country')->where('type', 1)->orderBy('nest_left')->get();
+
+    // Logo carousel: every partner (logo = Cover, or the acronym when there
+    // is none); clicking opens its Institution url in a new tab.
+    $logos = $partners->map(function ($p) {
+        return [
+            'name' => $p->instituion ?: $p->title,
+            'short' => $p->title,
+            'logo' => $p->cover ? $p->cover->getPath() : null,
+            'url' => trim((string) $p->instituion_url),
+        ];
+    })->values()->all();
+    if (!$logos) {
+        foreach ([
+            'zavod' => 'Zavod za gozdove Slovenije', 'wageningen' => 'Wageningen University & Research',
+            'step' => 'STEP', 'pensoft' => 'Pensoft Publishers', 'cooperativas-espana' => 'Cooperativas Agro-alimentarias de España',
+            'ogs' => 'National Institute of Oceanography and Applied Geophysics (OGS)', 'okoloogiliste' => 'Ökoloogiliste Tehnoloogiate Keskus',
+            'gozdarski' => 'Gozdarski inštitut Slovenije', 'urcacyl' => 'URCACYL',
+        ] as $file => $name) {
+            $logos[] = ['name' => $name, 'short' => $name, 'url' => '',
+                'logo' => $this->controller->themeUrl('assets/images/balansed/logos/' . $file . '.svg')];
+        }
+    }
+
+    $countries = $partners->flatMap(function ($p) {
+        return $p->country->pluck('code')->all() ?: array_filter((array) $p->country_code);
+    })->map(function ($c) {
+        return strtoupper($c);
+    })->unique();
+
+    $this['partner_logos'] = $logos;
+    $this['partner_count'] = $partners->count() ?: 13;
+    $this['country_count'] = $countries->count() ?: 9;
+}
+?>
+==
+{#
+    BALANSED homepage: hero, "brings land and sea" drawing, introduction,
+    "Bringing together", "Evidence, both ways", "What success looks like",
+    latest news + upcoming events, follow-us band.
+    Styles: assets/less/balansed/pages/home.less
+#}
+{% set img = 'assets/images/balansed/' %}
+{% set vid = 'assets/videos/balansed/' %}
+
+{# ------------------------------------------------------------------ HERO #}
+<section class="bl-hero" aria-labelledby="hero-heading">
+    {# Decorative videos: no autoplay attribute - initReveal (balansed.js) plays
+       each one while it is on screen; with "reduce motion" or without JS the
+       poster (the former photo) shows instead. #}
+    <video class="bl-hero__photo" src="{{ (vid ~ 'coastline-people.mp4')|theme }}" poster="{{ (img ~ 'hero.jpg')|theme }}" muted loop playsinline preload="auto" aria-hidden="true"></video>
+    <div class="bl-hero__panel">
+        <img class="bl-hero__map" src="{{ (img ~ 'hero-map.svg')|theme }}" alt="" aria-hidden="true">
+        <div class="bl-hero__content">
+            <h1 class="bl-hero__title" id="hero-heading">{% component 'jumbo' jumbotron='home-hero-title' %}</h1>
+            <div class="bl-hero__actions">
+                <a class="bl-btn bl-btn--sand" href="{{ 'study-regions'|page({}, false) ?: ('/study-regions'|app) }}">See our Study Regions</a>
+                <span class="bl-btn bl-btn--outline" aria-disabled="true">Deliberation Toolkit Coming Soon</span>
+            </div>
+        </div>
+    </div>
+    <div class="bl-hero__aim">
+        <div class="bl-hero__aim-text">{% component 'jumbo' jumbotron='home-hero-aim' %}</div>
+    </div>
+</section>
+
+{# ------------------------------------------------------- LAND AND SEA #}
+{#
+    Three slides, drawn as the visitor scrolls (assets/js/balansed.js,
+    initDrawing; styles in pages/home.less): the section stays in view
+    while its lines are sketched in step with the scroll - land and sea,
+    then evidence and lived experience, then the conversation (the blob
+    wobbles like a voice). Scrolling simply carries on past it at any time.
+    Without JS: the first slide, fully drawn.
+#}
+<section class="bl-drawing" data-bl-drawing aria-labelledby="land-sea-heading">
+    <div class="bl-drawing__stage">
+        <div class="bl-drawing__canvas">
+            {% partial 'balansed/drawing-art' %}
+
+            {# Circle (slides 1-2) and the "conversation" blob (slide 3) #}
+            <svg class="bl-drawing__ring" viewBox="0 0 470 470" aria-hidden="true" focusable="false">
+                <circle class="bl-line" pathLength="1" cx="235" cy="235" r="234.5"/>
+            </svg>
+            <svg class="bl-drawing__blob" viewBox="-40 -40 550 550" aria-hidden="true" focusable="false">
+                <path class="bl-drawing__echo bl-drawing__echo--2" d=""/>
+                <path class="bl-drawing__echo bl-drawing__echo--1" d=""/>
+                <path class="bl-drawing__blob-line bl-line" pathLength="1" d="M72.6035 52.2363C114.85 6.36746 178.441 -15.3927 242.712 13.6777C249.181 16.6039 256.574 17.2125 263.389 15.1807C286.392 8.3218 303.281 7.53956 316.185 10.9619C329.071 14.3798 338.044 22.0081 345.192 32.1074C352.353 42.2238 357.665 54.7935 363.234 68.0762C368.796 81.3401 374.61 95.2999 382.765 108.102C386.041 113.244 391.442 116.422 397.068 118.485C420.068 126.92 438.178 146.915 450.544 171.289C462.908 195.658 469.5 224.348 469.5 250.071C469.5 277.095 449.391 296.483 428.292 313.669C417.775 322.235 407.003 330.263 398.496 338.368C389.99 346.472 383.647 354.743 382.066 363.85C381.497 367.127 381.032 370.553 380.545 374.01C380.058 377.47 379.549 380.966 378.894 384.403C377.583 391.281 375.691 397.886 372.243 403.446C367.26 411.481 364.026 419.959 360.276 427.964C356.516 435.991 352.216 443.601 345.07 450.066C330.786 462.992 304.985 471.473 248.933 469.104L248.897 469.102L248.863 469.104C219.946 471.893 196.558 457.756 170.869 442.551C145.214 427.365 117.329 411.164 79.5723 410.185C77.2376 410.124 74.8242 409.796 72.6133 409.108C25.9096 394.586 5.68455 369.834 1.39453 342.858C-2.90446 315.826 8.76726 286.397 26.2236 262.507C31.9468 254.674 33.6613 244.508 30.7363 235.255C9.49728 168.064 30.3492 98.1133 72.6035 52.2363Z"/>
+            </svg>
+
+            <div class="bl-drawing__texts">
+                <h2 class="bl-drawing__text is-active" id="land-sea-heading" data-slide="0">{% component 'jumbo' jumbotron='home-land-sea' %}</h2>
+                <p class="bl-drawing__text" data-slide="1">{% component 'jumbo' jumbotron='home-land-sea-2' %}</p>
+                <p class="bl-drawing__text bl-drawing__text--thin" data-slide="2">{% component 'jumbo' jumbotron='home-land-sea-3' %}</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ------------------------------------------------------- INTRODUCTION #}
+<section class="bl-intro" aria-label="Introduction">
+    <div class="bl-wrap">
+        <div class="bl-intro__row">
+            <div class="bl-statement">{% component 'jumbo' jumbotron='home-intro-1' %}</div>
+            <video class="bl-intro__img" src="{{ (vid ~ 'coastline-fields.mp4')|theme }}" poster="{{ (img ~ 'intro-1.jpg')|theme }}" muted loop playsinline preload="none" aria-hidden="true"></video>
+        </div>
+        <div class="bl-intro__row bl-intro__row--reverse">
+            <div class="bl-statement">{% component 'jumbo' jumbotron='home-intro-2' %}</div>
+            <video class="bl-intro__img" src="{{ (vid ~ 'farmers-field.mp4')|theme }}" poster="{{ (img ~ 'intro-2.jpg')|theme }}" muted loop playsinline preload="none" aria-hidden="true"></video>
+        </div>
+        <div class="bl-statement bl-intro__last">{% component 'jumbo' jumbotron='home-intro-3' %}</div>
+    </div>
+</section>
+
+{# -------------------------------------------------- BRINGING TOGETHER #}
+<section class="bl-together" aria-labelledby="together-heading">
+    <video class="bl-together__video" src="{{ (vid ~ 'earth-globe.mp4')|theme }}" muted loop playsinline preload="none" aria-hidden="true"></video>
+    <div class="bl-together__grid">
+        <h2 class="bl-together__title" id="together-heading">{% component 'jumbo' jumbotron='home-together-title' %}</h2>
+        <ul class="bl-together__stats">
+            <li>{{ partner_count }} organisations</li>
+            <li>{{ country_count }} EU Countries</li>
+            <li>8 Study Regions</li>
+        </ul>
+    </div>
+
+    {# Partner logos sliding as an endless carousel (CSS, pages/home.less).
+       The list is printed twice so the loop is seamless; the copy is hidden
+       from assistive tech and the keyboard. Hover / focus pauses it and
+       shows the institution's name; a logo opens the partner's website
+       (Pensoft.Partners > Institution url) in a new tab. #}
+    {% if partner_logos|length %}
+    <div class="bl-logos" style="--count: {{ partner_logos|length }}">
+        <div class="bl-logos__track">
+            {% for pass in 1..2 %}
+            {% set copy = pass == 2 %}
+            <ul class="bl-logos__list" {% if copy %}aria-hidden="true"{% else %}aria-label="Partners"{% endif %}>
+                {% for p in partner_logos %}
+                <li class="bl-logos__item">
+                    {% if p.url %}<a class="bl-logos__link" href="{{ p.url }}" target="_blank" rel="noopener noreferrer" {% if copy %}tabindex="-1"{% endif %}>{% else %}<span class="bl-logos__link">{% endif %}
+                        {% if p.logo %}
+                        <img src="{{ p.logo }}" alt="{{ copy ? '' : p.name }}" loading="lazy">
+                        {% else %}
+                        <span class="bl-logos__text">{{ p.short }}</span>{% if not copy %}<span class="sr-only"> - {{ p.name }}</span>{% endif %}
+                        {% endif %}
+                        <span class="bl-logos__name" aria-hidden="true">{{ p.name }}</span>
+                        {% if p.url and not copy %}{% partial 'components/new-tab-hint' %}{% endif %}
+                    {% if p.url %}</a>{% else %}</span>{% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            {% endfor %}
+        </div>
+    </div>
+    {# Stop / restart the scrolling logos (WCAG 2.2.2); shown by initLogos. #}
+    <button type="button" class="bl-motion-toggle bl-logos__pause" data-bl-logos-pause aria-label="Pause partner logos" hidden>
+        <span class="bl-motion-toggle__pause">{% partial 'balansed/icon' name='pause' size=20 %}</span>
+        <span class="bl-motion-toggle__play">{% partial 'balansed/icon' name='play' size=20 %}</span>
+    </button>
+    {% endif %}
+</section>
+
+{# ------------------------------------------------- EVIDENCE BOTH WAYS #}
+{#
+    Endless slider (Figma: Homepage Imagery animation, 4 variants): slides
+    crossfade every few seconds; the round arrow shows the next one. Each
+    slide's title lines arrive from below / right / left and its text rises
+    in when it becomes current (assets/js/balansed.js, initSlider; styles in
+    pages/home.less + motion.less). Pauses on hover / focus, when off screen
+    and with "reduce motion". Texts: Jumbotron home-evidence-title / -text
+    (slide 1) and home-evidence-N-title / -text (slides 2-4).
+#}
+{% set evidence_slides = [
+    { title: 'home-evidence-title', text: 'home-evidence-text', images: ['evidence.jpg'], flip: true },
+    { title: 'home-evidence-2-title', text: 'home-evidence-2-text', images: ['evidence/forest-lake.jpg', 'evidence/coast-cliff.jpg'], split: true },
+    { title: 'home-evidence-3-title', text: 'home-evidence-3-text', images: ['evidence/hands.jpg'] },
+    { title: 'home-evidence-4-title', text: 'home-evidence-4-text', images: ['evidence/forest-road.jpg'], short: true },
+] %}
+<section class="bl-evidence" data-bl-slider aria-roledescription="carousel" aria-label="BALANSED principles">
+    <div class="bl-evidence__slides" aria-live="off">
+        {% for s in evidence_slides %}
+        <div class="bl-evidence__slide {{ loop.first ? 'is-current' }} {{ s.split ? 'bl-evidence__slide--split' }} {{ s.short ? 'bl-evidence__slide--short' }}" role="group" aria-roledescription="slide" aria-label="{{ loop.index }} of {{ evidence_slides|length }}" {% if not loop.first %}inert{% endif %}>
+            <div class="bl-evidence__media" aria-hidden="true">
+                {% for image in s.images %}
+                <img class="bl-evidence__img {{ s.flip ? 'bl-evidence__img--flip' }} {{ s.split ? 'bl-evidence__img--' ~ loop.index }}" src="{{ (img ~ image)|theme }}" alt="" {% if not loop.parent.loop.first %}loading="lazy"{% endif %}>
+                {% endfor %}
+            </div>
+            <div class="bl-evidence__inner">
+                <h2 class="bl-evidence__title">{% component 'jumbo' jumbotron=s.title %}</h2>
+                <button type="button" class="bl-round-arrow" data-bl-slider-next aria-label="Next">
+                    {% partial 'balansed/icon' name='arrow-right' size=32 %}
+                </button>
+                <div class="bl-evidence__text">{% component 'jumbo' jumbotron=s.text %}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {# Stop / restart the automatic slide change (WCAG 2.2.2). Shown by
+       initSlider; hidden with "reduce motion", where slides never auto-advance. #}
+    <button type="button" class="bl-motion-toggle bl-evidence__pause" data-bl-slider-pause aria-label="Pause slideshow" hidden>
+        <span class="bl-motion-toggle__pause">{% partial 'balansed/icon' name='pause' size=20 %}</span>
+        <span class="bl-motion-toggle__play">{% partial 'balansed/icon' name='play' size=20 %}</span>
+    </button>
+</section>
+
+{# --------------------------------------------- WHAT SUCCESS LOOKS LIKE #}
+{#
+    Four goals on a ring of 96 ticks (Figma: 4 states). As the visitor
+    scrolls, the section stays in view and the ticks light up one by one
+    around the ring like a loading indicator, a quarter per goal: the goal
+    text changes and a photo pops in as each quarter completes
+    (assets/js/balansed.js, initSuccess; styles in pages/home.less).
+    Texts: Jumbotron home-success-goal ("By 2030 ...") and home-success-1..4.
+    Without JS: the first goal with its quarter lit.
+#}
+<section class="bl-success" data-bl-success aria-labelledby="success-heading">
+    <div class="bl-success__stage">
+        <h2 class="bl-success__title" id="success-heading">{% component 'jumbo' jumbotron='home-success-title' %}</h2>
+        <div class="bl-success__ring">
+            {% partial 'balansed/success-ring' %}
+
+            <div class="bl-success__goal">
+                <p class="bl-success__by">{% component 'jumbo' jumbotron='home-success-goal' %}</p>
+                <ul class="bl-success__whats">
+                    {% for n in 1..4 %}
+                    <li class="bl-success__what {{ n == 1 ? 'is-active' }}" data-step="{{ n - 1 }}">{% component 'jumbo' jumbotron='home-success-' ~ n %}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            {# A photo per quarter; the left one changes on the last goal (as in the design). #}
+            {% set simg = img ~ 'success/' %}
+            <img class="bl-success__thumb bl-success__thumb--1 is-on" data-step="0" src="{{ (simg ~ 'worker.jpg')|theme }}" alt="" loading="lazy">
+            <img class="bl-success__thumb bl-success__thumb--2" data-step="1" data-until="2" src="{{ (simg ~ 'laptop.jpg')|theme }}" alt="" loading="lazy">
+            <img class="bl-success__thumb bl-success__thumb--2" data-step="3" src="{{ (simg ~ 'coast.jpg')|theme }}" alt="" loading="lazy">
+            <img class="bl-success__thumb bl-success__thumb--3" data-step="2" src="{{ (simg ~ 'farmers.jpg')|theme }}" alt="" loading="lazy">
+            <img class="bl-success__thumb bl-success__thumb--4" data-step="3" src="{{ (simg ~ 'fields.jpg')|theme }}" alt="" loading="lazy">
+        </div>
+    </div>
+</section>
+
+{# ------------------------------------------------------ NEWS + EVENTS #}
+<section class="bl-updates" data-bl-nostack>
+    <div class="bl-updates__group" aria-labelledby="news-heading">
+        <h2 class="bl-h2" id="news-heading">Latest news</h2>
+        {% if news|length %}
+        <div class="bl-cards">
+            {% for record in news %}
+                {% set external = record.external and record.url %}
+                {% partial 'balansed/card'
+                    url=(external ? record.url : ('news'|page({ id: record.slug })))
+                    external=external
+                    title=record.title
+                    date=record.published_at
+                    image=(record.cover ? (record.cover.getThumb(790, 540, { mode: 'crop' }) ?: record.cover.path) : ((img ~ 'news-card.jpg')|theme))
+                %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="bl-empty">News will follow soon - stay tuned!</p>
+        {% endif %}
+        <a class="bl-btn bl-btn--green" href="{{ 'news'|page({}, false) }}">All News</a>
+    </div>
+
+    <div class="bl-updates__group" aria-labelledby="events-heading">
+        <h2 class="bl-h2" id="events-heading">Upcoming events</h2>
+        {% if events|length %}
+        <div class="bl-cards">
+            {% for entry in events %}
+                {% partial 'balansed/card'
+                    url=(entry.url ?: ('events'|page({ slug: entry.slug })))
+                    external=(entry.url is not empty)
+                    title=entry.title
+                    date=entry.start
+                    image=(entry.cover_image ? (entry.cover_image.getThumb(790, 540, { mode: 'crop' }) ?: entry.cover_image.path) : ((img ~ 'event-card.jpg')|theme))
+                %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="bl-empty">No upcoming events at the moment - check back soon.</p>
+        {% endif %}
+        <a class="bl-btn bl-btn--green" href="{{ 'events'|page({}, false) }}">See Calendar</a>
+    </div>
+</section>
+
+{# ---------------------------------------------------------- FOLLOW US #}
+<section class="bl-follow" data-bl-nostack aria-labelledby="follow-heading">
+    <div class="bl-wrap">
+        <h2 class="bl-follow__text" id="follow-heading">{% component 'jumbo' jumbotron='home-follow' %}</h2>
+        {% set bl_social_html %}{% partial 'balansed/socials' %}{% endset %}
+        {% if bl_social_html|trim %}
+        <div class="bl-follow__row">
+            <span class="bl-follow__label">Follow us</span>
+            {{ bl_social_html|raw }}
+        </div>
+        {% endif %}
+    </div>
+</section>

@@ -1,0 +1,346 @@
+// ===========================================================================
+//  News & Events: news list and article - pages/news.htm
+// ===========================================================================
+
+@bl-teal-35: rgba(39, 85, 106, 0.35);
+
+.bl-news-page {
+    .bl-section-top(86px);
+    z-index: 1;
+    padding: 80px 0 114px;
+    background: @bl-sand;
+    color: @bl-navy;
+    --bl-notch: @bl-sand;   // card corner notch matches the sand background
+
+    &__back {
+        margin-bottom: 29px;
+    }
+}
+
+// -- News / Events switch + ghost buttons -------------------------------------
+.bl-switch {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 35px;
+}
+
+.bl-btn--tab,
+.bl-btn--ghost {
+    border-color: @bl-teal-35;
+    color: @bl-teal;
+
+    &:hover,
+    &:focus-visible {
+        border-color: @bl-teal;
+        color: @bl-teal;
+    }
+}
+
+// Figma "Events" tab: on hover it fills in green.
+.bl-btn--tab:hover,
+.bl-btn--tab:focus-visible {
+    border-color: @bl-green-35;
+    background: @bl-green;
+    color: @bl-sand;
+}
+
+.bl-btn--tab.is-active {
+    border-color: transparent;
+    background: @bl-green;
+    color: @bl-sand;
+}
+
+// -- Card grid (list) -------------------------------------------------------------
+.bl-cards--page {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 25px;
+    max-width: none;
+}
+
+// -- Pager ---------------------------------------------------------------------------
+.bl-pager {
+    margin-top: 45px;
+
+    ul {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        align-items: center;
+        gap: 8px;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    li {
+        margin: 0;
+    }
+
+    &__item {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 50px;
+        height: 50px;
+        padding: 0 16px;
+        border: 1px solid @bl-teal-35;
+        border-radius: @bl-pill;
+        font-family: @bl-font-display;
+        font-size: 16px;
+        font-weight: 500;
+        color: @bl-teal;
+        text-decoration: none;
+        transition: border-color .2s ease, background-color .2s ease;
+
+        &:hover,
+        &:focus-visible {
+            border-color: @bl-teal;
+            color: @bl-teal;
+            text-decoration: none;
+        }
+
+        &.is-current {
+            border-color: transparent;
+            background: @bl-green;
+            color: @bl-sand;
+        }
+
+        &.is-disabled {
+            opacity: .35;
+        }
+    }
+
+    &__flip {
+        display: inline-flex;
+        transform: scaleX(-1);
+    }
+
+    &__gap {
+        padding: 0 4px;
+        color: @bl-teal;
+    }
+}
+
+// -- Article -------------------------------------------------------------------------
+.bl-article {
+    display: grid;
+    grid-template-columns: minmax(0, 835px) minmax(0, 395px);
+    justify-content: space-between;
+    align-items: start;
+    gap: 50px;
+
+    &__main {
+        display: flex;
+        flex-direction: column;
+        gap: 35px;
+        min-width: 0;
+    }
+
+    // Cover with the date + title over it.
+    &__head {
+        position: relative;
+        display: flex;
+        align-items: center;
+        min-height: 270px;
+        padding: 40px 65px;
+        overflow: hidden;
+        border-radius: @bl-radius-card;
+        background: @bl-navy;
+        color: @bl-sand;
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 110% 170% at 55% 0%, fade(@bl-navy, 0%) 0%, @bl-navy 100%),
+                rgba(39, 85, 106, .36);
+        }
+    }
+
+    &__cover {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: bottom;
+    }
+
+    &__head-text {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        max-width: 630px;
+
+        .bl-eyebrow {
+            letter-spacing: -0.8px;
+        }
+    }
+
+    &__gallery {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 25px;
+
+        a {
+            display: block;
+            overflow: hidden;
+            border-radius: @bl-radius-card;
+        }
+
+        img {
+            display: block;
+            width: 100%;
+            aspect-ratio: 405 / 270;
+            object-fit: cover;
+            transition: transform .4s @bl-ease;
+        }
+
+        a:hover img {
+            transform: scale(1.03);
+        }
+    }
+
+    &__related {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+    }
+
+    &__related-title {
+        font-size: 28px;
+        line-height: 1.25;
+        letter-spacing: -1.4px;
+    }
+}
+
+// Article body (rich text from the backend).
+.bl-prose {
+    font-family: @bl-font-body;
+    font-size: @bl-fs-lead;
+    font-weight: 300;
+    line-height: 1.45;
+    letter-spacing: -0.4px;
+    overflow-wrap: break-word;
+
+    > * + * {
+        margin-top: 1.45em;
+    }
+
+    h2, h3, h4 {
+        margin-top: 1.6em;
+        font-family: @bl-font-display;
+        line-height: 1.25;
+        letter-spacing: -0.8px;
+    }
+
+    h2 { font-size: 28px; }
+    h3 { font-size: 23px; }
+    h4 { font-size: 20px; }
+
+    strong, b { font-weight: 600; }
+    em, i { font-style: italic; }
+
+    a {
+        color: @bl-blue;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+    }
+
+    ul, ol {
+        padding-left: 1.3em;
+    }
+
+    ul { list-style: disc; }
+    ol { list-style: decimal; }
+
+    li + li {
+        margin-top: .4em;
+    }
+
+    img {
+        height: auto;
+        border-radius: @bl-radius-card;
+    }
+
+    blockquote {
+        padding-left: 24px;
+        border-left: 3px solid @bl-brown;
+        font-family: @bl-font-display;
+        font-weight: 300;
+    }
+}
+
+.bl-share {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    margin-top: 7px;
+
+    &__label {
+        font-family: @bl-font-display;
+        font-size: 28px;
+        font-weight: 100;
+        line-height: 1.35;
+        letter-spacing: 0.28px;
+    }
+}
+
+// ===========================================================================
+//  Responsive
+// ===========================================================================
+@media @bl-lg {
+    .bl-cards--page {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 20px;
+    }
+
+    .bl-article {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 56px;
+
+        &__related {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 20px;
+        }
+
+        &__related-title {
+            grid-column: ~"1 / -1";
+        }
+    }
+}
+
+@media @bl-md {
+    .bl-news-page {
+        margin-top: -50px;
+        padding: 48px 0 72px;
+        border-radius: 32px 32px 0 0;
+    }
+
+    .bl-cards--page {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 480px;
+        margin: 0 auto;
+    }
+
+    .bl-article {
+        &__head {
+            padding: 36px 28px;
+        }
+
+        &__gallery {
+            grid-template-columns: minmax(0, 1fr);
+            gap: 16px;
+        }
+
+        &__related {
+            grid-template-columns: minmax(0, 1fr);
+        }
+    }
+}

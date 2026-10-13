@@ -1,0 +1,38 @@
+{#
+    Inner-page banner (BALANSED): landscape photo under a navy tint with the
+    page title centred. The site header (partials/site/header.htm) is laid
+    over its top, so every inner page shares the same header.
+
+    The banner is the theme setting "Header image" (Header tab) when set,
+    otherwise the coastline video (its photo as the poster).
+
+    crumb   - optional eyebrow text ("About", "Resources")
+    parent  - optional {title, url}: renders "parent / crumb" with a link
+    title   - the H1
+    heading - pass false when the page renders its own H1; the title is
+              then a visually identical <p> so the page keeps one H1
+    fade    - pass true when navy content follows (no sand band): the photo
+              fades into navy at the bottom (Figma: Work packages)
+#}
+{# Banner: the coastline video (poster: the matching photo; played by
+   initReveal while on screen, the poster with "reduce motion"), or the
+   theme setting "Header image" as a still photo when one is uploaded. #}
+<section class="bl-page-hero{{ fade ? ' bl-page-hero--fade' }}">
+    {% if this.theme.header_image %}
+    <img class="bl-page-hero__img" src="{{ this.theme.header_image.getPath() }}" alt="" aria-hidden="true">
+    {% else %}
+    <video class="bl-page-hero__img" src="{{ 'assets/videos/balansed/coastline-people.mp4'|theme }}" poster="{{ 'assets/images/balansed/hero.jpg'|theme }}" muted loop playsinline preload="auto" aria-hidden="true"></video>
+    {% endif %}
+    <div class="bl-page-hero__inner">
+        {% if crumb or parent %}
+        <span class="bl-page-hero__crumb">
+            {% if parent %}<a href="{{ parent.url }}">{{ parent.title }}</a> / {% endif %}{{ crumb }}
+        </span>
+        {% endif %}
+        {% if heading is defined and heading == false %}
+        <p class="bl-page-hero__title">{{ title }}</p>
+        {% else %}
+        <h1 class="bl-page-hero__title" id="page-title">{{ title }}</h1>
+        {% endif %}
+    </div>
+</section>

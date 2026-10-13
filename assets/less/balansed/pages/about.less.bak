@@ -1,0 +1,468 @@
+// ===========================================================================
+//  About the project - pages/about.htm
+//  Sections overlap with the design's rounded tops (banner > why > result >
+//  aims > will), offsets measured in Figma.
+// ===========================================================================
+
+
+// One-line drawings sketched as the visitor scrolls (initScrollDraw):
+// stroke-dashoffset 1 = hidden, 0 = drawn.
+[data-bl-draw] .bl-line {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 0;
+}
+
+.bl-about-head {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    max-width: 709px;
+}
+
+// -- Why BALANSED exists ---------------------------------------------------------
+.bl-why {
+    .bl-section-top(86px);
+    z-index: 1;
+    padding: 59px 0 124px;
+    background: @bl-sand;
+    color: @bl-navy;
+
+    // Two overlapping photos with a text beside each (868 x 399 at 1440).
+    &__collage {
+        position: relative;
+        width: 868px;
+        max-width: 100%;
+        aspect-ratio: 868 / 399;
+        margin: 15px 0 0 222px;
+    }
+
+    &__img {
+        position: absolute;
+        width: percentage(485 / 868);
+        aspect-ratio: 485 / 240;
+        object-fit: cover;
+        border-radius: @bl-radius-card;
+
+        &--1 {
+            top: 0;
+            left: 0;
+        }
+
+        &--2 {
+            top: percentage(159 / 399);
+            right: 0;
+            border: 4px solid @bl-sand;
+        }
+    }
+
+    &__text {
+        position: absolute;
+
+        &--1 {
+            top: 0;
+            left: percentage(520 / 868);
+            width: percentage(335 / 868);
+        }
+
+        &--2 {
+            top: percentage(275 / 399);
+            left: 0;
+            width: percentage(323 / 868);
+        }
+    }
+}
+
+// -- The result ----------------------------------------------------------------------
+.bl-result {
+    .bl-section-top(71px);
+    z-index: 2;
+    padding: 80px 0 65px;
+    background: @bl-navy;
+    color: @bl-sky;
+
+    // Banner runs to the right edge of the page, so no right padding.
+    &__inner {
+        display: flex;
+        flex-direction: column;
+        gap: 53px;
+        max-width: 1440px;
+        margin: 0 auto;
+        padding-left: @bl-gutter;
+    }
+
+    &__head {
+        display: flex;
+        flex-direction: column;
+        gap: 15px;
+        max-width: 1104px;
+        padding: 3px 0 3px 36px;
+        border-left: 3px solid @bl-brown;
+    }
+
+    &__banner {
+        position: relative;
+        min-height: 220px;
+        overflow: hidden;
+        border-radius: @bl-radius-section 0 0 @bl-radius-section;
+        background: @bl-green;
+
+        &::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(89.5deg, fade(@bl-navy, 0%) 4%, @bl-navy 70%);
+        }
+    }
+
+    &__img {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    &__banner-text {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        max-width: 992px + 130px;
+        padding: 65px;
+    }
+
+    &__claim {
+        flex: 0 0 267px;
+        font-family: @bl-font-display;
+        font-size: @bl-fs-statement;
+        line-height: 1.25;
+        letter-spacing: -1.8px;
+    }
+
+    .bl-lead {
+        max-width: 703px;
+    }
+}
+
+// -- What we're setting out to do -------------------------------------------
+.bl-aims {
+    position: relative;
+    z-index: 3;
+    min-height: 794px;
+    padding: 80px 0 220px;
+    overflow: hidden;
+    border-radius: @bl-radius-section @bl-radius-section 0 0;
+    background: @bl-sky;
+    color: @bl-navy;
+
+    // One-line drawing of two people talking, anchored bottom right.
+    &__drawing {
+        position: absolute;
+        top: 171px;
+        right: 0;
+        width: ~"max(900px, 100.7%)";
+        max-width: none;
+        height: auto;
+        overflow: visible;
+        color: @bl-navy;
+        opacity: .35;
+        pointer-events: none;
+    }
+
+    .bl-wrap {
+        position: relative;
+    }
+
+    &__head {
+        max-width: 554px;
+    }
+
+    &__text {
+        max-width: 479px;
+        margin-top: 27px;
+    }
+}
+
+// -- BALANSED will ---------------------------------------------------------------
+.bl-will {
+    .bl-section-top(61px);
+    z-index: 4;
+    min-height: 1171px;
+    padding: 80px 0 420px;
+    overflow: hidden;
+    background: @bl-teal;
+    color: @bl-sky;
+
+    // Scales line drawing (35%) across the lower half.
+    &__drawing {
+        position: absolute;
+        top: 650px;
+        right: -43px;
+        width: 1809px;
+        max-width: none;
+        height: auto;
+        overflow: visible;
+        color: @bl-sky;
+        opacity: .35;
+        pointer-events: none;
+    }
+
+    .bl-wrap {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 55px;
+    }
+
+    .bl-h2 {
+        line-height: 1.25;
+        letter-spacing: -1.8px;
+    }
+
+    &__list {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 412px));
+        justify-content: center;
+        gap: 20px;
+        width: 100%;
+        margin: 0;
+        padding: 0;
+        align-items: start;   // an opened card grows on its own
+        list-style: none;
+    }
+
+    &__card {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+        min-height: 162px;
+        margin: 0;
+        padding: 35px;
+        border: 1px solid @bl-sky-35;
+        border-radius: @bl-radius-card;
+        transition: min-height .55s @bl-ease;
+    }
+
+    // Short text under the card (Figma "About the project cards", hover):
+    // the height opens (grid rows 0fr -> 1fr) and the text rises and fades in.
+    &__more {
+        display: grid;
+        grid-template-rows: 0fr;
+        transition: grid-template-rows .55s @bl-ease;
+    }
+
+    &__more-inner {
+        min-height: 0;
+        overflow: hidden;
+        max-width: 340px;
+        padding-top: 10px;   // 15px under the title with the card's 5px gap
+        font-family: @bl-font-body;
+        font-size: 18px;
+        line-height: 1.6;
+        letter-spacing: -0.36px;
+        opacity: 0;
+        transform: translateY(12px);
+        transition: opacity .35s ease, transform .55s @bl-ease;
+    }
+
+    &__card.is-open {
+        min-height: 295px;   // Figma: every opened card is 295px tall
+
+        .bl-will__more {
+            grid-template-rows: 1fr;
+        }
+
+        .bl-will__more-inner {
+            opacity: 1;
+            transform: none;
+            transition-delay: .12s;
+        }
+    }
+
+    &__num {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-family: @bl-font-body;
+        font-size: 20px;
+        line-height: 1.45;
+        letter-spacing: -0.4px;
+
+        &::before {
+            content: "";
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: @bl-sky;
+        }
+    }
+
+    &__text {
+        max-width: 340px;
+        font-family: @bl-font-display;
+        font-size: 22px;
+        line-height: 1.25;
+        letter-spacing: -1.1px;
+    }
+}
+
+// ===========================================================================
+//  Responsive
+// ===========================================================================
+@media @bl-xl {
+    .bl-why__collage {
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    .bl-will__drawing {
+        top: auto;
+        bottom: 60px;
+        width: ~"max(1100px, 125%)";
+    }
+}
+
+@media @bl-lg {
+    .bl-result__banner-text {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 48px;
+
+        .bl-result__claim {
+            flex-basis: auto;
+        }
+    }
+
+    .bl-aims {
+        min-height: 0;
+        padding-bottom: 46vw;
+
+        &__drawing {
+            top: auto;
+            bottom: 0;
+        }
+    }
+
+    .bl-will {
+        min-height: 0;
+        padding-bottom: 300px;
+
+        &__list {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+    }
+}
+
+@media @bl-md {
+    .bl-why,
+    .bl-result,
+    .bl-aims,
+    .bl-will {
+        border-radius: 32px 32px 0 0;
+    }
+
+    .bl-why {
+        margin-top: -50px;
+        padding: 48px 0 100px;
+
+        // Stacked: photo, text, photo, text.
+        &__collage {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            aspect-ratio: auto;
+            margin-top: 32px;
+        }
+
+        &__img,
+        &__text {
+            position: static;
+            width: 100%;
+        }
+
+        &__img--2 {
+            border: 0;
+        }
+
+        &__img--1 { order: 1; }
+        &__text--1 { order: 2; }
+        &__img--2 { order: 3; }
+        &__text--2 { order: 4; }
+    }
+
+    .bl-result {
+        padding-top: 56px;
+
+        &__inner {
+            gap: 36px;
+        }
+
+        &__head {
+            padding-left: 20px;
+            margin-right: @bl-gutter;
+        }
+
+        &__banner {
+            border-radius: 32px 0 0 32px;
+        }
+
+        &__banner-text {
+            padding: 36px 24px 36px 32px;
+        }
+    }
+
+    .bl-aims {
+        padding-top: 56px;
+        padding-bottom: 260px;
+
+        &__drawing {
+            width: 760px;
+            right: -120px;
+        }
+    }
+
+    .bl-will {
+        padding: 56px 0 220px;
+
+        .bl-wrap {
+            gap: 32px;
+        }
+
+        &__list {
+            grid-template-columns: minmax(0, 1fr);
+        }
+
+        &__card {
+            min-height: 0;
+            padding: 24px 28px;
+        }
+
+        &__drawing {
+            width: 900px;
+            right: -260px;
+        }
+    }
+}
+
+// "BALANSED will" hover texts: open on plain hover without JS, always open
+// on touch screens (no hover to reveal them), no motion when reduced.
+html:not(.bl-js) .bl-will__card:hover,
+.bl-will__card:focus-within {
+    .bl-will__more { grid-template-rows: 1fr; }
+    .bl-will__more-inner { opacity: 1; transform: none; }
+}
+
+@media (hover: none) {
+    .bl-will__more { grid-template-rows: 1fr; }
+    .bl-will__more-inner { opacity: 1; transform: none; }
+}
+
+.bl-reduced-motion({
+    .bl-will__card,
+    .bl-will__more,
+    .bl-will__more-inner {
+        transition: none !important;
+    }
+});

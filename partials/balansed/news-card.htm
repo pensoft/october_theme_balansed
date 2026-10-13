@@ -1,0 +1,9 @@
+{# One news card. record = Pensoft\Articles\Models\Article. Wraps balansed/card. #}
+{% set external = record.external and record.url %}
+{% partial 'balansed/card'
+    url=(external ? record.url : ('news'|page({ id: record.slug })))
+    external=external
+    title=record.title
+    date=record.published_at
+    image=(record.cover ? (record.cover.getThumb(820, 540, { mode: 'crop' }) ?: record.cover.path) : ('assets/images/balansed/news-card.jpg'|theme))
+%}

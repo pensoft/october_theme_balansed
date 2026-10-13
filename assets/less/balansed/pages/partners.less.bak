@@ -1,0 +1,373 @@
+// ===========================================================================
+//  Consortium - pages/partners.htm, partials/balansed/europe-map.htm
+//  Uses the sand .bl-news-page band from news.less. Partner-country map
+//  colours come from an inline <style> in the page (they depend on data).
+// ===========================================================================
+
+.bl-consortium__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 767px) minmax(0, 526px);
+    justify-content: space-between;
+    align-items: start;
+    gap: 40px;
+}
+
+.bl-consortium__main {
+    min-width: 0;
+}
+
+.bl-consortium__map {
+    position: sticky;
+    top: 40px;
+    margin-top: 74px;
+}
+
+// -- Topic switches ------------------------------------------------------------
+.bl-topics {
+    position: relative;
+    z-index: 1;
+    // Figma: 1006px wide, so the switches run on into the space above the
+    // map (three per row) instead of wrapping inside the 767px column.
+    width: 1006px;
+    max-width: ~"calc(100vw - 2 * 80px)";
+    margin: 0 0 35px;
+    padding: 0;
+    border: 0;
+
+    legend {
+        margin-bottom: 25px;
+        padding: 0;
+    }
+
+    &__list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 25px;
+    }
+}
+
+.bl-toggle {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+
+    input {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        margin: 0;
+        opacity: 0;
+    }
+
+    &__track {
+        position: relative;
+        flex: none;
+        width: 65px;
+        height: 25px;
+        border-radius: 90px;
+        background: @bl-navy;
+        transition: background-color .25s ease;
+
+        &::after {
+            content: "";
+            position: absolute;
+            top: 5px;
+            left: 6px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: @bl-sand;
+            transition: transform .25s @bl-ease;
+        }
+    }
+
+    &__label {
+        font-family: @bl-font-display;
+        font-size: 22px;
+        line-height: 1.25;
+        letter-spacing: -1.1px;
+        color: @bl-navy;
+    }
+
+    input:checked + .bl-toggle__track {
+        background: @bl-brown;
+
+        &::after {
+            transform: translateX(38px);
+        }
+    }
+
+    input:focus-visible + .bl-toggle__track {
+        outline: 2px solid @bl-blue;
+        outline-offset: 3px;
+    }
+
+    &:hover .bl-toggle__track {
+        background: lighten(@bl-navy, 12%);
+    }
+
+    &:hover input:checked + .bl-toggle__track {
+        background: lighten(@bl-brown, 8%);
+    }
+}
+
+// -- Partner tiles ----------------------------------------------------------------
+.bl-partners {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 180px));
+    gap: 15px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+
+    li {
+        margin: 0;
+    }
+
+    &[hidden],
+    li[hidden] {
+        display: none;
+    }
+
+    &__empty {
+        text-align: left;
+    }
+}
+
+.bl-partner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    aspect-ratio: 1;
+    padding: 20px 25px;
+    border-radius: 11px;
+    background: @bl-brown;
+    color: @bl-sand;
+    text-decoration: none;
+    transition: background-color .25s ease;
+
+    img {
+        display: block;
+        width: auto;
+        max-width: 130px;
+        height: auto;
+        max-height: 45px;
+        filter: brightness(0) invert(1);   // light logo on brown, as in the design
+        opacity: .92;
+    }
+
+    &__name {
+        font-family: @bl-font-display;
+        font-size: 20px;
+        letter-spacing: -0.8px;
+    }
+
+    &__more {
+        padding: 8px 15px;
+        border-radius: @bl-pill;
+        background: @bl-sand;
+        font-family: @bl-font-display;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1.45;
+        letter-spacing: -0.24px;
+        color: @bl-brown;
+    }
+
+    &:hover,
+    &:focus-visible {
+        background: lighten(@bl-brown, 6%);
+        color: @bl-sand;
+        text-decoration: none;
+    }
+}
+
+// -- Partner panel -----------------------------------------------------------------
+// Without JS the panels are listed under the tiles; with JS one replaces
+// the grid at a time (hidden attribute, assets/js/balansed.js).
+.bl-partner-panels {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.bl-consortium.is-ready .bl-partner-panels {
+    margin-top: 0;
+}
+
+.bl-partner-panel {
+    position: relative;
+    padding: 44px 50px 44px 39px;
+    border-radius: 11px;
+    background: @bl-brown;
+    color: @bl-sand;
+    outline: 0;
+
+    &[hidden] {
+        display: none;
+    }
+
+    &__close {
+        position: absolute;
+        top: 18px;
+        right: 22px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 22px;
+        height: 22px;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        background: none;
+        color: @bl-sand;
+        cursor: pointer;
+        transition: transform .25s @bl-ease;
+
+        &:hover,
+        &:focus-visible {
+            transform: rotate(90deg);
+        }
+    }
+
+    &__head {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
+
+        img {
+            width: 130px;
+            height: auto;
+            max-height: 45px;
+            object-fit: contain;
+            object-position: left center;
+            filter: brightness(0) invert(1);
+            opacity: .92;
+        }
+    }
+
+    &__name {
+        max-width: 278px;
+        font-size: 16px;
+        line-height: 1.25;
+        letter-spacing: -0.8px;
+    }
+
+    &__text {
+        max-width: 691px;
+        margin-top: 12px;
+        font-family: @bl-font-body;
+        font-size: 14px;
+        line-height: 1.25;
+        letter-spacing: -0.56px;
+
+        > * + * {
+            margin-top: .8em;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: underline;
+        }
+    }
+
+    &__link {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-top: 16px;
+        font-family: @bl-font-display;
+        font-size: 14px;
+        font-weight: 500;
+        color: @bl-sand;
+        text-decoration: underline;
+        text-underline-offset: 3px;
+
+        &:hover,
+        &:focus-visible {
+            color: @bl-white;
+        }
+    }
+}
+
+.bl-consortium.is-ready .bl-partner-panel__close {
+    display: inline-flex;
+}
+
+// -- Map ---------------------------------------------------------------------------
+.bl-map {
+    display: block;
+    width: 100%;
+    height: auto;
+
+    [data-country] {
+        fill: @bl-navy;
+        stroke: @bl-sky-35;
+        stroke-width: .92;
+        transition: fill .3s ease;
+    }
+
+    // Beats the inline partner/selection rules (one more class).
+    &.has-selection [data-country].is-active {
+        fill: @bl-brown;
+    }
+}
+
+// ===========================================================================
+//  Responsive
+// ===========================================================================
+@media @bl-xl {
+    .bl-consortium__grid {
+        grid-template-columns: minmax(0, 1fr) minmax(0, 400px);
+    }
+
+    // The map column comes closer: keep the switches in their column.
+    .bl-topics {
+        width: auto;
+        max-width: none;
+    }
+
+    .bl-toggle__label {
+        font-size: 19px;
+    }
+}
+
+@media @bl-lg {
+    .bl-consortium__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .bl-consortium__map {
+        position: static;
+        order: -1;
+        width: 100%;
+        max-width: 420px;
+        margin: 0 auto;
+    }
+}
+
+@media @bl-md {
+    .bl-topics__list {
+        gap: 14px 20px;
+    }
+
+    .bl-toggle__label {
+        font-size: 17px;
+        letter-spacing: -0.6px;
+    }
+
+    .bl-partners {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+
+    .bl-partner-panel {
+        padding: 36px 28px 28px;
+    }
+}

@@ -1,0 +1,40 @@
+{#
+    Results document card (navy): type pill, title, Authors / number /
+    Year / Status rows, and the round button in the top-right notch -
+    download when a file is attached, otherwise the DOI / URL link.
+    The link covers the whole card; the round button sits inside it.
+    record = Pensoft\Library\Models\Library
+#}
+{% set bl_rows = [] %}
+{% if record.authors %}{% set bl_rows = bl_rows|merge([{ label: 'Authors', value: (record.authors is iterable ? record.authors|join(', ') : record.authors) }]) %}{% endif %}
+{% if record.deliverable_number %}{% set bl_rows = bl_rows|merge([{ label: 'Number', value: record.deliverable_number }]) %}{% endif %}
+{% if record.journal_title %}{% set bl_rows = bl_rows|merge([{ label: 'Journal', value: record.journal_title }]) %}{% endif %}
+{% if record.year_attr %}{% set bl_rows = bl_rows|merge([{ label: 'Year', value: record.year_attr }]) %}{% endif %}
+{% if record.status %}{% set bl_rows = bl_rows|merge([{ label: 'Status', value: record.status_attr }]) %}{% endif %}
+
+<article class="bl-doc">
+    <span class="bl-doc__type">{{ record.type_attr }}</span>
+    <h3 class="bl-doc__title">{{ record.title }}</h3>
+    {% if bl_rows|length %}
+    <dl class="bl-doc__rows">
+        {% for row in bl_rows %}
+        <div>
+            <dt>{{ row.label }}</dt>
+            <dd>{{ row.value }}</dd>
+        </div>
+        {% endfor %}
+    </dl>
+    {% endif %}
+
+    {% if record.file %}
+    <a class="bl-doc__link" {% partial 'realise/file-link' file=record.file %}>
+        <span class="bl-doc__btn" aria-hidden="true">{% partial 'balansed/icon' name='arrow-down' size=22 stroke=1.5 %}</span>
+        <span class="sr-only">Download {{ record.title }} ({{ record.file.getExtension()|upper }}, {{ (record.file.file_size / 1024 / 1024)|round(2) }} MB{{ record.file.getExtension()|lower in ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'webp'] ? ', opens in a new tab' }})</span>
+    </a>
+    {% elseif record.doi %}
+    <a class="bl-doc__link" href="{{ record.doi }}" target="_blank" rel="noopener noreferrer">
+        <span class="bl-doc__btn" aria-hidden="true">{% partial 'balansed/icon' name='arrow-up-right' size=22 stroke=1.5 %}</span>
+        <span class="sr-only">Open {{ record.title }} (opens in a new tab)</span>
+    </a>
+    {% endif %}
+</article>

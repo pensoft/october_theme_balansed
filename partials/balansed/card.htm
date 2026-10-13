@@ -1,0 +1,29 @@
+{#
+    News / event card: photo, glass caption and the arrow badge in the
+    top-right notch. The whole card is the link.
+
+    url, title, date (DateTime), image (url), external (bool)
+    variant - 'event': teal badge, pills (tags) top-left, no date line
+    tags    - list of short labels shown as pills (events)
+#}
+<article class="bl-card {{ variant ? 'bl-card--' ~ variant }}">
+    <img class="bl-card__img" src="{{ image }}" alt="" loading="lazy">
+    {% if tags is defined and tags|length %}
+    <ul class="bl-card__tags">
+        {% for tag in tags %}<li>{{ tag }}</li>{% endfor %}
+    </ul>
+    {% endif %}
+    <div class="bl-card__caption">
+        {% if variant != 'event' %}
+        <time class="bl-card__date" datetime="{{ date|date('Y-m-d') }}">{{ date|date('j M Y')|upper }}</time>
+        {% endif %}
+        <h3 class="bl-card__title">
+            <a href="{{ url }}" {% if external %}target="_blank" rel="noopener noreferrer"{% endif %}>{{ title|striptags }}{% if external %}{% partial 'components/new-tab-hint' %}{% endif %}</a>
+        </h3>
+    </div>
+    {# Click target over the whole card. The caption is its own positioned
+       (blurred) layer, so the title link can't stretch past it; this copy
+       is for the mouse only - keyboard and screen readers use the title. #}
+    <a class="bl-card__link" href="{{ url }}" tabindex="-1" aria-hidden="true" {% if external %}target="_blank" rel="noopener noreferrer"{% endif %}></a>
+    <span class="bl-card__badge" aria-hidden="true">{% partial 'balansed/icon' name='arrow-up-right' size=22 stroke=1.5 %}</span>
+</article>

@@ -1,0 +1,28 @@
+url = "/privacy-policy"
+layout = "default"
+title = "Privacy policy"
+is_hidden = 0
+robot_index = "index"
+robot_follow = "follow"
+
+[siteSearchInclude]
+
+[jumbotron]
+jumbotron = "privacy-policy"
+title = 0
+background = "transperant"
+templates = "template1"
+description_limit = 0
+==
+{% component 'siteSearchInclude' %}
+{# The page H1 is the layout's hero (page title). Body: the "privacy-policy"
+   Pensoft.Jumbotron entry, then the Matomo opt-out box, filled by the script
+   below. The box lives in the theme (its own id) so the opt-out always has
+   somewhere to render inside the page - without it Matomo printed an error
+   outside the main content. #}
+<div class="container">
+    {% component 'jumbotron' %}
+    <div id="bl-matomo-opt-out" class="bl-matomo-opt-out"></div>
+</div>
+
+<script src="https://matomo.pensoft.net/index.php?module=CoreAdminHome&action=optOutJS&divId=bl-matomo-opt-out&language=auto&showIntro=1"></script>

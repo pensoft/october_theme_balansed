@@ -1,0 +1,242 @@
+url = "/study-regions/:slug?"
+layout = "default"
+title = "Study regions"
+is_hidden = 0
+robot_index = "index"
+robot_follow = "follow"
+
+; Static texts: Pensoft.Jumbotron entries (backend > Jumbotron), rendered
+; with {% component 'jumbo' jumbotron='<slug>' %} - see partials/jumbo/default.htm.
+[jumbotron jumbo]
+jumbotron = "regions-label"
+background = "transperant"
+templates = "template3"
+description_limit = 0
+==
+<?php
+use Pensoft\Casestudies\Models\Data as CaseStudy;
+
+/*
+ * BALANSED Study regions.
+ *   /study-regions          the regions on a circle around the globe
+ *   /study-regions/<slug>   one region (slug = the case study's slug)
+ * Regions are the Pensoft.Casestudies records (backend > Case studies), in
+ * their sort order: Title, Description (rich text: heading, text, "The
+ * question"), Cover = the photo on the circle, Gallery = the region page's
+ * other two photos. Their place on the globe is the theme setting "Globe
+ * places" (backend > Settings > Front-end theme > Study regions: case
+ * study slug + latitude/longitude). Until there are case studies, the
+ * design's example region is shown.
+ */
+function regions()
+{
+    static $cache = null;   // onInit and onStart both ask
+    if ($cache !== null) {
+        return $cache;
+    }
+    $theme = function ($file) { return $this->controller->themeUrl('assets/images/balansed/' . $file); };
+
+    // Globe places by case study slug; decimal degrees, "39,2" accepted.
+    $coord = function ($v, $max) {
+        $v = str_replace(',', '.', trim((string) $v));
+        return is_numeric($v) && abs((float) $v) <= $max ? (float) $v : null;
+    };
+    $places = [];
+    foreach ((array) $this->theme->region_places as $p) {
+        $lat = $coord($p['lat'] ?? '', 90);
+        $lng = $coord($p['lng'] ?? '', 180);
+        if (!empty($p['case_study']) && $lat !== null && $lng !== null) {
+            $places[trim($p['case_study'])] = [$lat, $lng];
+        }
+    }
+
+    $regions = [];
+    foreach (CaseStudy::with(['image', 'gallery'])->orderBy('sort_order')->orderBy('id')->get() as $cs) {
+        if (trim((string) $cs->title) === '' || !$cs->slug) {
+            continue;
+        }
+        // Original files (thumbnails can't be written on this server yet).
+        $images = [];
+        if ($cs->image) {
+            $images[] = $cs->image->getPath();
+        }
+        foreach ($cs->gallery as $file) {
+            $images[] = $file->getPath();
+        }
+        $place = $places[$cs->slug] ?? null;
+        $regions[] = [
+            'slug' => $cs->slug,
+            'name' => trim($cs->title),
+            'description' => (string) $cs->description,
+            'images' => $images,
+            'lat' => $place ? $place[0] : null,
+            'lng' => $place ? $place[1] : null,
+            'url' => $this->pageUrl('study-regions', ['slug' => $cs->slug]),
+        ];
+    }
+
+    if (!count($regions)) {
+        $regions[] = [
+            'slug' => 'la-mancha-and-southern-spain',
+            'name' => 'La Mancha and Southern Spain',
+            'description' => '<h3>Farmers, drought and hard choices</h3><p>An ageing farming population. Large versus small landholdings. A widening gap between irrigated and rain-fed land.</p><h3>The question</h3><p>Which biomass production for which use - food, energy or something new - can a shrinking water supply actually support?</p>',
+            'images' => [$theme('regions/coast.jpg'), $theme('news-card.jpg'), $theme('evidence.jpg')],
+            'lat' => 39.2,
+            'lng' => -3.0,
+            'url' => $this->pageUrl('study-regions', ['slug' => 'la-mancha-and-southern-spain']),
+        ];
+    }
+    return $cache = $regions;
+}
+
+function onInit()
+{
+    if ($slug = $this->param('slug')) {
+        foreach ($this->regions() as $r) {
+            if ($r['slug'] === $slug) {
+                $this->page->title = $r['name'] . ' - Study regions';
+            }
+        }
+    }
+}
+
+function onStart()
+{
+    $regions = $this->regions();
+    $this['regions'] = $regions;
+    $this['list_url'] = $this->pageUrl('study-regions', ['slug' => null]);
+
+    if ($slug = $this->param('slug')) {
+        $region = null;
+        foreach ($regions as $r) {
+            if ($r['slug'] === $slug) {
+                $region = $r;
+            }
+        }
+        if (!$region) {
+            $this->setStatusCode(404);
+            return $this->controller->run('404');
+        }
+        $this['region'] = $region;
+        return;
+    }
+
+    // The ring: the regions, padded with empty circles to the design's
+    // seven, spaced 31.3deg apart (fewer degrees when there are many).
+    $count = max(7, count($regions));
+    $step = $count > 11 ? 360 / $count : 31.3;
+    // Angles wrap around the top: with seven circles 0, +31, +63, +94, then
+    // -94, -63, -31 - so the first region is on top and the order runs
+    // clockwise. Circles beyond 100deg are hidden behind the globe.
+    $span = $count * $step;
+    $ring = [];
+    for ($i = 0; $i < $count; $i++) {
+        $angle = fmod($i * $step, $span);
+        if ($angle >= $span / 2) {
+            $angle -= $span;
+        }
+        $ring[] = ['region' => $regions[$i] ?? null, 'index' => $i, 'angle' => round($angle, 2)];
+    }
+    $this['ring'] = $ring;
+    $this['ring_step'] = $step;
+    $this['dot_angles'] = [-94, -62.6, -31.3, 0, 31.3, 62.6, 94];
+}
+?>
+==
+{#
+    BALANSED Study regions (Figma: About / Study regions).
+    Overview - region photos on a ring around the globe; the active region
+    sits at the top with "Learn more" (its page) and its name on the globe.
+    Picking another photo turns the ring (assets/js/balansed.js,
+    initRegions); without JS every photo links to its region page.
+    The globe can be dragged round (canvas drawn from
+    assets/images/balansed/regions/land-110m.json, initGlobe): the region
+    turned to face the visitor is selected - its marker pulses and the ring
+    brings its photo to the top; picking a photo turns the globe to it.
+    Regions are placed by their Latitude / Longitude theme settings. The
+    flat globe images stay as the no-JS fallback.
+    Region page - photos, globe and the region's texts on navy.
+    Styles: assets/less/balansed/pages/regions.less
+#}
+{% set img = 'assets/images/balansed/regions/' %}
+{% partial 'realise/page-hero' title='Study regions' heading=(region is not defined) %}
+
+{% if region is defined %}
+{# ---------------------------------------------------------- REGION #}
+<section class="bl-region">
+    <div class="bl-wrap">
+        <a class="bl-btn bl-btn--outline bl-region__back" href="{{ list_url }}">Back to study regions</a>
+
+        <div class="bl-region__grid">
+            <div class="bl-region__visual" aria-hidden="true">
+                <img class="bl-region__globe" src="{{ (img ~ 'globe-base-dark.svg')|theme }}" alt="">
+                <img class="bl-region__land" src="{{ (img ~ 'globe-land.svg')|theme }}" alt="" loading="lazy">
+                <span class="bl-regions__label bl-region__label">{{ region.name }}</span>
+                {% for a in [-94, -62.6, -31.3, 31.3, 62.6, 94] %}<span class="bl-regions__dot bl-regions__dot--dim" style="--a: {{ a }}deg"></span>{% endfor %}
+                <span class="bl-regions__dot is-active" style="--a: 0deg"></span>
+                {% for src in region.images|slice(0, 3) %}
+                <img class="bl-region__photo bl-region__photo--{{ loop.index }}" src="{{ src }}" alt="">
+                {% endfor %}
+            </div>
+
+            <div class="bl-region__text">
+                <h1 class="bl-eyebrow bl-region__name">{{ region.name }}</h1>
+                {# The case study's Description (rich text): headings + paragraphs.
+                   Editors use H3 (and H4) under the region name, which is the
+                   page's H1; they are lifted one level so no heading level is
+                   skipped. Styled alike (pages/regions.less). #}
+                {% if region.description|trim %}
+                {% set bl_desc = region.description %}
+                {% if '<h2' not in bl_desc %}
+                {% set bl_desc = bl_desc|replace({'<h3': '<h2', '</h3>': '</h2>', '<h4': '<h3', '</h4>': '</h3>'}) %}
+                {% endif %}
+                <div class="bl-region__body">{{ bl_desc|raw }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% else %}
+{# -------------------------------------------------------- OVERVIEW #}
+<section class="bl-regions" data-bl-regions data-step="{{ ring_step }}" data-count="{{ ring|length }}">
+    <div class="bl-regions__intro">
+        <p class="bl-eyebrow bl-regions__eyebrow">{% component 'jumbo' jumbotron='regions-label' %}</p>
+        <div class="bl-regions__lead">{% component 'jumbo' jumbotron='regions-intro' %}</div>
+        <div class="bl-regions__lead bl-regions__lead--right">{% component 'jumbo' jumbotron='regions-outro' %}</div>
+    </div>
+
+    <div class="bl-regions__stage">
+        <img class="bl-regions__globe" src="{{ (img ~ 'globe-base.svg')|theme }}" alt="" aria-hidden="true">
+        <img class="bl-regions__land" src="{{ (img ~ 'globe-land.svg')|theme }}" alt="" aria-hidden="true">
+        <canvas class="bl-regions__canvas" data-bl-globe data-land="{{ (img ~ 'land-110m.json')|theme }}" aria-hidden="true"></canvas>
+        <span class="bl-regions__label" data-bl-region-label aria-live="polite">{{ regions|length ? regions[0].name }}</span>
+
+        {% for a in dot_angles %}<span class="bl-regions__dot {{ a == 0 ? 'is-active' }}" style="--a: {{ a }}deg" aria-hidden="true"></span>{% endfor %}
+        {# Necks joining globe -> active dot -> active photo; they retract
+           while the globe/ring turns and grow back once a region settles. #}
+        <img class="bl-regions__pin bl-regions__pin--globe" src="{{ (img ~ 'pin.svg')|theme }}" alt="" aria-hidden="true">
+        <img class="bl-regions__pin" src="{{ (img ~ 'pin.svg')|theme }}" alt="" aria-hidden="true">
+
+        <ul class="bl-regions__ring" aria-label="Study regions">
+            {% for slot in ring %}
+            {% set angle = slot.angle %}
+            {% set r = slot.region %}
+            <li class="bl-regions__item {{ r ? '' : 'bl-regions__item--empty' }} {{ slot.index == 0 ? 'is-active' }} {{ angle > 100 or angle < -100 ? 'is-hidden' }}" style="--a: {{ angle }}deg" data-index="{{ slot.index }}" {% if not r %}aria-hidden="true"{% endif %}>
+                {% if r %}
+                <a class="bl-regions__photo" href="{{ r.url }}" data-bl-region data-name="{{ r.name }}" {% if r.lat is not null %}data-lat="{{ r.lat }}" data-lng="{{ r.lng }}"{% endif %}>
+                    {% if r.images|length %}<img src="{{ r.images[0] }}" alt="" loading="lazy">{% endif %}
+                    {# One span per letter, typed in from left to right when the circle
+                       is active; screen readers get the plain text (aria-hidden copy). #}
+                    <span class="bl-regions__more"><span class="sr-only">Learn more about {{ r.name }}</span><span aria-hidden="true">{% for c in 'Learn more'|split('') %}{% if c == ' ' %} {% else %}<span class="bl-regions__char" style="--c: {{ loop.index0 }}">{{ c }}</span>{% endif %}{% endfor %}</span></span>
+                    <span class="sr-only bl-regions__name">{{ r.name }}</span>
+                </a>
+                {% else %}
+                <span class="bl-regions__photo"></span>
+                {% endif %}
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</section>
+{% endif %}

@@ -1,0 +1,243 @@
+url = "/news/:id?/:category?"
+layout = "default"
+title = "News"
+is_hidden = 0
+robot_index = "index"
+robot_follow = "follow"
+
+==
+<?php
+use Pensoft\Articles\Models\Category;
+use Pensoft\Articles\Models\Article;
+
+// <title>: the SEO component (layout) reads the page title before onStart,
+// so set it here - article name, or "<category> - News".
+function onInit()
+{
+    $id = $this->param('id');
+    if ($id === 'category') {
+        $cat = Category::where('slug', $this->param('category'))->first();
+        if ($cat) {
+            $this->page->title = $cat->name . ' - News';
+        }
+    } elseif ($id) {
+        $article = Article::where('slug', $id)->where('published', 'true')->first();
+        if ($article) {
+            $this->page->title = trim(strip_tags($article->title));
+        }
+    }
+}
+
+function urlencode($string){
+    return trim(urlencode($string));
+}
+function onStart()
+{
+
+// Filter options: categories marked visible in the backend, in their sort order.
+$this['categories'] = Category::where('is_visible', true)->orderBy('sort_order')->orderBy('created_at', 'desc')->get();
+
+/*
+ * URLs:  /news                         all news
+ *        /news/category/<category slug> one category (clean URL)
+ *        /news/<article slug>           an article
+ * The old /news?categoryId=<id> form redirects (301) to the clean URL.
+ */
+$listUrl = $this->pageUrl('news', [], false);
+if (input('categoryId') !== null) {
+    $old = input('categoryId');
+    $cat = is_numeric($old) ? Category::find((int) $old) : null;
+    $to = $cat ? $listUrl . '/category/' . $cat->slug : $listUrl;
+    $query = array_filter(['page' => input('page')]);
+    return Redirect::to($to . ($query ? '?' . http_build_query($query) : ''), 301);
+}
+
+$categoryId = 'all';
+if ($this->param('id') === 'category') {
+    $cat = $this->param('category') ? Category::where('slug', $this->param('category'))->first() : null;
+    if (!$cat) {
+        return Redirect::to($listUrl, 301);
+    }
+    $categoryId = $cat->id;
+    $this['category'] = $cat;
+} elseif ($this->param('category')) {
+    abort(404);
+}
+
+$this['article'] = $categoryId === 'all' && $this->param('id')
+    ? Article::where('slug', $this->param('id'))->where('published', 'true')->first()
+    : null;
+
+$this['categoryId'] = $categoryId;
+
+if ($categoryId === 'all') {
+$records = Article::news()->where('published_at', '<=', 'now')
+->where('published', 'true')
+->orderBy('published_at', 'DESC')
+->paginate(12);
+} else {
+$records = Article::news()->whereHas('categories', function ($query) use ($categoryId) {
+$query->whereKey($categoryId);
+})->where('published_at', '<=', 'now')
+->where('published', 'true')
+->orderBy('published_at', 'DESC')
+->paginate(12);
+}
+
+// Page links stay on the clean URL: /news/category/<slug>?page=2
+if ($categoryId !== 'all') {
+    $records->withPath($listUrl . '/category/' . $this['category']->slug);
+}
+
+$this['records'] = $records;
+
+if($this['article']){
+
+$this['is_detail_page'] = $this['article'] ? true : false;
+$this['allow_share'] = $this['article']['allow_share'] == 'yes' ? true : false;
+if($this['is_detail_page']){
+$seoTitle = $this['article']['title'];
+$seoKeywords = $this['article']['meta_keywords'] ?: $this['article']['keywords'];
+$seoDescription = str_limit(Html::strip($this['article']['content']), 255);
+
+if (class_exists('\BennoThommo\Meta\Meta')) {
+if($seoTitle) {
+\BennoThommo\Meta\Meta::set('title', $seoTitle);
+}
+if($seoKeywords) {
+\BennoThommo\Meta\Meta::set('keywords', $seoKeywords);
+}
+if($seoDescription) {
+\BennoThommo\Meta\Meta::set('description', $seoDescription);
+}
+}
+}
+if($this['is_detail_page'] and $this['allow_share']){
+$this['page_url'] = $this->pageUrl('');
+$this['encoded_title'] = urlencode($this['article']['title']);
+$this['slug'] = $this['article']['slug'];
+\BennoThommo\Meta\Meta::set('twitter:card', 'summary_large_image');
+\BennoThommo\Meta\Meta::set('twitter:title', $this['article']['title']);
+\BennoThommo\Meta\Meta::set('twitter:description', str_limit(Html::strip($this['article']['content']), 255));
+\BennoThommo\Meta\Meta::set('og:title', $this['article']['title']);
+\BennoThommo\Meta\Meta::set('og:description', str_limit(Html::strip($this['article']['content']), 255) );
+\BennoThommo\Meta\Meta::set('og:type', 'article');
+\BennoThommo\Meta\Meta::set('og:url', $this->pageUrl(''));
+if($this['article']['cover']){
+\BennoThommo\Meta\Meta::set('twitter:image', $this['article']['cover']->getThumb(600, null, ['mode' => 'auto']));
+
+\BennoThommo\Meta\Meta::set('og:image', $this['article']['cover']->getThumb(600, 314, ['mode' => 'crop']));
+\BennoThommo\Meta\Meta::set('og:image:width', 600);
+\BennoThommo\Meta\Meta::set('og:image:height', 314);
+}
+}
+}
+
+if ($this['is_detail_page']) {
+    $article = $this['article'];
+
+    // Related news: other published news sharing a keyword with this one,
+    // topped up with the latest news so the sidebar always has three.
+    $tags = array_filter(array_map('trim', explode(',', (string) $article->keywords)));
+    $base = function () use ($article) {
+        return Article::news()->where('id', '!=', $article->id)
+            ->where('published', 'true')
+            ->where('published_at', '<=', 'now')
+            ->orderBy('published_at', 'desc');
+    };
+    $related = collect();
+    if ($tags) {
+        $related = $base()->where(function ($q) use ($tags) {
+            foreach ($tags as $tag) {
+                $q->orWhere('keywords', 'ILIKE', '%' . str_replace(['%', '_'], ['\%', '\_'], $tag) . '%');
+            }
+        })->take(3)->get();
+    }
+    if ($related->count() < 3) {
+        $related = $related->concat($base()->whereNotIn('id', $related->pluck('id')->all())->take(3 - $related->count())->get());
+    }
+    $this['related'] = $related;
+
+    // Photos from the galleries attached to the article (Pensoft.Media).
+    $this['gallery'] = $article->galleries->flatMap(function ($g) {
+        return $g->images;
+    })->values();
+}
+}
+?>
+==
+{#
+    BALANSED News (Figma: News & Events / News Open).
+    List: News / Events switch + 3-column card grid + pager.
+    Article: back link, cover header with date + title, body, photos from
+    the article's galleries, share links, and Related news on the right.
+    Data comes from Pensoft.Articles, see the code section above.
+    Styles: assets/less/balansed/pages/news.less
+#}
+{% partial 'realise/page-hero' title='News & Events' heading=(not is_detail_page) %}
+
+<section class="bl-news-page">
+    <div class="bl-wrap">
+{% if is_detail_page %}
+
+        <a class="bl-btn bl-btn--ghost bl-news-page__back" href="{{ 'news'|page({}, false) }}">Back to news</a>
+
+        <div class="bl-article">
+            <article class="bl-article__main" aria-labelledby="article-title">
+                <header class="bl-article__head">
+                    {% if article.cover %}<img class="bl-article__cover" src="{{ (article.cover.getThumb(1670, 540, { mode: 'crop' }) ?: article.cover.path) }}" alt="">{% endif %}
+                    <div class="bl-article__head-text">
+                        <time class="bl-eyebrow" datetime="{{ article.published_at|date('Y-m-d') }}">{{ article.published_at|date('j M Y')|upper }}</time>
+                        <h1 class="bl-statement" id="article-title">{{ article.title|striptags }}</h1>
+                    </div>
+                </header>
+
+                <div class="bl-prose">{{ article.content|raw }}</div>
+
+                {% if gallery|length %}
+                <div class="bl-article__gallery">
+                    {% for image in gallery %}
+                    <a href="{{ image.path }}" target="_blank" rel="noopener noreferrer">
+                        <img src="{{ (image.getThumb(810, 540, { mode: 'crop' }) ?: image.path) }}" alt="{{ image.title ?: image.description }}" loading="lazy">{% partial 'components/new-tab-hint' %}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+
+                {% if allow_share %}
+                {% partial 'balansed/share' label='Share news' url=page_url title=article.title %}
+                {% endif %}
+            </article>
+
+            {% if related|length %}
+            <aside class="bl-article__related" aria-labelledby="related-heading">
+                <h2 class="bl-article__related-title" id="related-heading">Related news</h2>
+                {% for record in related %}
+                    {% partial 'balansed/news-card' record=record %}
+                {% endfor %}
+            </aside>
+            {% endif %}
+        </div>
+
+{% else %}
+
+        <nav class="bl-switch" aria-label="News and events">
+            <a class="bl-btn bl-btn--tab is-active" href="{{ 'news'|page({}, false) }}" aria-current="page">News</a>
+            <a class="bl-btn bl-btn--tab" href="{{ 'events'|page({}, false) }}">Events</a>
+        </nav>
+
+        <h2 id="news-list-heading" class="sr-only">{{ category ? category.name ~ ' - news' : 'News articles' }}</h2>
+        {% if records|length %}
+        <div class="bl-cards bl-cards--page" id="news-list">
+            {% for record in records %}
+                {% partial 'balansed/news-card' record=record %}
+            {% endfor %}
+        </div>
+        {% partial 'balansed/pager' p=records label='News pages' hash='news-list' %}
+        {% else %}
+        <p class="bl-empty">{{ categoryId == 'all' ? 'News will follow soon - stay tuned!' : 'No news in this category yet.' }}</p>
+        {% endif %}
+
+{% endif %}
+    </div>
+</section>

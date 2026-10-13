@@ -1,0 +1,23 @@
+{#
+    "Share news / Share event" row: LinkedIn and Bluesky share the page;
+    Instagram has no share link, so it opens the BALANSED profile (theme
+    setting, shown only when set).
+    label, url (page URL), title
+#}
+{% set enc = url|url_encode %}
+<div class="bl-share">
+    <span class="bl-share__label" id="share-label">{{ label }}</span>
+    <div class="bl-social" role="group" aria-labelledby="share-label">
+        <a href="https://www.linkedin.com/sharing/share-offsite/?url={{ enc }}" target="_blank" rel="noopener noreferrer" aria-label="Share on LinkedIn (opens in a new tab)">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M6.94 5a2 2 0 1 1-4-.002 2 2 0 0 1 4 .002ZM7 8.48H3V21h4V8.48Zm6.32 0H9.34V21h3.94v-6.57c0-3.66 4.77-4 4.77 0V21H22v-7.93c0-6.17-7.06-5.94-8.72-2.91l.04-1.68Z"/></svg>
+        </a>
+        <a href="https://bsky.app/intent/compose?text={{ (title|striptags ~ ' ' ~ url)|url_encode }}" target="_blank" rel="noopener noreferrer" aria-label="Share on Bluesky (opens in a new tab)">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M5.2 3.3C7.9 5.3 10.8 9.4 12 11.8c1.2-2.4 4.1-6.5 6.8-8.5 2-1.4 5.2-2.6 5.2 1 0 .7-.4 6-.7 6.8-.9 3-4 3.8-6.7 3.3 4.8.8 6 3.5 3.4 6.2-5 5.1-7.1-1.3-7.7-2.9L12 17l-.3.7c-.6 1.6-2.7 8-7.7 2.9-2.6-2.7-1.4-5.4 3.4-6.2-2.8.5-5.8-.3-6.7-3.3C.4 10.3 0 5 0 4.3c0-3.6 3.2-2.4 5.2-1z"/></svg>
+        </a>
+        {% if this.theme.instagram and this.theme.instagram_url %}
+        <a href="{{ this.theme.instagram_url }}" target="_blank" rel="noopener noreferrer" aria-label="BALANSED on Instagram (opens in a new tab)">
+            <svg width="21" height="21" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" focusable="false"><path d="M12 2.2c3.2 0 3.6 0 4.8.1 1.2.1 1.8.2 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.4 1.1.4 2.2.1 1.3.1 1.6.1 4.8s0 3.6-.1 4.8c-.1 1.2-.2 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1.1.4-2.2.4-1.3.1-1.6.1-4.8.1s-3.6 0-4.8-.1c-1.2-.1-1.8-.2-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.4-1.1-.4-2.2-.1-1.3-.1-1.6-.1-4.8s0-3.6.1-4.8c.1-1.2.2-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1.1-.4 2.2-.4 1.3-.1 1.6-.1 4.8-.1Zm0 4.9a4.9 4.9 0 1 0 0 9.8 4.9 4.9 0 0 0 0-9.8Zm0 8.1a3.2 3.2 0 1 1 0-6.4 3.2 3.2 0 0 1 0 6.4Zm5.1-9.4a1.1 1.1 0 1 0 0 2.3 1.1 1.1 0 0 0 0-2.3Z"/></svg>
+        </a>
+        {% endif %}
+    </div>
+</div>

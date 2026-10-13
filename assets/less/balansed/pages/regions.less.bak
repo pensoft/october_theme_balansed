@@ -1,0 +1,753 @@
+// ===========================================================================
+//  Study regions - pages/study-regions.htm
+//  The ring "stage" is sized in container units (cqw) from the 1440px
+//  design, so it scales as one piece: overview 1100px wide (1cqw = 11px),
+//  region page 800px wide (1cqw = 8px).
+// ===========================================================================
+
+@bl-dot-ring: #BFCABF;
+
+// -- Shared: globe label and the dots around the globe -------------------------
+.bl-regions__label {
+    position: absolute;
+    z-index: 3;
+    padding: .39cqw 1.16cqw;
+    border-radius: @bl-pill;
+    background: rgba(0, 22, 41, .08);
+    -webkit-backdrop-filter: blur(23px);
+    backdrop-filter: blur(23px);
+    font-family: @bl-font-display;
+    font-size: ~"max(10px, .93cqw)";
+    line-height: 1.35;
+    letter-spacing: -0.2px;
+    color: @bl-sky;
+    white-space: nowrap;
+}
+
+// A dot on the ring around the globe: --cx/--cy centre, --dr radius,
+// --ds size, --a angle (set on the stage / inline).
+.bl-regions__dot {
+    position: absolute;
+    left: var(--cx);
+    top: var(--cy);
+    z-index: 2;
+    width: var(--ds);
+    height: var(--ds);
+    margin: ~"calc(var(--ds) / -2) 0 0 calc(var(--ds) / -2)";
+    border-radius: 50%;
+    background: @bl-green;
+    opacity: .15;
+    transform: ~"rotate(var(--a)) translateY(calc(var(--dr) * -1)) rotate(calc(var(--a) * -1))";
+
+    &::after {
+        content: "";
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 16%;
+        height: 16%;
+        border-radius: 50%;
+        background: @bl-sand;
+        transform: translate(-50%, -50%);
+    }
+
+    &.is-active {
+        opacity: 1;
+        box-shadow: 0 0 0 .35cqw @bl-dot-ring;
+    }
+
+    // Region page (navy): only the small green dot.
+    &--dim {
+        background: none;
+
+        &::after {
+            background: @bl-green;
+        }
+    }
+}
+
+// -- Overview ------------------------------------------------------------------------
+.bl-regions {
+    .bl-section-top(86px);
+    z-index: 1;
+    min-height: 850px;
+    padding: 70px 70px 80px;
+    background: @bl-sand;
+    color: @bl-navy;
+
+    &__intro {
+        position: relative;
+        z-index: 4;
+        display: grid;
+        grid-template-columns: minmax(0, 390px) 1fr minmax(0, 375px);
+        grid-template-areas:
+            "eyebrow eyebrow eyebrow"
+            "left . right";
+        row-gap: 26px;
+        max-width: 1300px;
+        margin: 0 auto;
+        pointer-events: none;   // the ring underneath stays clickable
+    }
+
+    &__eyebrow {
+        grid-area: eyebrow;
+        line-height: 1.25;
+        letter-spacing: -0.8px;
+    }
+
+    &__lead {
+        grid-area: left;
+        font-family: @bl-font-display;
+        font-size: 28px;
+        line-height: 1.25;
+        letter-spacing: -1.4px;
+
+        &--right {
+            grid-area: right;
+        }
+    }
+
+    // Ring + globe, 1100 x 680 design px, top at y=96 of the section.
+    &__stage {
+        --cx: 50%;
+        --cy: 44.49cqw;
+        --dr: 21.8cqw;
+        --ds: 5.45cqw;
+        position: absolute;
+        top: 96px;
+        left: 50%;
+        width: 1100px;
+        max-width: 100%;
+        aspect-ratio: 1100 / 680;
+        container-type: inline-size;
+        transform: translateX(-50%);
+    }
+
+    &__globe,
+    &__land {
+        position: absolute;
+        left: 32.95cqw;
+        width: 34.1cqw;
+        max-width: none;
+        height: auto;
+        pointer-events: none;
+    }
+
+    &__globe {
+        top: 27.45cqw;
+    }
+
+    // The draggable globe (initGlobe) over the flat one; it takes over
+    // once the map has loaded (.has-globe).
+    &__canvas {
+        position: absolute;
+        top: 27.45cqw;
+        left: 32.95cqw;
+        z-index: 1;
+        width: 34.1cqw;
+        height: 34.1cqw;
+        border-radius: 50%;
+        cursor: grab;
+        touch-action: pan-y;   // vertical swipes still scroll the page
+        opacity: 0;
+        transition: opacity .6s ease;
+        -webkit-user-select: none;
+        user-select: none;
+
+        &.is-dragging {
+            cursor: grabbing;
+        }
+    }
+
+    &.has-globe {
+        .bl-regions__canvas {
+            opacity: 1;
+        }
+
+        .bl-regions__globe,
+        .bl-regions__land {
+            visibility: hidden;
+        }
+
+        // The name rides above the selected region's marker.
+        &.has-marks .bl-regions__label {
+            transform: translate(-50%, ~"calc(-100% - 1.6cqw)");
+            pointer-events: none;
+            transition: opacity .3s ease;
+        }
+    }
+
+    &__land {
+        top: 29.38cqw;
+        z-index: 1;
+    }
+
+    .bl-regions__label {
+        top: 40.7cqw;
+        left: 45.8cqw;
+    }
+
+    // Necks in the dot-ring colour: active photo -> active dot (top), and
+    // active dot -> globe (--globe; under the dot, over the globe). Both
+    // grow towards the dot; .is-turning (initGlobe) retracts them
+    // while the globe or the ring moves, then both draw in again together.
+    &__pin {
+        position: absolute;
+        top: 18.1cqw;
+        left: 50%;
+        z-index: 2;
+        width: 1.45cqw;
+        height: auto;
+        transform: translateX(-50%);
+        transform-origin: 50% 0;   // grows down from the photo to the dot
+        transition: transform .3s @bl-ease, opacity .2s ease;
+
+        &--globe {
+            top: 25.7cqw;
+            z-index: 1;
+            transform-origin: 50% 100%;   // grows up from the globe to the dot
+        }
+    }
+
+    &.is-turning .bl-regions__pin {
+        opacity: 0;
+        transform: translateX(-50%) scaleY(0);
+        transition: transform .18s ease, opacity .15s ease;
+    }
+
+    &__ring {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    // One circle on the ring: centred on the globe, turned out to radius
+    // 35.4cqw at angle --a (0 = top), then turned back upright.
+    &__item {
+        --size: 15.45cqw;
+        position: absolute;
+        left: var(--cx);
+        top: var(--cy);
+        z-index: 3;
+        width: var(--size);
+        height: var(--size);
+        margin: ~"calc(var(--size) / -2) 0 0 calc(var(--size) / -2)";
+        transform: ~"rotate(var(--a)) translateY(-35.4cqw) rotate(calc(var(--a) * -1))";
+        transition: transform .8s @bl-ease, opacity .5s ease, width .5s @bl-ease, height .5s @bl-ease, margin .5s @bl-ease;
+
+        &.is-active {
+            --size: 18.18cqw;
+            z-index: 4;
+        }
+
+        &.is-hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+    }
+
+    &__photo {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        border-radius: 50%;
+        background: @bl-navy;
+        opacity: .08;
+        text-decoration: none;
+        transition: opacity .4s ease, transform .4s @bl-ease;
+
+        img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    }
+
+    a.bl-regions__photo:hover,
+    a.bl-regions__photo:focus-visible {
+        opacity: .35;
+    }
+
+    a.bl-regions__photo:focus-visible {
+        outline: 3px solid @bl-blue;
+        outline-offset: 4px;
+    }
+
+    &__item--empty .bl-regions__photo {
+        opacity: .05;
+    }
+
+    &__item.is-active .bl-regions__photo {
+        opacity: 1;
+    }
+
+    // Newly selected region (from the designer's reference): its photo
+    // zooms out into the circle.
+    &__item.is-active .bl-regions__photo img {
+        animation: bl-region-zoom 1.1s @bl-ease both;
+    }
+
+    .bl-reduced-motion({
+        .bl-regions__item.is-active .bl-regions__photo img {
+            animation: none;
+        }
+
+        .bl-regions__canvas,
+        .bl-regions__pin,
+        .bl-regions__more,
+        .bl-regions__char {
+            transition: none !important;
+        }
+    });
+
+    &__more {
+        position: relative;
+        z-index: 1;
+        padding: ~"max(8px, 1.16cqw) max(12px, 1.55cqw)";
+        border-radius: @bl-pill;
+        background: rgba(0, 22, 41, .08);
+        -webkit-backdrop-filter: blur(23px);
+        backdrop-filter: blur(23px);
+        font-family: @bl-font-display;
+        font-size: ~"max(12px, 1.36cqw)";
+        font-weight: 500;
+        line-height: 1.25;
+        letter-spacing: -0.6px;
+        color: @bl-sand;
+        white-space: nowrap;
+        opacity: 0;
+        // Hidden: wiped back to its left edge (quick, so it's gone before
+        // the ring turns).
+        clip-path: inset(0 100% 0 0 round @bl-pill);
+        transform: translateX(-8px);
+        transition: opacity .2s ease, clip-path .25s ease, transform .25s ease, background-color .2s ease;
+    }
+
+    // Active circle: once the ring has turned, the button wipes in from
+    // left to right while it fades in.
+    &__item.is-active &__more {
+        opacity: 1;
+        clip-path: inset(0 0 0 0 round @bl-pill);
+        transform: none;
+        transition: opacity .5s ease .55s, clip-path .7s @bl-ease .55s, transform .7s @bl-ease .55s, background-color .2s ease;
+    }
+
+    // The letters type in from left to right once the pill is opening
+    // (one every 55ms); they vanish at once when the circle stops being
+    // active.
+    &__char {
+        opacity: 0;
+        transition: opacity .1s ease;
+    }
+
+    &__item.is-active &__char {
+        opacity: 1;
+        transition: opacity .06s linear;
+        transition-delay: ~"calc(.75s + var(--c, 0) * .055s)";
+    }
+
+    &__item.is-active a:hover &__more,
+    &__item.is-active a:focus-visible &__more {
+        background: rgba(0, 22, 41, .35);
+    }
+
+    .bl-reduced-motion({
+        .bl-regions__item {
+            transition: none;
+        }
+    });
+}
+
+// -- Region page ---------------------------------------------------------------------
+.bl-region {
+    .bl-section-top(86px);
+    z-index: 1;
+    padding: 49px 0 120px;
+    background: @bl-navy;
+    color: @bl-sand;
+
+    &__grid {
+        display: grid;
+        grid-template-columns: minmax(0, 800px) minmax(0, 393px);
+        justify-content: space-between;
+        align-items: start;
+        gap: 40px;
+    }
+
+    &__back {
+        margin-bottom: 16px;
+    }
+
+    // 800 x 660 design px (1cqw = 8px).
+    &__visual {
+        --cx: 76.25cqw;
+        --cy: 58.75cqw;
+        --dr: 30cqw;
+        --ds: 7.5cqw;
+        position: relative;
+        width: 100%;
+        aspect-ratio: 800 / 660;
+        container-type: inline-size;
+
+        .bl-regions__label {
+            top: 53.5cqw;
+            left: 70.45cqw;
+            font-size: ~"max(10px, 1.28cqw)";
+        }
+    }
+
+    &__globe,
+    &__land {
+        position: absolute;
+        left: 52.8cqw;
+        width: 46.9cqw;
+        max-width: none;
+        height: auto;
+    }
+
+    &__globe {
+        top: 35.3cqw;
+    }
+
+    &__land {
+        top: 37.98cqw;
+        z-index: 1;
+    }
+
+    &__photo {
+        position: absolute;
+        z-index: 3;
+        aspect-ratio: 1;
+        object-fit: cover;
+        border-radius: 50%;
+
+        &--1 { top: 1.6cqw;  left: 2cqw;    width: 40cqw; }
+        &--2 { top: .6cqw;   left: 46.4cqw; width: 21.25cqw; }
+        &--3 { top: 25.6cqw; left: 43.9cqw; width: 11.9cqw; }
+    }
+
+    &__text {
+        display: flex;
+        flex-direction: column;
+        gap: 25px;
+        padding-top: 0;
+
+        .bl-lead {
+            max-width: 393px;
+            margin-top: 5px;
+        }
+    }
+
+    &__name {
+        line-height: 1.45;
+        letter-spacing: -0.8px;
+    }
+
+    &__h {
+        font-size: 22px;
+        line-height: 1.25;
+        letter-spacing: -1.1px;
+    }
+
+    // The case study's Description (rich text): each heading opens a
+    // group, its paragraphs follow 5px under it.
+    &__body {
+        h2, h3, h4 {
+            margin: 25px 0 0;
+            font-family: @bl-font-display;
+            font-size: 22px;
+            font-weight: 400;
+            line-height: 1.25;
+            letter-spacing: -1.1px;
+            color: inherit;
+        }
+
+        p, ul, ol {
+            max-width: 393px;
+            margin: 5px 0 0;
+            font-family: @bl-font-body;
+            font-size: @bl-fs-lead;
+            font-weight: 300;
+            line-height: 1.45;
+            letter-spacing: -0.8px;
+        }
+
+        > :first-child {
+            margin-top: 0;
+        }
+
+        a {
+            color: inherit;
+            text-decoration: underline;
+        }
+    }
+}
+
+// ===========================================================================
+//  Responsive
+// ===========================================================================
+@media (max-width: 1199px) {
+    .bl-regions {
+        min-height: 0;
+        padding: 56px @bl-gutter 72px;
+
+        &__intro {
+            grid-template-columns: minmax(0, 1fr);
+            grid-template-areas: none;
+            row-gap: 20px;
+            max-width: 720px;
+        }
+
+        &__eyebrow,
+        &__lead,
+        &__lead--right {
+            grid-area: auto;
+        }
+
+        &__stage {
+            position: relative;
+            top: auto;
+            left: auto;
+            margin: 40px auto 0;
+            transform: none;
+        }
+    }
+
+    .bl-region__grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .bl-region__visual {
+        max-width: 640px;
+        margin: 0 auto;
+    }
+}
+
+@media @bl-md {
+    .bl-regions,
+    .bl-region {
+        margin-top: -50px;
+        border-radius: 32px 32px 0 0;
+    }
+
+    .bl-regions__lead {
+        font-size: 22px;
+        letter-spacing: -0.8px;
+    }
+
+    .bl-region {
+        padding: 40px 0 80px;
+    }
+}
+
+@keyframes bl-region-zoom {
+    from { transform: scale(1.35); }
+    to   { transform: none; }
+}
+
+// -- Study region trip: overview <-> region page --------------------------------
+// "Learn more" (zoomOpen): a navy circle grows from around the photo until
+// the section is navy, clipped to the section's rounded shape; the photo
+// itself doesn't move. The region page opens at the same scroll position
+// and takes over (initRegionEnter). Back (zoomBack) shrinks it again.
+.bl-zoom {
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    overflow: hidden;
+    border-radius: inherit;
+    pointer-events: none;
+
+    &__circle,
+    &__photo {
+        position: absolute;
+        border-radius: 50%;
+    }
+
+    &__circle {
+        background: @bl-navy;
+        will-change: transform;
+    }
+
+    &__photo {
+        background: @bl-navy center / cover no-repeat;
+    }
+}
+
+.bl-regions__photo.is-opening .bl-regions__more {
+    opacity: 0;
+    transition: opacity .15s ease;
+}
+
+// Arriving back on the overview: its section is navy from the first paint
+// until zoomBack's circle takes over.
+html.bl-region-enter .bl-regions::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 20;
+    border-radius: inherit;
+    background: @bl-navy;
+}
+
+// Back on the overview: the region is placed at once under the navy.
+.bl-regions.is-instant {
+    .bl-regions__item,
+    .bl-regions__photo,
+    .bl-regions__more,
+    .bl-regions__char,
+    .bl-regions__pin {
+        transition: none !important;
+    }
+}
+
+// Region page arrival (.is-entering, initRegionEnter): the globe settles
+// in, the photos come out into their places and the texts come out
+// towards the right one after another. Hidden until it starts (motion
+// only). From "Learn more" (.is-zoomed) the photos are moved by
+// initRegionEnter from where the clicked circle was; on a direct visit
+// they fly out of the globe (keyframes below).
+html.bl-motion .bl-region:not(.is-entering) {
+    .bl-region__photo,
+    .bl-region__globe,
+    .bl-region__land,
+    .bl-region__name,
+    .bl-region__body > *,
+    .bl-region__back {
+        opacity: 0;
+    }
+}
+
+.bl-region.is-entering {
+    .bl-region__globe,
+    .bl-region__land {
+        animation: bl-region-globe-in .9s @bl-ease both;
+    }
+
+    .bl-regions__dot,
+    .bl-regions__label {
+        animation: bl-region-fade-in .6s ease .5s both;
+    }
+
+    .bl-region__photo {
+        animation: .95s cubic-bezier(.3, 1.35, .5, 1) both;
+    }
+
+    // Start offsets: from each photo's place to the globe's centre (cqw).
+    .bl-region__photo--1 { animation-name: bl-region-photo-1; animation-delay: .25s; }
+    .bl-region__photo--2 { animation-name: bl-region-photo-2; animation-delay: .37s; }
+    .bl-region__photo--3 { animation-name: bl-region-photo-3; animation-delay: .49s; }
+
+    .bl-region__back {
+        animation: bl-region-fade-in .5s ease .2s both;
+    }
+
+    .bl-region__name,
+    .bl-region__body > * {
+        animation: bl-region-text-in .8s @bl-ease .45s both;
+    }
+
+    .bl-region__body > :nth-child(1) { animation-delay: .55s; }
+    .bl-region__body > :nth-child(2) { animation-delay: .62s; }
+    .bl-region__body > :nth-child(3) { animation-delay: .72s; }
+    .bl-region__body > :nth-child(4) { animation-delay: .79s; }
+    .bl-region__body > :nth-child(n+5) { animation-delay: .86s; }
+}
+
+// From "Learn more": the photos are animated by script; the rest follows
+// once the clicked photo has started to move.
+.bl-region.is-entering.is-zoomed {
+    .bl-region__photo {
+        animation: none;
+    }
+
+    .bl-region__globe,
+    .bl-region__land {
+        animation-duration: .6s;
+        animation-delay: .2s;
+    }
+
+    .bl-regions__dot,
+    .bl-regions__label {
+        animation-delay: .55s;
+    }
+
+    .bl-region__back { animation-delay: .3s; }
+
+    .bl-region__name,
+    .bl-region__body > * { animation-duration: .6s; }
+    .bl-region__name { animation-delay: .35s; }
+    .bl-region__body > :nth-child(1) { animation-delay: .42s; }
+    .bl-region__body > :nth-child(2) { animation-delay: .48s; }
+    .bl-region__body > :nth-child(3) { animation-delay: .56s; }
+    .bl-region__body > :nth-child(4) { animation-delay: .62s; }
+    .bl-region__body > :nth-child(n+5) { animation-delay: .68s; }
+}
+
+// "Back to study regions" (.is-leaving): texts out to the left and the
+// globe away, while the script gathers the photos back into the circle.
+.bl-region.is-entering.is-leaving {
+    .bl-region__name,
+    .bl-region__body > *,
+    .bl-region__back {
+        animation: bl-region-text-out .3s ease-in both;
+    }
+
+    .bl-region__name { animation-delay: .1s; }
+
+    .bl-region__globe,
+    .bl-region__land,
+    .bl-regions__dot,
+    .bl-regions__label {
+        animation: bl-region-globe-out .4s ease-in .05s both;
+    }
+}
+
+@keyframes bl-region-globe-in {
+    from { opacity: 0; transform: scale(.86); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes bl-region-globe-out {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: scale(.9); }
+}
+
+@keyframes bl-region-fade-in {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+}
+
+@keyframes bl-region-text-in {
+    from { opacity: 0; transform: translateX(-36px); }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes bl-region-text-out {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: translateX(-36px); }
+}
+
+@keyframes bl-region-photo-1 {
+    from { opacity: 0; transform: translate(54.25cqw, 37.15cqw) scale(.15) rotate(-25deg); }
+    35%  { opacity: 1; }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes bl-region-photo-2 {
+    from { opacity: 0; transform: translate(19.2cqw, 47.5cqw) scale(.15) rotate(20deg); }
+    35%  { opacity: 1; }
+    to   { opacity: 1; transform: none; }
+}
+
+@keyframes bl-region-photo-3 {
+    from { opacity: 0; transform: translate(26.4cqw, 27.2cqw) scale(.15) rotate(-15deg); }
+    35%  { opacity: 1; }
+    to   { opacity: 1; transform: none; }
+}

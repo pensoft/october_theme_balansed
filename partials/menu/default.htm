@@ -1,0 +1,64 @@
+{#
+    Theme override of plugins/benfreke/menumanager/components/menu/default.htm
+    for the BALANSED menu drawer (alias "menu" in partials/site/header.htm).
+
+    Items, order, labels and links are managed in the backend under
+    Menu Manager. Two levels are rendered: top-level items, and their
+    children listed under them (About > Background & Objectives, ...).
+
+    A parent with children is a button that expands its sub-links in place
+    (assets/js/balansed.js, initDrawer) instead of opening the parent page;
+    put the parent page among its children to keep it reachable. The
+    section of the current page starts open. Without JS all are open.
+
+    "active" comes from the plugin: an item is active when its page (or one
+    of its children's) is the current page.
+#}
+{% if parentNode and parentNode.getChildCount %}
+<ul class="bl-nav">
+    {% for item in parentNode.getChildren|filter(i => i.enabled) %}
+    {% set active = item.getListItemClasses(activeLeft, activeRight) == 'active' %}
+    {% set href = item.getLinkHref %}
+    {% set target = item.getLinkTarget %}
+    {% set children = numberOfLevels > 1 ? item.getChildren|filter(c => c.enabled) : [] %}
+
+    {% if children|length %}
+    {% set sub_id = 'bl-nav-sub-' ~ item.id %}
+    <li class="bl-nav__item bl-nav__item--parent {{ active ? 'is-active is-open' }}" data-bl-nav-parent>
+        <button type="button" class="bl-nav__link bl-nav__toggle" aria-expanded="{{ active ? 'true' : 'false' }}" aria-controls="{{ sub_id }}">
+            {{ item.title }}
+            <span class="bl-nav__arrow" aria-hidden="true">{% partial 'balansed/icon' name='arrow-up-right' size=25 %}</span>
+        </button>
+
+        <div class="bl-nav__sub-wrap" id="{{ sub_id }}">
+            <ul class="bl-nav__sub">
+                {% for child in children %}
+                {# Menu Manager marks only the first item pointing at the current
+                   page - the parent when parent and child share it - so also
+                   match the child by its page. #}
+                {% set child_active = child.getListItemClasses(activeLeft, activeRight) == 'active'
+                    or (not child.is_external and child.url and child.url == this.page.baseFileName) %}
+                {% set child_target = child.getLinkTarget %}
+                <li style="--i: {{ loop.index0 }}">
+                    <a class="bl-nav__link {{ child_active ? 'is-active' }}" href="{{ child.getLinkHref }}" {% if child_active %}aria-current="page"{% endif %} {% if child_target != '_self' %}target="{{ child_target }}" rel="noopener noreferrer"{% endif %}>
+                        {{ child.title }}{% if child_target != '_self' %}{% partial 'components/new-tab-hint' %}{% endif %}
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </li>
+    {% else %}
+    <li class="bl-nav__item {{ active ? 'is-active' }}">
+        {% if href != '#' %}
+        <a class="bl-nav__link" href="{{ href }}" {% if active %}aria-current="page"{% endif %} {% if target != '_self' %}target="{{ target }}" rel="noopener noreferrer"{% endif %}>
+            {{ item.title }}{% if target != '_self' %}{% partial 'components/new-tab-hint' %}{% endif %}
+        </a>
+        {% else %}
+        <span class="bl-nav__link bl-nav__link--label">{{ item.title }}</span>
+        {% endif %}
+    </li>
+    {% endif %}
+    {% endfor %}
+</ul>
+{% endif %}

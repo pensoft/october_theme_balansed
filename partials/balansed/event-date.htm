@@ -1,0 +1,8 @@
+{# Event date: "12 FEB 2026", or a range "12 - 14 FEB 2026" / "28 FEB - 2 MAR 2026". entry = Pensoft\Calendar\Models\Entry #}
+{% set s = entry.start %}
+{% set e = entry.end %}
+{% if e and s|date('Y-m-d') != e|date('Y-m-d') %}
+{% if s|date('Y-m') == e|date('Y-m') %}{{ s|date('j') }} - {{ e|date('j M Y')|upper }}
+{% elseif s|date('Y') == e|date('Y') %}{{ s|date('j M')|upper }} - {{ e|date('j M Y')|upper }}
+{% else %}{{ s|date('j M Y')|upper }} - {{ e|date('j M Y')|upper }}{% endif %}
+{% else %}{{ s|date('j M Y')|upper }}{% endif %}

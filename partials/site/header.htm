@@ -1,0 +1,75 @@
+[menu]
+start = 1
+activeNode = 0
+numberOfLevels = 2
+
+[localePicker]
+forceUrl = 0
+==
+<?php
+use BenFreke\MenuManager\Models\Menu;
+
+function onStart()
+{
+    // The nav is the children of a top-level Menu Manager menu. Prefer the
+    // one titled "Main menu"; otherwise take the first top-level menu, so
+    // the header does not depend on a database id.
+    $root = Menu::whereNull('parent_id')->where('title', 'Main menu')->first()
+        ?: Menu::whereNull('parent_id')->orderBy('nest_left')->first();
+
+    $this['bl_menu_start'] = $root ? 'id-' . $root->id : null;
+}
+?>
+==
+{#
+    BALANSED header: logo, expanding search pill and the menu button that
+    opens the side drawer.
+
+    The bar is laid over the top of the page: over the split hero on the
+    homepage (bl-header--home) and over the photo banner of every other page
+    (partials/realise/page-hero.htm), so it is the same on all inner pages.
+
+    Navigation comes from Menu Manager (backend > Menu Manager): the children
+    of the "Main menu" root are the drawer links and their children the
+    sub-links. Markup: theme override partials/menu/default.htm.
+
+    id="headernavbar" is kept because assets/js/app.js reads its height.
+    Behaviour (drawer, search expand): assets/js/balansed.js.
+#}
+{% set bl_home = page_id == 'home' %}
+
+<header class="bl-header {{ bl_home ? 'bl-header--home' }}" id="headernavbar">
+    <div class="bl-header__inner">
+        <a href="{{ 'home'|page }}" class="bl-header__brand" aria-label="{{ site_name|default('BALANSED') }} - home">
+            {% partial 'balansed/logo' %}
+        </a>
+
+        <div class="bl-header__actions">
+            <form class="bl-search" action="{{ 'search'|page({}, false) }}" method="get" role="search" aria-label="Site" data-bl-search>
+                <label for="bl-search-input" class="sr-only">Search content</label>
+                <input id="bl-search-input" class="bl-search__input" type="search" name="q" placeholder="Search content" autocomplete="off" enterkeyhint="search">
+                <button type="submit" class="bl-search__btn" aria-label="Search">
+                    {% partial 'balansed/icon' name='search' size=24 %}
+                </button>
+            </form>
+
+            {% if bl_menu_start %}
+            <button type="button" class="bl-menu-btn" data-bl-menu-open aria-expanded="false" aria-controls="bl-drawer" aria-label="Open menu">
+                {% partial 'balansed/icon' name='menu' size=24 %}
+            </button>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+{% if bl_menu_start %}
+<div class="bl-drawer" id="bl-drawer" data-bl-drawer role="dialog" aria-modal="true" aria-label="Menu" hidden>
+    <div class="bl-drawer__backdrop" data-bl-menu-close></div>
+    <nav class="bl-drawer__panel" aria-label="Main navigation" tabindex="-1">
+        <button type="button" class="bl-drawer__close" data-bl-menu-close aria-label="Close menu">
+            {% partial 'balansed/icon' name='close' size=25 %}
+        </button>
+        {% component 'menu' start=bl_menu_start %}
+    </nav>
+</div>
+{% endif %}
