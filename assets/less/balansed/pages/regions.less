@@ -95,12 +95,13 @@
         letter-spacing: -0.8px;
     }
 
+    // Kept small enough to stay clear of the circles below it.
     &__lead {
         grid-area: left;
         font-family: @bl-font-display;
-        font-size: 28px;
-        line-height: 1.25;
-        letter-spacing: -1.4px;
+        font-size: 22px;
+        line-height: 1.3;
+        letter-spacing: -0.8px;
 
         &--right {
             grid-area: right;
@@ -150,7 +151,7 @@
         cursor: grab;
         touch-action: pan-y;   // vertical swipes still scroll the page
         opacity: 0;
-        transition: opacity .6s ease;
+        transition: opacity .3s ease;
         -webkit-user-select: none;
         user-select: none;
 
@@ -255,10 +256,20 @@
         height: 100%;
         overflow: hidden;
         border-radius: 50%;
+        text-decoration: none;
+        transition: transform .4s @bl-ease;
+    }
+
+    // The photo (on navy), faded on the circles that aren't active - the
+    // region name on top of it stays at full strength.
+    &__media {
+        position: absolute;
+        inset: 0;
+        overflow: hidden;
+        border-radius: 50%;
         background: @bl-navy;
         opacity: .08;
-        text-decoration: none;
-        transition: opacity .4s ease, transform .4s @bl-ease;
+        transition: opacity .4s ease;
 
         img {
             position: absolute;
@@ -269,8 +280,8 @@
         }
     }
 
-    a.bl-regions__photo:hover,
-    a.bl-regions__photo:focus-visible {
+    a.bl-regions__photo:hover .bl-regions__media,
+    a.bl-regions__photo:focus-visible .bl-regions__media {
         opacity: .35;
     }
 
@@ -279,12 +290,34 @@
         outline-offset: 4px;
     }
 
-    &__item--empty .bl-regions__photo {
+    &__item--empty .bl-regions__media {
         opacity: .05;
     }
 
-    &__item.is-active .bl-regions__photo {
+    &__item.is-active .bl-regions__media {
         opacity: 1;
+    }
+
+    // The name on a circle that isn't active; it gives way to the pill
+    // (__more) when its circle becomes the active one.
+    &__tag {
+        position: relative;
+        z-index: 1;
+        max-width: 78%;
+        font-family: @bl-font-display;
+        font-size: ~"max(11px, 1.18cqw)";
+        font-weight: 500;
+        line-height: 1.2;
+        letter-spacing: -0.3px;
+        text-align: center;
+        color: @bl-navy;
+        transition: opacity .3s ease .3s;
+    }
+
+    &__item.is-active &__tag {
+        position: absolute;
+        opacity: 0;
+        transition: opacity .15s ease;
     }
 
     // Newly selected region (from the designer's reference): its photo
@@ -300,15 +333,20 @@
 
         .bl-regions__canvas,
         .bl-regions__pin,
+        .bl-regions__media,
+        .bl-regions__tag,
         .bl-regions__more,
         .bl-regions__char {
             transition: none !important;
         }
     });
 
+    // The active circle's button: the region's name (long names wrap).
     &__more {
-        position: relative;
+        position: absolute;
         z-index: 1;
+        max-width: 86%;
+        text-align: center;
         padding: ~"max(8px, 1.16cqw) max(12px, 1.55cqw)";
         border-radius: @bl-pill;
         background: rgba(0, 22, 41, .08);
@@ -320,7 +358,7 @@
         line-height: 1.25;
         letter-spacing: -0.6px;
         color: @bl-sand;
-        white-space: nowrap;
+        white-space: normal;
         opacity: 0;
         // Hidden: wiped back to its left edge (quick, so it's gone before
         // the ring turns).
@@ -339,8 +377,8 @@
     }
 
     // The letters type in from left to right once the pill is opening
-    // (one every 55ms); they vanish at once when the circle stops being
-    // active.
+    // (one every 30ms - names can be long); they vanish at once when the
+    // circle stops being active.
     &__char {
         opacity: 0;
         transition: opacity .1s ease;
@@ -349,7 +387,7 @@
     &__item.is-active &__char {
         opacity: 1;
         transition: opacity .06s linear;
-        transition-delay: ~"calc(.75s + var(--c, 0) * .055s)";
+        transition-delay: ~"calc(.75s + var(--c, 0) * .03s)";
     }
 
     &__item.is-active a:hover &__more,
@@ -380,8 +418,14 @@
         gap: 40px;
     }
 
+    // No glow on this one (designer feedback): only the rim changes.
     &__back {
         margin-bottom: 16px;
+
+        &:hover,
+        &:focus-visible {
+            box-shadow: none;
+        }
     }
 
     // 800 x 660 design px (1cqw = 8px).
@@ -538,8 +582,12 @@
     }
 
     .bl-regions__lead {
-        font-size: 22px;
-        letter-spacing: -0.8px;
+        font-size: 20px;
+    }
+
+    // Small circles: only the active one carries its name.
+    .bl-regions__tag {
+        display: none;
     }
 
     .bl-region {
@@ -662,7 +710,7 @@ html.bl-motion .bl-region:not(.is-entering) {
 }
 
 // From "Learn more": the photos are animated by script; the rest follows
-// once the clicked photo has started to move.
+// almost at once (the navy has already been on screen during the trip).
 .bl-region.is-entering.is-zoomed {
     .bl-region__photo {
         animation: none;
@@ -670,25 +718,25 @@ html.bl-motion .bl-region:not(.is-entering) {
 
     .bl-region__globe,
     .bl-region__land {
-        animation-duration: .6s;
-        animation-delay: .2s;
+        animation-duration: .5s;
+        animation-delay: .05s;
     }
 
     .bl-regions__dot,
     .bl-regions__label {
-        animation-delay: .55s;
+        animation-delay: .3s;
     }
 
-    .bl-region__back { animation-delay: .3s; }
+    .bl-region__back { animation-delay: .08s; }
 
     .bl-region__name,
-    .bl-region__body > * { animation-duration: .6s; }
-    .bl-region__name { animation-delay: .35s; }
-    .bl-region__body > :nth-child(1) { animation-delay: .42s; }
-    .bl-region__body > :nth-child(2) { animation-delay: .48s; }
-    .bl-region__body > :nth-child(3) { animation-delay: .56s; }
-    .bl-region__body > :nth-child(4) { animation-delay: .62s; }
-    .bl-region__body > :nth-child(n+5) { animation-delay: .68s; }
+    .bl-region__body > * { animation-duration: .5s; }
+    .bl-region__name { animation-delay: .1s; }
+    .bl-region__body > :nth-child(1) { animation-delay: .15s; }
+    .bl-region__body > :nth-child(2) { animation-delay: .2s; }
+    .bl-region__body > :nth-child(3) { animation-delay: .25s; }
+    .bl-region__body > :nth-child(4) { animation-delay: .3s; }
+    .bl-region__body > :nth-child(n+5) { animation-delay: .35s; }
 }
 
 // "Back to study regions" (.is-leaving): texts out to the left and the

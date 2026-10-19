@@ -3,8 +3,10 @@
 //  The bar is laid over the top of the page (homepage hero / inner banner).
 // ===========================================================================
 
+// It stays on screen while the page scrolls: once scrolled (.is-stuck,
+// initHeader) it moves up and sits on a blurred glass bar.
 .bl-header {
-    position: absolute;
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
@@ -12,6 +14,7 @@
     padding: 70px 70px 0;
     color: @bl-sand;
     pointer-events: none;   // let the hero underneath stay interactive
+    transition: padding .35s @bl-ease;
 
     &__inner {
         display: flex;
@@ -20,6 +23,21 @@
         gap: 24px;
         max-width: 1298px + 2 * 71px;
         margin: 0 auto;
+        padding: 0;
+        border-radius: 20px;
+        transition: padding .35s @bl-ease, background-color .35s ease, -webkit-backdrop-filter .35s ease, backdrop-filter .35s ease;
+    }
+
+    &.is-stuck {
+        padding-top: 16px;
+
+        .bl-header__inner {
+            padding: 14px 16px 14px 24px;
+            background: rgba(0, 22, 41, .38);
+            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(20px);
+            pointer-events: auto;
+        }
     }
 
     &__brand,
@@ -44,6 +62,73 @@
         display: flex;
         align-items: center;
         gap: 15px;
+    }
+}
+
+.bl-reduced-motion({
+    .bl-header,
+    .bl-header__inner {
+        transition: none;
+    }
+});
+
+// -- Back to top (layouts/default.htm, initToTop) -----------------------------
+// A glass circle at the bottom right, shown a few sections down the page.
+.bl-to-top {
+    position: fixed;
+    right: 40px;
+    bottom: 40px;
+    z-index: 60;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin: 0;
+    padding: 0;
+    border: 1.5px solid rgba(255, 255, 255, .35);
+    border-radius: 50%;
+    background: linear-gradient(180deg, rgba(120, 128, 134, .75), rgba(40, 48, 56, .85));
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
+    box-shadow: 0 4px 18px rgba(0, 22, 41, .25);
+    color: @bl-sand;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(12px);
+    transition: opacity .3s ease, transform .35s @bl-ease, visibility 0s linear .35s, box-shadow .3s ease;
+
+    &.is-shown {
+        opacity: 1;
+        visibility: visible;
+        transform: none;
+        transition: opacity .3s ease, transform .35s @bl-ease, visibility 0s, box-shadow .3s ease;
+    }
+
+    &:hover,
+    &:focus-visible {
+        color: @bl-white;
+        box-shadow: 0 .5px 25px 0 @bl-sand-35;
+    }
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+.bl-reduced-motion({
+    .bl-to-top {
+        transition: none;
+    }
+});
+
+@media @bl-md {
+    .bl-to-top {
+        right: 16px;
+        bottom: 16px;
+        width: 52px;
+        height: 52px;
     }
 }
 
@@ -394,6 +479,15 @@ html.bl-js .bl-nav__item--parent:not(.is-open) {
 @media @bl-md {
     .bl-header {
         padding-top: 24px;
+
+        &.is-stuck {
+            padding: 10px 12px 0;
+
+            .bl-header__inner {
+                padding: 8px 8px 8px 14px;
+                border-radius: 16px;
+            }
+        }
     }
 
     .bl-search {

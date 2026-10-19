@@ -25,7 +25,7 @@ function resultTabs()
     return [
         'deliverables'      => ['label' => 'Deliverables',     'type' => Library::SORT_TYPE_DELIVERABLES,          'sort' => ['title', 'asc']],
         'publications'      => ['label' => 'Publications',     'type' => Library::SORT_TYPE_PROJECT_PUBLICATIONS,  'sort' => ['year', 'desc']],
-        'policy-briefs'     => ['label' => 'Policy briefs',    'type' => Library::SORT_TYPE_TECHNICAL_BRIEFS,      'sort' => ['title', 'asc']],
+        'policy-briefs'     => ['label' => 'Policy briefs',    'type' => Library::SORT_TYPE_TECHNICAL_BRIEFS,      'sort' => ['title', 'asc'], 'empty' => 'Policy briefs will follow at a later stage.'],
         'relevant-reading'  => ['label' => 'Relevant reading', 'type' => Library::SORT_TYPE_RELEVANT_PUBLICATIONS, 'sort' => ['year', 'desc']],
     ];
 }
@@ -99,7 +99,7 @@ function onStart()
         </div>
         {% partial 'balansed/pager' p=records label=(tab.label ~ ' pages') hash='results-list' %}
         {% else %}
-        <p class="bl-empty">{{ tab.label }} will follow soon - keep posted!</p>
+        <p class="bl-empty">{{ tab.empty ?? (tab.label ~ ' will follow soon - stay tuned!') }}</p>
         {% endif %}
     </div>
 </section>

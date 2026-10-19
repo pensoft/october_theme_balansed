@@ -70,6 +70,11 @@
     to   { clip-path: inset(0 0 0 0 round 15px); }
 }
 
+@keyframes bl-hold-shift {
+    from { translate: 0 var(--hold-shift, 0px); }
+    to   { translate: 0 0; }
+}
+
 @keyframes bl-draw-x {
     from { clip-path: inset(0 100% 0 0); }
     to   { clip-path: inset(0 0 0 0); }
@@ -95,26 +100,27 @@
 }
 
 // -- Lines ------------------------------------------------------------------------
-// Statements in .bl-lines (homepage introduction) rise line by line: all
-// words of a line (--l from JS) move together, lines follow top to bottom.
+// Statements in .bl-lines (homepage introduction) play the evidence slider's
+// text animation: word by word, each rising with a soft fade (bl-word-fade).
 // Each statement starts when it is itself on screen (.bl-lines.is-inview).
 html.bl-motion {
     .bl-lines:not(.is-inview) .bl-w > span {
+        opacity: 0;
         translate: 0 110%;
         animation: none;
     }
 
     .bl-lines.is-inview .bl-w > span {
-        animation: bl-word 1.05s @bl-motion-ease ~"calc(var(--l, 0) * 140ms + 80ms)" both;
+        animation: bl-word-fade 1.1s @bl-motion-ease ~"calc(var(--w, 0) * 45ms + 80ms)" both;
     }
 }
 
 // -- "Bringing together" (homepage) ------------------------------------------------
-// The two title words fade in one after the other (no rise); then the
-// figures ("12 organisations", "8 EU Countries", ...) drift up from below
-// with a soft fade, one by one.
+// The figures ("12 organisations", "8 EU Countries", ...) come first, one
+// under the other from the top, with a light fade; the two title words
+// fade in last, one after the other (no rise).
 @keyframes bl-soft-rise {
-    from { opacity: 0; translate: 0 26px; }
+    from { opacity: 0; translate: 0 16px; }
     to   { opacity: 1; translate: 0 0; }
 }
 
@@ -130,16 +136,36 @@ html.bl-motion .bl-together {
 
     &.is-inview .bl-together__title .bl-w > span {
         translate: none;
-        animation: bl-appear 1.3s ease ~"calc(var(--w, 0) * 450ms + 250ms)" both;
+        animation: bl-appear 1.3s ease ~"calc(var(--w, 0) * 450ms + 1.6s)" both;
     }
 
     &.is-inview .bl-together__stats li {
         animation: bl-soft-rise 1.1s @bl-motion-ease both;
 
-        &:nth-child(1) { animation-delay: 1.15s; }
-        &:nth-child(2) { animation-delay: 1.45s; }
-        &:nth-child(3) { animation-delay: 1.75s; }
-        &:nth-child(n+4) { animation-delay: 2.05s; }
+        &:nth-child(1) { animation-delay: .25s; }
+        &:nth-child(2) { animation-delay: .6s; }
+        &:nth-child(3) { animation-delay: .95s; }
+        &:nth-child(n+4) { animation-delay: 1.3s; }
+    }
+}
+
+// -- "Why BALANSED exists" (About) ---------------------------------------------------
+// The two texts beside the videos slide in from the sides with a fade - the
+// first ("More biomass ...") from the right, the second ("Yet these
+// decisions ...") from the left - each when it is itself on screen
+// (data-bl-inview).
+html.bl-motion .bl-why {
+    .bl-why__text:not(.is-inview) {
+        opacity: 0;
+        animation: none;
+    }
+
+    .bl-why__text--1.is-inview {
+        animation: bl-from-right 1.2s @bl-motion-ease .15s both;
+    }
+
+    .bl-why__text--2.is-inview {
+        animation: bl-from-left 1.2s @bl-motion-ease .15s both;
     }
 }
 
@@ -304,23 +330,30 @@ html.bl-motion {
         // "What success looks like" has its own scroll engine (initSuccess).
 
         // Study regions: the globe turns in, dots and label follow
-        .bl-regions__globe,
+        // (the overview quickly, so the interaction is soon ready).
         .bl-region__globe {
             animation: bl-spin-in 1.4s @bl-motion-ease .2s both;
         }
 
-        .bl-regions__land,
         .bl-region__land {
             animation: bl-spin-in 1.6s @bl-motion-ease .35s both;
         }
 
+        .bl-regions__globe {
+            animation: bl-spin-in .9s @bl-motion-ease .05s both;
+        }
+
+        .bl-regions__land {
+            animation: bl-spin-in 1s @bl-motion-ease .1s both;
+        }
+
         .bl-regions__dot,
         .bl-regions__pin {
-            animation: bl-appear .6s ease 1.1s both;
+            animation: bl-appear .4s ease .5s both;
         }
 
         .bl-regions__label {
-            animation: bl-appear .6s ease 1.4s both;
+            animation: bl-appear .4s ease .6s both;
         }
 
         // Consortium map: countries fade in one after another (--d from JS)
@@ -368,6 +401,25 @@ html.bl-stack {
         transform-origin: 100% 0;
         // Its section background is sand on phones, but its edges are navy.
         --bl-stack-tint: rgb(0, 22, 41);
+    }
+
+    // The section after a hold (data-bl-hold, initStack) waits right below
+    // the held one: shifted up over the hold's spacer, by less and less as
+    // the spacer scrolls by. Driven by the scroll itself, so it never lags
+    // (positions in px from initStack; other browsers: set from the script).
+    @supports (animation-timeline: scroll()) {
+        .bl-main > .bl-held-next {
+            animation: bl-hold-shift linear both;
+            animation-timeline: scroll(root block);
+            animation-range: var(--hold-from, 0px) var(--hold-to, 1px);
+        }
+    }
+
+    // Full-bleed photo / video sections keep their width (they only dim):
+    // no flat colour could fill the strips beside a photo's edges.
+    .bl-main > .bl-together,
+    .bl-main > .bl-evidence {
+        scale: none;
     }
 
     // Fully hidden behind later sections (initStack): not painted at all.

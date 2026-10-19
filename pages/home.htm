@@ -99,7 +99,7 @@ function onStart()
             <h1 class="bl-hero__title" id="hero-heading">{% component 'jumbo' jumbotron='home-hero-title' %}</h1>
             <div class="bl-hero__actions">
                 <a class="bl-btn bl-btn--sand" href="{{ 'study-regions'|page({}, false) ?: ('/study-regions'|app) }}">See our Study Regions</a>
-                <span class="bl-btn bl-btn--outline" aria-disabled="true">Deliberation Toolkit Coming Soon</span>
+                <span class="bl-btn bl-btn--outline" aria-disabled="true">Deliberation Toolkit (Coming Soon)</span>
             </div>
         </div>
     </div>
@@ -117,7 +117,13 @@ function onStart()
     wobbles like a voice). Scrolling simply carries on past it at any time.
     Without JS: the first slide, fully drawn.
 #}
-<section class="bl-drawing" data-bl-drawing data-bl-hold="1" aria-labelledby="land-sea-heading">
+<section class="bl-drawing" data-bl-drawing data-bl-hold="2.2" aria-labelledby="land-sea-heading">
+    {# Hint that the section moves with the scroll (it holds while it draws,
+       which can look stuck). Decorative: the mouse's wheel rolls down. #}
+    <p class="bl-scroll-hint" aria-hidden="true">
+        <span class="bl-scroll-hint__mouse"><span class="bl-scroll-hint__wheel"></span></span>
+        Scroll to explore
+    </p>
     <div class="bl-drawing__stage">
         <div class="bl-drawing__canvas">
             {% partial 'balansed/drawing-art' %}
@@ -142,7 +148,9 @@ function onStart()
 </section>
 
 {# ------------------------------------------------------- INTRODUCTION #}
-<section class="bl-intro" aria-label="Introduction">
+{# data-bl-hold: stays a screen's worth of scrolling before "Bringing
+   together" slides over it, so the statements can be read (initStack). #}
+<section class="bl-intro" data-bl-hold="1" aria-label="Introduction">
     <div class="bl-wrap">
         <div class="bl-intro__row">
             <div class="bl-statement">{% component 'jumbo' jumbotron='home-intro-1' %}</div>
@@ -213,10 +221,12 @@ function onStart()
     pages/home.less + motion.less). Pauses on hover / focus, when off screen
     and with "reduce motion". Texts: Jumbotron home-evidence-title / -text
     (slide 1) and home-evidence-N-title / -text (slides 2-4).
+    Slide 2 is the designer's two-photo image (forest | coast) with the
+    navy gradient already in it ("baked": no CSS gradient on top).
 #}
 {% set evidence_slides = [
     { title: 'home-evidence-title', text: 'home-evidence-text', images: ['evidence.jpg'], flip: true },
-    { title: 'home-evidence-2-title', text: 'home-evidence-2-text', images: ['evidence/forest-lake.jpg', 'evidence/coast-cliff.jpg'], split: true },
+    { title: 'home-evidence-2-title', text: 'home-evidence-2-text', images: ['evidence/regions.jpg'], baked: true },
     { title: 'home-evidence-3-title', text: 'home-evidence-3-text', images: ['evidence/hands.jpg'] },
     { title: 'home-evidence-4-title', text: 'home-evidence-4-text', images: ['evidence/forest-road.jpg'], short: true },
 ] %}
@@ -224,7 +234,7 @@ function onStart()
     <div class="bl-evidence__slides" aria-live="off">
         {% for s in evidence_slides %}
         <div class="bl-evidence__slide {{ loop.first ? 'is-current' }} {{ s.split ? 'bl-evidence__slide--split' }} {{ s.short ? 'bl-evidence__slide--short' }}" role="group" aria-roledescription="slide" aria-label="{{ loop.index }} of {{ evidence_slides|length }}" {% if not loop.first %}inert{% endif %}>
-            <div class="bl-evidence__media" aria-hidden="true">
+            <div class="bl-evidence__media {{ s.baked ? 'bl-evidence__media--baked' }}" aria-hidden="true">
                 {% for image in s.images %}
                 <img class="bl-evidence__img {{ s.flip ? 'bl-evidence__img--flip' }} {{ s.split ? 'bl-evidence__img--' ~ loop.index }}" src="{{ (img ~ image)|theme }}" alt="" {% if not loop.parent.loop.first %}loading="lazy"{% endif %}>
                 {% endfor %}
@@ -232,7 +242,7 @@ function onStart()
             <div class="bl-evidence__inner">
                 <h2 class="bl-evidence__title">{% component 'jumbo' jumbotron=s.title %}</h2>
                 <button type="button" class="bl-round-arrow" data-bl-slider-next aria-label="Next">
-                    {% partial 'balansed/icon' name='arrow-right' size=32 %}
+                    {% partial 'balansed/icon' name='arrow-right' size=44 stroke=1.25 %}
                 </button>
                 <div class="bl-evidence__text">{% component 'jumbo' jumbotron=s.text %}</div>
             </div>
@@ -255,9 +265,10 @@ function onStart()
     text changes and a photo pops in as each quarter completes
     (assets/js/balansed.js, initSuccess; styles in pages/home.less).
     Texts: Jumbotron home-success-goal ("By 2030 ...") and home-success-1..4.
+    The arrows step back / on one goal by scrolling to it.
     Without JS: the first goal with its quarter lit.
 #}
-<section class="bl-success" data-bl-success data-bl-hold="1.2" aria-labelledby="success-heading">
+<section class="bl-success" data-bl-success data-bl-hold="2.4" aria-labelledby="success-heading">
     <div class="bl-success__stage">
         <h2 class="bl-success__title" id="success-heading">{% component 'jumbo' jumbotron='home-success-title' %}</h2>
         <div class="bl-success__ring">
@@ -272,13 +283,21 @@ function onStart()
                 </ul>
             </div>
 
-            {# A photo per quarter; the left one changes on the last goal (as in the design). #}
+            {# A photo per quarter; the top-left laptop stays on through the last goal. #}
             {% set simg = img ~ 'success/' %}
             <img class="bl-success__thumb bl-success__thumb--1 is-on" data-step="0" src="{{ (simg ~ 'worker.jpg')|theme }}" alt="" loading="lazy">
-            <img class="bl-success__thumb bl-success__thumb--2" data-step="1" data-until="2" src="{{ (simg ~ 'laptop.jpg')|theme }}" alt="" loading="lazy">
-            <img class="bl-success__thumb bl-success__thumb--2" data-step="3" src="{{ (simg ~ 'coast.jpg')|theme }}" alt="" loading="lazy">
+            <img class="bl-success__thumb bl-success__thumb--2" data-step="1" src="{{ (simg ~ 'toolkit-laptop.jpg')|theme }}" alt="" loading="lazy">
             <img class="bl-success__thumb bl-success__thumb--3" data-step="2" src="{{ (simg ~ 'farmers.jpg')|theme }}" alt="" loading="lazy">
             <img class="bl-success__thumb bl-success__thumb--4" data-step="3" src="{{ (simg ~ 'fields.jpg')|theme }}" alt="" loading="lazy">
+
+            {# Previous / next goal: scroll the page to that goal (initSuccess).
+               Shown by the script, which is what makes them work. #}
+            <button type="button" class="bl-round-arrow bl-success__nav bl-success__nav--prev" data-bl-success-prev aria-label="Previous goal" hidden>
+                {% partial 'balansed/icon' name='arrow-left' size=28 stroke=1.5 %}
+            </button>
+            <button type="button" class="bl-round-arrow bl-success__nav bl-success__nav--next" data-bl-success-next aria-label="Next goal" hidden>
+                {% partial 'balansed/icon' name='arrow-right' size=28 stroke=1.5 %}
+            </button>
         </div>
     </div>
 </section>

@@ -149,7 +149,8 @@ function onStart()
 {#
     BALANSED Study regions (Figma: About / Study regions).
     Overview - region photos on a ring around the globe; the active region
-    sits at the top with "Learn more" (its page) and its name on the globe.
+    sits at the top with its name as the button to its page (and on the
+    globe); the other circles show their names too.
     Picking another photo turns the ring (assets/js/balansed.js,
     initRegions); without JS every photo links to its region page.
     The globe can be dragged round (canvas drawn from
@@ -202,6 +203,11 @@ function onStart()
 
 {% else %}
 {# -------------------------------------------------------- OVERVIEW #}
+{# The globe's map data starts loading with the page, not only once the
+   (deferred) script runs - so the globe is ready sooner. #}
+{% put styles %}
+<link rel="preload" href="{{ (img ~ 'land-110m.json')|theme }}" as="fetch" type="application/json" crossorigin>
+{% endput %}
 <section class="bl-regions" data-bl-regions data-step="{{ ring_step }}" data-count="{{ ring|length }}">
     <div class="bl-regions__intro">
         <p class="bl-eyebrow bl-regions__eyebrow">{% component 'jumbo' jumbotron='regions-label' %}</p>
@@ -228,14 +234,16 @@ function onStart()
             <li class="bl-regions__item {{ r ? '' : 'bl-regions__item--empty' }} {{ slot.index == 0 ? 'is-active' }} {{ angle > 100 or angle < -100 ? 'is-hidden' }}" style="--a: {{ angle }}deg" data-index="{{ slot.index }}" {% if not r %}aria-hidden="true"{% endif %}>
                 {% if r %}
                 <a class="bl-regions__photo" href="{{ r.url }}" data-bl-region data-name="{{ r.name }}" {% if r.lat is not null %}data-lat="{{ r.lat }}" data-lng="{{ r.lng }}"{% endif %}>
-                    {% if r.images|length %}<img src="{{ r.images[0] }}" alt="" loading="lazy">{% endif %}
-                    {# One span per letter, typed in from left to right when the circle
-                       is active; screen readers get the plain text (aria-hidden copy). #}
-                    <span class="bl-regions__more"><span class="sr-only">Learn more about {{ r.name }}</span><span aria-hidden="true">{% for c in 'Learn more'|split('') %}{% if c == ' ' %} {% else %}<span class="bl-regions__char" style="--c: {{ loop.index0 }}">{{ c }}</span>{% endif %}{% endfor %}</span></span>
-                    <span class="sr-only bl-regions__name">{{ r.name }}</span>
+                    <span class="bl-regions__media">{% if r.images|length %}<img src="{{ r.images[0] }}" alt="" {% if slot.index == 0 %}fetchpriority="high"{% else %}decoding="async"{% endif %}>{% endif %}</span>
+                    {# The region's name on its circle: plain on the other circles,
+                       and on the active one a pill typed in letter by letter
+                       (one span per letter) - it opens the region's page.
+                       Screen readers get the plain text (aria-hidden copies). #}
+                    <span class="bl-regions__tag" aria-hidden="true">{{ r.name }}</span>
+                    <span class="bl-regions__more"><span class="sr-only">{{ r.name }} - learn more</span><span aria-hidden="true">{% for c in r.name|split('') %}{% if c == ' ' %} {% else %}<span class="bl-regions__char" style="--c: {{ loop.index0 }}">{{ c }}</span>{% endif %}{% endfor %}</span></span>
                 </a>
                 {% else %}
-                <span class="bl-regions__photo"></span>
+                <span class="bl-regions__photo"><span class="bl-regions__media"></span></span>
                 {% endif %}
             </li>
             {% endfor %}

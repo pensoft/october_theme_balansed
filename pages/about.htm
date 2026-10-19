@@ -49,7 +49,7 @@ function onStart()
 {% partial 'balansed/page-hero' title='About the project' %}
 
 {# --------------------------------------------- WHY BALANSED EXISTS #}
-<section class="bl-why" aria-labelledby="why-heading">
+<section class="bl-why" data-bl-hold="0.6" aria-labelledby="why-heading">
     <div class="bl-wrap">
         <div class="bl-about-head">
             <p class="bl-eyebrow">{% component 'jumbo' jumbotron='about-why-label' %}</p>
@@ -62,8 +62,8 @@ function onStart()
                without JS the poster (the former photo) shows instead. #}
             <video class="bl-why__img bl-why__img--1" src="{{ 'assets/videos/balansed/fields-coast.mp4'|theme }}" poster="{{ (img ~ 'why-1.jpg')|theme }}" muted loop playsinline preload="none" aria-hidden="true"></video>
             <video class="bl-why__img bl-why__img--2" src="{{ 'assets/videos/balansed/vineyard-people.mp4'|theme }}" poster="{{ (img ~ 'why-2.jpg')|theme }}" muted loop playsinline preload="none" aria-hidden="true"></video>
-            <div class="bl-lead bl-why__text bl-why__text--1">{% component 'jumbo' jumbotron='about-why-text-1' %}</div>
-            <div class="bl-lead bl-why__text bl-why__text--2">{% component 'jumbo' jumbotron='about-why-text-2' %}</div>
+            <div class="bl-lead bl-why__text bl-why__text--1" data-bl-inview>{% component 'jumbo' jumbotron='about-why-text-1' %}</div>
+            <div class="bl-lead bl-why__text bl-why__text--2" data-bl-inview>{% component 'jumbo' jumbotron='about-why-text-2' %}</div>
         </div>
     </div>
 </section>
@@ -87,7 +87,7 @@ function onStart()
 </section>
 
 {# --------------------------------------- WHAT WE'RE SETTING OUT TO DO #}
-<section class="bl-aims" aria-labelledby="aims-heading">
+<section class="bl-aims" data-bl-hold="1" aria-labelledby="aims-heading">
     {% partial 'balansed/about-people' %}
     <div class="bl-wrap">
         <div class="bl-about-head bl-aims__head">

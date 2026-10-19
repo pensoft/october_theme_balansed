@@ -171,10 +171,12 @@ body.bl {
         background: @bl-sand;
         color: @bl-navy;
 
+        // A soft sand glow, as on the outline button (designer feedback).
         &:hover,
         &:focus-visible {
             background: @bl-white;
             color: @bl-navy;
+            box-shadow: 0 .5px 12px 0 fade(@bl-sand, 18%);
         }
     }
 
@@ -182,11 +184,12 @@ body.bl {
         border-color: @bl-sand-35;
         color: @bl-sand;
 
-        // Figma "Deliberation Toolkit button": brown rim + sand glow.
+        // Figma "Deliberation Toolkit button": brown rim + a soft sand glow
+        // (toned down from the Figma 25px / 35% after designer feedback).
         &:hover,
         &:focus-visible {
             border-color: @bl-brown;
-            box-shadow: 0 .5px 25px 0 @bl-sand-35;
+            box-shadow: 0 .5px 12px 0 fade(@bl-sand, 18%);
             color: @bl-sand;
         }
     }
@@ -222,11 +225,11 @@ body.bl {
     color: @bl-sky;
     transition: box-shadow .3s ease;
 
-    // Figma "Outline arrow": a green glow around the ring.
+    // Figma "Outline arrow": a very light green glow around the ring.
     &:hover,
     &:focus-visible {
         color: @bl-sky;
-        box-shadow: 0 .5px 25px 0 rgba(82, 189, 127, .65);
+        box-shadow: 0 .5px 14px 0 rgba(82, 189, 127, .25);
     }
 }
 
@@ -289,7 +292,9 @@ body.bl .bl-motion-toggle {
     flex-wrap: wrap;
     gap: 8px;
 
-    a {
+    // __icon: a network whose link isn't set yet (partials/balansed/socials.htm).
+    a,
+    &__icon {
         display: inline-flex;
         align-items: center;
         justify-content: center;
@@ -317,6 +322,20 @@ body.bl .bl-social a {
     &:focus-visible,
     &:visited {
         color: @bl-white;
+    }
+
+    svg {
+        fill: @bl-white;
+    }
+}
+
+body.bl .bl-social__icon {
+    color: @bl-white;
+
+    // Not a link (yet): no hover glow.
+    &:hover {
+        background: @bl-blue;
+        box-shadow: none;
     }
 
     svg {
@@ -368,12 +387,17 @@ body.bl .bl-social a {
     color: @bl-navy;
 }
 
-.bl-legacy {
+// ("body.bl .bl-legacy" to beat the base "body.bl h2, body.bl p { margin: 0 }".)
+body.bl .bl-legacy {
     font-size: 18px;
     line-height: 1.6;
 
+    > :first-child {
+        margin-top: 0;
+    }
+
     h1, h2, h3 {
-        margin: 1.4em 0 .5em;
+        margin: 1.4em 0 .6em;
         line-height: 1.25;
         letter-spacing: -0.5px;
     }

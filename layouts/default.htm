@@ -9,6 +9,22 @@ security = "all"
 includePageMeta = 1
 escape = 1
 ==
+<?php
+function onStart()
+{
+    // Theme scripts are served as plain static files (no PHP per request:
+    // the asset combiner boots October and waits on the session lock for
+    // each one, which held every page back by up to half a second). The
+    // file's modified time is its ?v=, so a changed file gets a new URL.
+    $dir = $this->controller->getTheme()->getPath() . '/assets/js/';
+    $v = [];
+    foreach (['app', 'accessibility', 'balansed'] as $name) {
+        $v[$name] = @filemtime($dir . $name . '.js') ?: 1;
+    }
+    $this['bl_js_v'] = $v;
+}
+?>
+==
 {#
     BALANSED layout.
 
@@ -69,13 +85,13 @@ escape = 1
     </script>
 
     <script src="{{ 'assets/js/jquery.js'|theme }}"></script>
-    {# Theme scripts go through the asset combiner (array form) so their URL
-       changes whenever the file changes - no stale copies in browser caches. #}
-    <script src="{{ ['assets/js/app.js']|theme }}"></script>
-    <script src="{{ ['assets/js/accessibility.js']|theme }}"></script>
+    {# Theme scripts: static files, versioned by their modified time
+       (bl_js_v, onStart above) so a changed file is never served stale. #}
+    <script src="{{ 'assets/js/app.js'|theme }}?v={{ bl_js_v.app }}"></script>
+    <script src="{{ 'assets/js/accessibility.js'|theme }}?v={{ bl_js_v.accessibility }}"></script>
     <script src="{{ 'assets/vendor/bootstrap/js/modal.js'|theme }}"></script>
     <script src="{{ 'assets/js/slick.min.js'|theme }}"></script>
-    <script src="{{ ['assets/js/balansed.js']|theme }}" defer></script>
+    <script src="{{ 'assets/js/balansed.js'|theme }}?v={{ bl_js_v.balansed }}" defer></script>
 
     <script src="https://www.google.com/recaptcha/api.js" async defer></script>
 
@@ -155,6 +171,12 @@ height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
         %}
     </footer>
     {% endif %}
+
+    {# Back to the top: appears once the visitor is a few sections down
+       (initToTop, assets/js/balansed.js). Hidden without the script. #}
+    <button type="button" class="bl-to-top" data-bl-to-top aria-label="Back to top" hidden>
+        {% partial 'balansed/icon' name='arrow-up' size=34 stroke=1.25 %}
+    </button>
 </div>
 
 <div id="gdpr-reload">

@@ -303,6 +303,12 @@ form:
                 type: colorpicker
                 assetVar: 'secondary-color'
                 tab: 'Colors'
+            deliverables_approved:
+                label: Deliverables approved by the EC
+                comment: 'Off: every deliverable on the Results page shows the status "In preparation", whatever its own Status says. Switch on once the European Commission has approved them, to show each deliverable''s own Status.'
+                type: switch
+                default: false
+                tab: 'Results'
             region_places:
                 label: Globe places
                 comment: 'Where each study region sits on the globe of the Study regions page. The regions themselves (name, texts, photos, order) are the Case studies in the backend menu; match each one here by its slug (e.g. la-mancha-and-southern-spain). A case study without a place is shown on the ring but not on the globe.'

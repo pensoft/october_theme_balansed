@@ -165,8 +165,9 @@
         '.bl-article__related-title', '.bl-region__h'
     ].join(',');
 
-    // Statements revealed line by line (each line rises from below, top to
-    // bottom), triggered when the statement itself scrolls into view.
+    // Statements revealed word by word with a fade (motion.less, "Lines"),
+    // triggered when the statement itself scrolls into view. (Their lines
+    // are numbered too, --l, for a line-by-line variant.)
     var REVEAL_LINES = '.bl-intro .bl-statement';
 
     // Number each word's line (--l) from its position on screen.
@@ -1174,23 +1175,29 @@
 
     /*
      * Scroll progress (0..1) through a content-height section that is
-     * animated with the scroll (the drawing, the success ring). Held by the
-     * stacking (data-bl-hold, initStack): it runs while the section is held
-     * fully in view - from when the hold spacer after it starts passing the
-     * bottom of the screen - and is done with USE of the hold scrolled, so
-     * the animation is finished before the next section slides over it.
-     * Without the hold (reduced motion: no stacking): from when its top is
-     * at START of the screen until it reaches the top.
+     * animated with the scroll (the drawing, the success ring), from when
+     * its top is at START of the screen, as it scrolls up:
+     *  - held at the top by the stacking (data-bl-hold, initStack - both
+     *    sections): on through the hold, done with USE of it scrolled, so it
+     *    is finished before the next section slides over it. The spacer
+     *    after it scrolls normally: its top is the section's unpinned
+     *    bottom edge. (A section taller than the screen first scrolls
+     *    its own extra height before it is held.);
+     *  - without a hold (reduced motion: no stacking): done when its
+     *    top reaches FINISH (default: the top of the screen).
      */
-    function scrollThrough(root, START) {
+    function scrollThrough(root, START, FINISH) {
+        FINISH = FINISH || 0;
         var USE = 0.85;
         var vh = window.innerHeight;
         var clamp = function (v) { return Math.max(0, Math.min(1, v)); };
         var spacer = root.nextElementSibling;
         if (spacer && spacer.classList.contains('bl-stack-hold') && spacer.offsetHeight) {
-            return clamp((vh - spacer.getBoundingClientRect().top) / (spacer.offsetHeight * USE));
+            var h = root.offsetHeight;
+            var travelled = vh * START + h - spacer.getBoundingClientRect().top;
+            return clamp(travelled / (vh * START + Math.max(0, h - vh) + spacer.offsetHeight * USE));
         }
-        return clamp((vh * START - root.getBoundingClientRect().top) / (vh * START));
+        return clamp((vh * START - root.getBoundingClientRect().top) / (vh * (START - FINISH)));
     }
 
     /*
@@ -1212,10 +1219,10 @@
         if (!root || !('IntersectionObserver' in window)) return;
 
         // -- Tuning -------------------------------------------------------
-        var START = 0.7;     // start drawing when the section top is at 70% of the screen
-        var END = 0.4;       // done when the next section has covered 40% of it
+        var START = 0.55;    // start when the section top is at 55% of the screen (the art coming into view)
+        var FINISH = 0.15;   // without the hold (reduced motion): fully drawn when it is at 15%
         var DRAW = 0.72;     // share of each slide's scroll spent drawing (the rest holds)
-        var SMOOTH = 0.09;   // how fast the pen catches up with the scroll (0..1)
+        var SMOOTH = 0.06;   // how fast the pen catches up with the scroll (0..1)
         var WOBBLE = 1;      // strength of the blob's "voice" wobble
         // -----------------------------------------------------------------
 
@@ -1295,7 +1302,7 @@
         var current = 0, active = -1, visible = false, raf = null, blobDrawn = 0;
 
         function target() {
-            return scrollThrough(root, START);
+            return scrollThrough(root, START, FINISH);
         }
 
         function render(p, time) {
@@ -1371,21 +1378,29 @@
         var ticking = false;
         var built = [];   // per section: the next one's built-in overlap (px)
         var tints = [];   // per section: its background colour [r, g, b]
+        var radii = [];   // per section: its top corner radius (px)
         var NAVY = [0, 22, 41];
         var root = document.documentElement;
 
         // Holds (data-bl-hold="<screens>"): a section animated with the
-        // scroll (the drawing, the success ring) stops once its bottom
-        // reaches the bottom of the screen - fully in view, the one above
-        // still behind it - for that many screens of scrolling before the
-        // next one slides over it. The scrolling room is an empty spacer
-        // after it (.bl-stack-hold); scrollThrough reads its progress there.
-        sections.forEach(function (s) {
+        // scroll (the drawing, the success ring) rises to the top as usual, then
+        // stays there for that many screens of scrolling - the next section
+        // waiting right below it, not over it - before that one slides over
+        // it. The scrolling room is an empty spacer after it
+        // (.bl-stack-hold; scrollThrough reads its progress there); the next
+        // section is shifted up over the spacer (translate) so no gap shows.
+        // The shift follows the scroll exactly, so where the browser can,
+        // it is a scroll-driven CSS animation (.bl-held-next, motion.less)
+        // that runs in step with the scrolling; set here per frame instead,
+        // it would lag a frame behind and the section would bounce.
+        var scrollDriven = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
+        sections.forEach(function (s, i) {
             if (!s.hasAttribute('data-bl-hold')) return;
             var spacer = document.createElement('div');
             spacer.className = 'bl-stack-hold';
             spacer.setAttribute('aria-hidden', 'true');
             s.parentNode.insertBefore(spacer, s.nextSibling);
+            if (scrollDriven && sections[i + 1]) sections[i + 1].classList.add('bl-held-next');
         });
 
         // A section's own background colour (transparent ones sit on navy),
@@ -1401,17 +1416,32 @@
             sections.forEach(function (s, i) {
                 s.style.zIndex = String(10 + i);
                 var hold = parseFloat(s.getAttribute('data-bl-hold')) || 0;
-                // Pinned with its bottom at the bottom of the screen: held
-                // sections at once (fully in view), taller ones at the end.
-                var top = hold ? vh - s.offsetHeight : Math.min(0, vh - s.offsetHeight);
-                s.style.top = s.hasAttribute('data-bl-nostack') ? '' : top + 'px';
+                s.style.top = s.hasAttribute('data-bl-nostack') ? '' : Math.min(0, vh - s.offsetHeight) + 'px';
                 if (hold && s.nextElementSibling && s.nextElementSibling.classList.contains('bl-stack-hold')) {
                     s.nextElementSibling.style.height = Math.round(hold * vh) + 'px';
                 }
                 var next = sections[i + 1];
                 built[i] = next ? Math.max(0, -parseFloat(getComputedStyle(next).marginTop) || 0) : 0;
                 tints[i] = tintOf(s);
+                s.style.borderTopLeftRadius = s.style.borderTopRightRadius = '';
+                radii[i] = parseFloat(getComputedStyle(s).borderTopLeftRadius) || 0;
             });
+            // The scroll-driven shift of the section after each hold: from
+            // the spacer's height (when the held section pins) to 0 (when
+            // the spacer has scrolled by), between those scroll positions.
+            if (scrollDriven) {
+                var y = window.pageYOffset;
+                sections.forEach(function (s, i) {
+                    var next = sections[i + 1];
+                    var spacer = s.nextElementSibling;
+                    if (!next || !s.hasAttribute('data-bl-hold') || !spacer || !spacer.classList.contains('bl-stack-hold')) return;
+                    var h = s.offsetHeight;
+                    var from = spacer.getBoundingClientRect().top + y - Math.min(0, vh - h) - h;
+                    next.style.setProperty('--hold-shift', -spacer.offsetHeight + 'px');
+                    next.style.setProperty('--hold-from', Math.round(from) + 'px');
+                    next.style.setProperty('--hold-to', Math.round(from + spacer.offsetHeight) + 'px');
+                });
+            }
             update();
         }
 
@@ -1419,6 +1449,19 @@
             ticking = false;
             var vh = window.innerHeight;
             var covers = [];
+
+            // Holds: the section after a held one waits right below it
+            // (shifted up over the spacer) until the spacer has scrolled by.
+            sections.forEach(function (s, i) {
+                var next = sections[i + 1];
+                if (scrollDriven || !next || !s.hasAttribute('data-bl-hold')) return;
+                var shift = parseFloat(next.getAttribute('data-bl-shift')) || 0;
+                var natural = next.getBoundingClientRect().top - shift;
+                var below = s.getBoundingClientRect().top + s.offsetHeight - built[i];
+                shift = Math.min(0, Math.round(below - natural));
+                next.setAttribute('data-bl-shift', shift);
+                next.style.translate = shift ? '0 ' + shift + 'px' : '';
+            });
             sections.forEach(function (s, i) {
                 var next = sections[i + 1];
                 var cover = 0;
@@ -1443,6 +1486,14 @@
                 var w = s.offsetWidth;
                 var inset = Math.round(w * cover * 0.035 / 2);
                 s.style.setProperty('--stack-scale', w && inset ? (1 - 2 * (inset + 0.05) / w).toFixed(7) : '1');
+                // Its rounded top corners square off as it starts to be
+                // covered: with the strips beside it painted its colour, a
+                // corner would show a wedge of the section behind between
+                // the strip and the section (when it is pinned at the top).
+                if (radii[i]) {
+                    var r = cover ? Math.round(radii[i] * (1 - Math.min(1, cover * 4))) : null;
+                    s.style.borderTopLeftRadius = s.style.borderTopRightRadius = r === null ? '' : r + 'px';
+                }
             });
 
             // A section buried under one that is itself being covered, and
@@ -1501,9 +1552,17 @@
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(layout, 120);
         });
-        // Heights change as images and fonts load.
+        // Heights change as images and fonts load (and as content above a
+        // hold changes height, which moves its scroll positions).
         window.addEventListener('load', layout);
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+        if ('ResizeObserver' in window) {
+            var relayout = null;
+            var ro = new ResizeObserver(function () {
+                if (!relayout) relayout = requestAnimationFrame(function () { relayout = null; layout(); });
+            });
+            sections.forEach(function (s) { ro.observe(s); });
+        }
         layout();
     }
 
@@ -1522,10 +1581,10 @@
         if (!root || !('IntersectionObserver' in window)) return;
 
         // -- Tuning -------------------------------------------------------
-        var START = 0.6;     // start when the section top is at 60% of the screen
-        var END = 0.4;       // done when the next section has covered 40% of it
+        var START = 0.33;    // start when the section top is at 33% of the screen (the ring and its text in view)
+        var FINISH = 0.2;    // without the hold (reduced motion): all lit when it is at 20%
         var FILL = 0.78;     // share of each quarter's scroll spent filling (rest holds)
-        var SMOOTH = 0.1;    // how fast the fill catches up with the scroll (0..1)
+        var SMOOTH = 0.06;   // how fast the fill catches up with the scroll (0..1)
         // -----------------------------------------------------------------
 
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1542,7 +1601,7 @@
         function ease(t) { return 1 - Math.pow(1 - t, 2); }
 
         function target() {
-            return scrollThrough(root, START);
+            return scrollThrough(root, START, FINISH);
         }
 
         function render(p) {
@@ -1722,7 +1781,7 @@
         if (!svgs.length || !('IntersectionObserver' in window)) return;
 
         var START = 0.85;   // begin when the section top is at 85% of the screen
-        var SMOOTH = 0.08;  // how fast the pen catches up with the scroll (0..1)
+        var SMOOTH = 0.06;  // how fast the pen catches up with the scroll (0..1)
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         var items = svgs.map(function (svg) {
@@ -1766,9 +1825,14 @@
                 var q = item.svg.getBoundingClientRect();
                 var y = window.pageYOffset;
                 var from = y + q.top - vh;                       // top enters
-                var to = y + q.bottom - vh * 0.8;                // bottom at 80%
+                var to = y + q.bottom - vh * 0.45;               // bottom at 45%
                 to = Math.min(to, document.documentElement.scrollHeight - vh - 2);
                 return to > from ? shape(item, Math.max(0, Math.min(1, (y - from) / (to - from)))) : 1;
+            }
+            // Held by the stacking (data-bl-hold): drawn on through the hold.
+            var spacer = item.section.nextElementSibling;
+            if (spacer && spacer.classList.contains('bl-stack-hold')) {
+                return shape(item, scrollThrough(item.section, START));
             }
             var r = item.section.getBoundingClientRect();
             var end = Math.min(0, vh - r.height);       // where the section pins

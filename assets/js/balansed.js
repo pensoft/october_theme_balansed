@@ -104,6 +104,49 @@
         });
     }
 
+    /*
+     * Header: fixed at the top (header.less); once the page is scrolled
+     * it moves up onto a blurred glass bar (.is-stuck).
+     */
+    function initHeader() {
+        var header = document.querySelector('.bl-header');
+        if (!header) return;
+        var ticking = false;
+        function update() {
+            ticking = false;
+            header.classList.toggle('is-stuck', window.pageYOffset > 40);
+        }
+        window.addEventListener('scroll', function () {
+            if (!ticking) { ticking = true; requestAnimationFrame(update); }
+        }, { passive: true });
+        update();
+    }
+
+    /*
+     * Back to top (layouts/default.htm): shown once the visitor is about
+     * two screens down; scrolls to the top and moves focus to the logo.
+     */
+    function initToTop() {
+        var btn = document.querySelector('[data-bl-to-top]');
+        if (!btn) return;
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        var ticking = false;
+        btn.hidden = false;
+        function update() {
+            ticking = false;
+            btn.classList.toggle('is-shown', window.pageYOffset > window.innerHeight * 1.8);
+        }
+        window.addEventListener('scroll', function () {
+            if (!ticking) { ticking = true; requestAnimationFrame(update); }
+        }, { passive: true });
+        btn.addEventListener('click', function () {
+            window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
+            var brand = document.querySelector('.bl-header__brand');
+            if (brand) brand.focus({ preventScroll: true });
+        });
+        update();
+    }
+
     function initSearch() {
         document.querySelectorAll('[data-bl-search]').forEach(function (form) {
             var input = form.querySelector('input');
@@ -165,8 +208,9 @@
         '.bl-article__related-title', '.bl-region__h'
     ].join(',');
 
-    // Statements revealed line by line (each line rises from below, top to
-    // bottom), triggered when the statement itself scrolls into view.
+    // Statements revealed word by word with a fade (motion.less, "Lines"),
+    // triggered when the statement itself scrolls into view. (Their lines
+    // are numbered too, --l, for a line-by-line variant.)
     var REVEAL_LINES = '.bl-intro .bl-statement';
 
     // Number each word's line (--l) from its position on screen.
@@ -476,6 +520,10 @@
             });
             var active = items[k].querySelector('[data-bl-region]');
             if (label && active) label.textContent = active.getAttribute('data-name');
+            // The active region is the one "Learn more" opens: fetch its
+            // page once it has stayed active a moment (not while spinning).
+            clearTimeout(select.prefetch);
+            if (active) select.prefetch = setTimeout(function () { prefetchPage(active.href); }, 400);
             root.dispatchEvent(new CustomEvent('bl-region-select', { detail: { index: k, source: source || 'ring' } }));
         }
         root.blSelect = function (k, source) { if (k !== current) select(k, source); };
@@ -484,6 +532,7 @@
         items.forEach(function (li, i) {
             var link = li.querySelector('[data-bl-region]');
             if (!link) return;
+            link.addEventListener('pointerenter', function () { if (i === current) prefetchPage(link.href); });
             link.addEventListener('click', function (e) {
                 if (i === current) {
                     // The active one opens its page - through the zoom.
@@ -533,6 +582,30 @@
     // head script sees it and flags <html> with .bl-region-enter.
     var TRIP = 'bl-region-trip', FROM = 'bl-region-from';
     function slugOf(a) { return a.pathname.replace(/\/+$/, '').split('/').pop(); }
+
+    // The page at the other end of a trip is fetched ahead, so it opens
+    // straight away when the zoom has covered the section instead of the
+    // navy waiting on the network. Speculation rules where supported (kept
+    // in memory: the pages are sent "no-store", which the HTTP cache would
+    // drop; the page's scripts don't run until it is opened), else a plain
+    // prefetch. Not with "save data".
+    var prefetched = {};
+    function prefetchPage(url) {
+        if (!url || prefetched[url]) return;
+        if (navigator.connection && navigator.connection.saveData) return;
+        prefetched[url] = true;
+        var el;
+        if (window.HTMLScriptElement && HTMLScriptElement.supports && HTMLScriptElement.supports('speculationrules')) {
+            el = document.createElement('script');
+            el.type = 'speculationrules';
+            el.textContent = JSON.stringify({ prefetch: [{ source: 'list', urls: [url] }] });
+        } else {
+            el = document.createElement('link');
+            el.rel = 'prefetch';
+            el.href = url;
+        }
+        document.head.appendChild(el);
+    }
     function readTrip(dir) {
         var t = null;
         try {
@@ -601,10 +674,13 @@
             try { sessionStorage.setItem(FROM, JSON.stringify(t)); } catch (e) {}
             window.location.assign(link.href);
         };
-        var grow = layer.circle.animate([{ transform: 'scale(1)' }, { transform: 'scale(' + layer.scale + ')' }],
-            { duration: 380, easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'forwards' });
-        grow.onfinish = go;
-        setTimeout(go, 650);    // in case the animation never reports back
+        // The region page is requested at once: the circle grows while the
+        // page loads (the browser keeps this page on screen until the new
+        // one paints), so the visitor doesn't sit on a plain navy section
+        // waiting for it. A frame first, so the growth has started.
+        layer.circle.animate([{ transform: 'scale(1)' }, { transform: 'scale(' + layer.scale + ')' }],
+            { duration: 320, easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'forwards' });
+        requestAnimationFrame(go);
 
         // Coming back with the browser's back button: undo.
         window.addEventListener('pageshow', function (e) {
@@ -681,19 +757,18 @@
             photos.forEach(function (p, i) {
                 var from = toward(p, trip.rect);
                 if (i === 0) {
-                    // The clicked photo: a beat where it was, then into place.
+                    // The clicked photo: from where it was straight into place.
                     p.animate([
                         { transform: from, opacity: 1 },
-                        { transform: from, opacity: 1, offset: .056 },
                         { transform: 'none', opacity: 1 }
-                    ], { duration: 800, easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'backwards' });
+                    ], { duration: 650, easing: 'cubic-bezier(.65, 0, .35, 1)', fill: 'backwards' });
                 } else {
                     // The others come out from behind it.
                     p.animate([
                         { transform: from + ' scale(.85)', opacity: 0 },
                         { opacity: 1, offset: .3 },
                         { transform: 'none', opacity: 1 }
-                    ], { duration: 700, delay: 180 + i * 80, easing: 'cubic-bezier(.3, 1.25, .5, 1)', fill: 'backwards' });
+                    ], { duration: 650, delay: 60 + i * 60, easing: 'cubic-bezier(.3, 1.25, .5, 1)', fill: 'backwards' });
                 }
             });
         }
@@ -702,6 +777,9 @@
         // photos gather back into the circle they came from - then the
         // overview opens and zoomBack shrinks the navy into that circle.
         var backLink = region.querySelector('.bl-region__back');
+        if (backLink) window.addEventListener('load', function () {
+            setTimeout(function () { prefetchPage(backLink.href); }, 1500);
+        });
         if (backLink && canTrip()) backLink.addEventListener('click', function (e) {
             if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
             var slug = window.location.pathname.replace(/\/+$/, '').split('/').pop();
@@ -1075,17 +1153,18 @@
         if ('ResizeObserver' in window) new ResizeObserver(resize).observe(canvas);
         else window.addEventListener('resize', resize);
 
-        // Turn in from further east the first time the globe comes into view.
+        // Turn in from further east the first time the globe comes into view
+        // (short, so the globe can be used almost at once).
         function intro() {
             if (started) return;
             started = true;
             var first = marks.filter(function (m) { return m.index === (root.blCurrent ? root.blCurrent() : 0); })[0];
             if (!first) return;
             if (reduce || root.blBack) { flyTo(first); return; }   // back from a region: no intro spin
-            view.lng = wrap(first.lng + 70);
-            view.lat = clampLat(first.lat - 12);
+            view.lng = wrap(first.lng + 45);
+            view.lat = clampLat(first.lat - 8);
             dirty = true;
-            flyTo(first, 1800);
+            flyTo(first, 1100);
         }
 
         if ('IntersectionObserver' in window) {
@@ -1093,7 +1172,7 @@
                 visible = entries[0].isIntersecting;
                 if (visible && land) intro();
                 kick();
-            }, { threshold: .35 }).observe(canvas);
+            }, { threshold: .15 }).observe(canvas);
         } else {
             visible = true;
         }
@@ -1102,8 +1181,8 @@
             land = json.polys;
             if (marks.length) {
                 var m = marks.filter(function (x) { return x.index === (root.blCurrent ? root.blCurrent() : 0); })[0] || marks[0];
-                view.lng = wrap(m.lng + 70);
-                view.lat = clampLat(m.lat - 12);
+                view.lng = wrap(m.lng + 45);
+                view.lat = clampLat(m.lat - 8);
             }
             resize();
             root.classList.add('has-globe');
@@ -1180,22 +1259,38 @@
      *    sections): on through the hold, done with USE of it scrolled, so it
      *    is finished before the next section slides over it. The spacer
      *    after it scrolls normally: its top is the section's unpinned
-     *    bottom edge;
+     *    bottom edge. (A section taller than the screen first scrolls
+     *    its own extra height before it is held.);
      *  - without a hold (reduced motion: no stacking): done when its
      *    top reaches FINISH (default: the top of the screen).
      */
+    var SCROLL_USE = 0.85;
     function scrollThrough(root, START, FINISH) {
         FINISH = FINISH || 0;
-        var USE = 0.8;
         var vh = window.innerHeight;
         var clamp = function (v) { return Math.max(0, Math.min(1, v)); };
         var spacer = root.nextElementSibling;
         if (spacer && spacer.classList.contains('bl-stack-hold') && spacer.offsetHeight) {
             var h = root.offsetHeight;
             var travelled = vh * START + h - spacer.getBoundingClientRect().top;
-            return clamp(travelled / (vh * START + spacer.offsetHeight * USE));
+            return clamp(travelled / (vh * START + Math.max(0, h - vh) + spacer.offsetHeight * SCROLL_USE));
         }
         return clamp((vh * START - root.getBoundingClientRect().top) / (vh * (START - FINISH)));
+    }
+
+    // The reverse: the page scroll position (px) at which scrollThrough
+    // gives progress p. Measured from the spacer (it never sticks) or,
+    // without a hold, from the section itself (then it doesn't stick either).
+    function scrollFor(root, START, FINISH, p) {
+        FINISH = FINISH || 0;
+        var vh = window.innerHeight, y = window.pageYOffset;
+        var spacer = root.nextElementSibling;
+        if (spacer && spacer.classList.contains('bl-stack-hold') && spacer.offsetHeight) {
+            var h = root.offsetHeight;
+            var total = vh * START + Math.max(0, h - vh) + spacer.offsetHeight * SCROLL_USE;
+            return p * total - vh * START - h + spacer.getBoundingClientRect().top + y;
+        }
+        return p * vh * (START - FINISH) - vh * START + root.getBoundingClientRect().top + y;
     }
 
     /*
@@ -1220,7 +1315,7 @@
         var START = 0.55;    // start when the section top is at 55% of the screen (the art coming into view)
         var FINISH = 0.15;   // without the hold (reduced motion): fully drawn when it is at 15%
         var DRAW = 0.72;     // share of each slide's scroll spent drawing (the rest holds)
-        var SMOOTH = 0.09;   // how fast the pen catches up with the scroll (0..1)
+        var SMOOTH = 0.06;   // how fast the pen catches up with the scroll (0..1)
         var WOBBLE = 1;      // strength of the blob's "voice" wobble
         // -----------------------------------------------------------------
 
@@ -1376,6 +1471,7 @@
         var ticking = false;
         var built = [];   // per section: the next one's built-in overlap (px)
         var tints = [];   // per section: its background colour [r, g, b]
+        var radii = [];   // per section: its top corner radius (px)
         var NAVY = [0, 22, 41];
         var root = document.documentElement;
 
@@ -1386,12 +1482,18 @@
         // it. The scrolling room is an empty spacer after it
         // (.bl-stack-hold; scrollThrough reads its progress there); the next
         // section is shifted up over the spacer (translate) so no gap shows.
-        sections.forEach(function (s) {
+        // The shift follows the scroll exactly, so where the browser can,
+        // it is a scroll-driven CSS animation (.bl-held-next, motion.less)
+        // that runs in step with the scrolling; set here per frame instead,
+        // it would lag a frame behind and the section would bounce.
+        var scrollDriven = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
+        sections.forEach(function (s, i) {
             if (!s.hasAttribute('data-bl-hold')) return;
             var spacer = document.createElement('div');
             spacer.className = 'bl-stack-hold';
             spacer.setAttribute('aria-hidden', 'true');
             s.parentNode.insertBefore(spacer, s.nextSibling);
+            if (scrollDriven && sections[i + 1]) sections[i + 1].classList.add('bl-held-next');
         });
 
         // A section's own background colour (transparent ones sit on navy),
@@ -1414,7 +1516,25 @@
                 var next = sections[i + 1];
                 built[i] = next ? Math.max(0, -parseFloat(getComputedStyle(next).marginTop) || 0) : 0;
                 tints[i] = tintOf(s);
+                s.style.borderTopLeftRadius = s.style.borderTopRightRadius = '';
+                radii[i] = parseFloat(getComputedStyle(s).borderTopLeftRadius) || 0;
             });
+            // The scroll-driven shift of the section after each hold: from
+            // the spacer's height (when the held section pins) to 0 (when
+            // the spacer has scrolled by), between those scroll positions.
+            if (scrollDriven) {
+                var y = window.pageYOffset;
+                sections.forEach(function (s, i) {
+                    var next = sections[i + 1];
+                    var spacer = s.nextElementSibling;
+                    if (!next || !s.hasAttribute('data-bl-hold') || !spacer || !spacer.classList.contains('bl-stack-hold')) return;
+                    var h = s.offsetHeight;
+                    var from = spacer.getBoundingClientRect().top + y - Math.min(0, vh - h) - h;
+                    next.style.setProperty('--hold-shift', -spacer.offsetHeight + 'px');
+                    next.style.setProperty('--hold-from', Math.round(from) + 'px');
+                    next.style.setProperty('--hold-to', Math.round(from + spacer.offsetHeight) + 'px');
+                });
+            }
             update();
         }
 
@@ -1422,12 +1542,13 @@
             ticking = false;
             var vh = window.innerHeight;
             var covers = [];
+            var corners = [];   // per section: its top corner radius now (px)
 
             // Holds: the section after a held one waits right below it
             // (shifted up over the spacer) until the spacer has scrolled by.
             sections.forEach(function (s, i) {
                 var next = sections[i + 1];
-                if (!next || !s.hasAttribute('data-bl-hold')) return;
+                if (scrollDriven || !next || !s.hasAttribute('data-bl-hold')) return;
                 var shift = parseFloat(next.getAttribute('data-bl-shift')) || 0;
                 var natural = next.getBoundingClientRect().top - shift;
                 var below = s.getBoundingClientRect().top + s.offsetHeight - built[i];
@@ -1459,15 +1580,25 @@
                 var w = s.offsetWidth;
                 var inset = Math.round(w * cover * 0.035 / 2);
                 s.style.setProperty('--stack-scale', w && inset ? (1 - 2 * (inset + 0.05) / w).toFixed(7) : '1');
+                // Its rounded top corners square off as it starts to be
+                // covered: with the strips beside it painted its colour, a
+                // corner would show a wedge of the section behind between
+                // the strip and the section (when it is pinned at the top).
+                if (radii[i]) {
+                    var r = cover ? Math.round(radii[i] * (1 - Math.min(1, cover * 4))) : null;
+                    s.style.borderTopLeftRadius = s.style.borderTopRightRadius = r === null ? '' : r + 'px';
+                    corners[i] = r === null ? radii[i] : r;
+                }
             });
 
             // A section buried under one that is itself being covered, and
             // whose top corners are off screen, can only show through that
             // one's side strips (the hero, which recedes toward its right
             // edge, would) - so it is clipped away (.is-buried, motion.less).
+            // Pinned right at the top counts too: its corners square off.
             sections.forEach(function (s, i) {
                 var next = sections[i + 1];
-                var buried = !!next && covers[i + 1] > 0 && next.getBoundingClientRect().top < 0;
+                var buried = !!next && covers[i + 1] > 0 && next.getBoundingClientRect().top < 0.5;
                 s.classList.toggle('is-buried', buried);
             });
 
@@ -1477,13 +1608,15 @@
             // darkened like its veil, so the strips blend into it instead of
             // showing as blank lines. Two can be covered at once (on phones),
             // hence bands of a gradient fixed to the screen. (The body only
-            // spans the first screen, so it is painted too.)
+            // spans the first screen, so it is painted too.) A band starts
+            // below the section's (still) rounded top corners: beside them
+            // the band above runs on, the colour that shows in the corners.
             var stops = [];
             sections.forEach(function (s, i) {
                 var next = sections[i + 1];
                 if (!next || !covers[i] || s.hasAttribute('data-bl-nostack')) return;
-                var from = Math.max(0, Math.round(s.getBoundingClientRect().top));
-                var to = Math.min(vh, Math.round(next.getBoundingClientRect().top));
+                var from = Math.max(0, Math.round(s.getBoundingClientRect().top + (corners[i] || 0)));
+                var to = Math.min(vh, Math.round(next.getBoundingClientRect().top + (corners[i + 1] || 0)));
                 if (to <= from) return;
                 var a = covers[i] * 0.55;
                 var c = 'rgb(' + tints[i].map(function (v, k) {
@@ -1517,9 +1650,17 @@
             clearTimeout(resizeTimer);
             resizeTimer = setTimeout(layout, 120);
         });
-        // Heights change as images and fonts load.
+        // Heights change as images and fonts load (and as content above a
+        // hold changes height, which moves its scroll positions).
         window.addEventListener('load', layout);
         if (document.fonts && document.fonts.ready) document.fonts.ready.then(layout);
+        if ('ResizeObserver' in window) {
+            var relayout = null;
+            var ro = new ResizeObserver(function () {
+                if (!relayout) relayout = requestAnimationFrame(function () { relayout = null; layout(); });
+            });
+            sections.forEach(function (s) { ro.observe(s); });
+        }
         layout();
     }
 
@@ -1541,7 +1682,7 @@
         var START = 0.33;    // start when the section top is at 33% of the screen (the ring and its text in view)
         var FINISH = 0.2;    // without the hold (reduced motion): all lit when it is at 20%
         var FILL = 0.78;     // share of each quarter's scroll spent filling (rest holds)
-        var SMOOTH = 0.1;    // how fast the fill catches up with the scroll (0..1)
+        var SMOOTH = 0.06;   // how fast the fill catches up with the scroll (0..1)
         // -----------------------------------------------------------------
 
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1600,14 +1741,39 @@
             if (!raf) raf = requestAnimationFrame(frame);
         }
 
+        // -- Previous / next goal: scroll to where that goal's quarter is
+        //    filled; the ring follows the scroll as usual. --------------------
+        var prev = root.querySelector('[data-bl-success-prev]');
+        var next = root.querySelector('[data-bl-success-next]');
+        function stepNow() {
+            return Math.max(0, Math.min(quarters - 1, Math.floor(target() * quarters + 0.001)));
+        }
+        function updateNav() {
+            var s = stepNow();
+            if (prev) prev.disabled = s <= 0;
+            if (next) next.disabled = s >= quarters - 1;
+        }
+        function goTo(k) {
+            k = Math.max(0, Math.min(quarters - 1, k));
+            // Just past the end of its fill, so the goal is fully shown.
+            var p = Math.min(1, (k + FILL + 0.04) / quarters);
+            window.scrollTo({ top: Math.round(scrollFor(root, START, FINISH, p)), behavior: reduce ? 'auto' : 'smooth' });
+        }
+        [prev, next].forEach(function (btn, i) {
+            if (!btn) return;
+            btn.hidden = false;
+            btn.addEventListener('click', function () { goTo(stepNow() + (i ? 1 : -1)); });
+        });
+
         new IntersectionObserver(function (entries) {
             visible = entries[0].isIntersecting;
-            if (visible) kick();
+            if (visible) { kick(); updateNav(); }
         }).observe(root);
-        window.addEventListener('scroll', function () { if (visible) kick(); }, { passive: true });
+        window.addEventListener('scroll', function () { if (visible) { kick(); updateNav(); } }, { passive: true });
 
         current = target();
         render(current);
+        updateNav();
     }
 
     /*
@@ -1738,7 +1904,7 @@
         if (!svgs.length || !('IntersectionObserver' in window)) return;
 
         var START = 0.85;   // begin when the section top is at 85% of the screen
-        var SMOOTH = 0.08;  // how fast the pen catches up with the scroll (0..1)
+        var SMOOTH = 0.06;  // how fast the pen catches up with the scroll (0..1)
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
         var items = svgs.map(function (svg) {
@@ -1782,9 +1948,14 @@
                 var q = item.svg.getBoundingClientRect();
                 var y = window.pageYOffset;
                 var from = y + q.top - vh;                       // top enters
-                var to = y + q.bottom - vh * 0.8;                // bottom at 80%
+                var to = y + q.bottom - vh * 0.45;               // bottom at 45%
                 to = Math.min(to, document.documentElement.scrollHeight - vh - 2);
                 return to > from ? shape(item, Math.max(0, Math.min(1, (y - from) / (to - from)))) : 1;
+            }
+            // Held by the stacking (data-bl-hold): drawn on through the hold.
+            var spacer = item.section.nextElementSibling;
+            if (spacer && spacer.classList.contains('bl-stack-hold')) {
+                return shape(item, scrollThrough(item.section, START));
             }
             var r = item.section.getBoundingClientRect();
             var end = Math.min(0, vh - r.height);       // where the section pins
@@ -1843,6 +2014,8 @@
         });
     }
 
+    initHeader();
+    initToTop();
     initDrawer();
     initSearch();
     initReveal();

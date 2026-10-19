@@ -4,13 +4,17 @@
     download when a file is attached, otherwise the DOI / URL link.
     The link covers the whole card; the round button sits inside it.
     record = Pensoft\Library\Models\Library
+    Deliverables read "In preparation" until the theme setting
+    "Deliverables approved by the EC" (Results tab) is switched on.
 #}
+{% set bl_pending = record.type == 5 and not this.theme.deliverables_approved %}{# 5 = Library::TYPE_DELIVERABLE #}
 {% set bl_rows = [] %}
 {% if record.authors %}{% set bl_rows = bl_rows|merge([{ label: 'Authors', value: (record.authors is iterable ? record.authors|join(', ') : record.authors) }]) %}{% endif %}
 {% if record.deliverable_number %}{% set bl_rows = bl_rows|merge([{ label: 'Number', value: record.deliverable_number }]) %}{% endif %}
 {% if record.journal_title %}{% set bl_rows = bl_rows|merge([{ label: 'Journal', value: record.journal_title }]) %}{% endif %}
 {% if record.year_attr %}{% set bl_rows = bl_rows|merge([{ label: 'Year', value: record.year_attr }]) %}{% endif %}
-{% if record.status %}{% set bl_rows = bl_rows|merge([{ label: 'Status', value: record.status_attr }]) %}{% endif %}
+{% if bl_pending %}{% set bl_rows = bl_rows|merge([{ label: 'Status', value: 'In Preparation' }]) %}
+{% elseif record.status %}{% set bl_rows = bl_rows|merge([{ label: 'Status', value: record.status_attr }]) %}{% endif %}
 
 <article class="bl-doc">
     <span class="bl-doc__type">{{ record.type_attr }}</span>
