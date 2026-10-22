@@ -40,6 +40,12 @@ html.bl-drawer-open {
     overflow: hidden;
 }
 
+// The fixed header bar (about 64px once scrolled, header.less) must not
+// cover what is scrolled to - #anchors, or an element receiving focus.
+html {
+    scroll-padding-top: 80px;
+}
+
 body.bl {
     margin: 0;
     background: @bl-navy;

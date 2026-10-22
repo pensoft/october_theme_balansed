@@ -1,0 +1,28 @@
+{#
+    Cookie banner (Matomo consent, Pensoft.Matomo plugin).
+    Rendered only when Matomo tracks this site in a consent mode
+    (MATOMO_COOKIES=consent / consent_strict) - otherwise there is nothing
+    to ask. Shown by initCookieBanner (assets/js/balansed.js) while the
+    visitor has not chosen yet, and again from "Cookie settings" in the
+    footer. Accept / Reject go to the plugin's consent API
+    (data-matomo-consent); Reject is as easy as Accept.
+    Styles: assets/less/balansed/cookie-banner.less
+#}
+{% set bl_mode = matomo_cookie_mode() %}
+{% if matomo_site_id() and bl_mode in ['consent', 'consent_strict'] %}
+<section class="bl-cookies" id="bl-cookies" data-bl-cookies role="region" aria-labelledby="bl-cookies-title" tabindex="-1" hidden>
+    <h2 class="bl-cookies__title" id="bl-cookies-title">Cookies</h2>
+    <p class="bl-cookies__text">
+        {% if bl_mode == 'consent_strict' %}
+        We would like to use Matomo to see how this website is used. Nothing is measured unless you accept; you can change your mind at any time under "Cookie settings".
+        {% else %}
+        We use Matomo to see how this website is used. Without your consent, visits are counted anonymously and no cookies are set; if you accept, Matomo may set cookies to recognise returning visitors.
+        {% endif %}
+        <a href="{{ 'privacy-policy'|page }}">Privacy policy</a>
+    </p>
+    <div class="bl-cookies__actions">
+        <button type="button" class="bl-btn bl-btn--sand" data-matomo-consent="accept">Accept</button>
+        <button type="button" class="bl-btn bl-btn--outline" data-matomo-consent="reject">Reject</button>
+    </div>
+</section>
+{% endif %}

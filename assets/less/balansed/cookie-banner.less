@@ -1,0 +1,128 @@
+// ===========================================================================
+//  Cookie banner - partials/balansed/cookie-banner.htm (initCookieBanner).
+//  A navy card at the bottom left, over the page but not blocking it.
+// ===========================================================================
+
+.bl-cookies {
+    position: fixed;
+    left: 40px;
+    bottom: 40px;
+    z-index: 70;            // over the stacked sections, header and "back to top"
+    width: 480px;
+    max-width: ~"calc(100vw - 80px)";
+    padding: 28px 30px 30px;
+    border: 1px solid @bl-sky-35;
+    border-radius: @bl-radius-card;
+    background: @bl-navy;
+    color: @bl-sand;
+    box-shadow: 0 10px 40px rgba(0, 22, 41, .35);
+    outline: 0;
+    animation: bl-cookies-in .45s @bl-ease both;
+
+    &[hidden] {
+        display: none;
+    }
+
+    // Focused from "Cookie settings": a visible ring.
+    &:focus-visible {
+        outline: 3px solid @bl-sky;
+        outline-offset: 3px;
+    }
+
+    // (".bl-cookies .bl-cookies__x" to beat the base "body.bl h2 / p" reset.)
+    & &__title {
+        margin: 0 0 10px;
+        font-family: @bl-font-display;
+        font-size: 22px;
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -0.6px;
+        color: inherit;
+    }
+
+    & &__text {
+        margin: 0;
+        font-family: @bl-font-body;
+        font-size: 16px;
+        font-weight: 300;
+        line-height: 1.5;
+
+        a {
+            color: @bl-sky;
+            text-decoration: underline;
+            text-underline-offset: 3px;
+
+            &:hover,
+            &:focus-visible {
+                color: @bl-white;
+            }
+        }
+    }
+
+    // Accept and Reject side by side, the same size: rejecting is as easy.
+    &__actions {
+        display: flex;
+        gap: 12px;
+        margin-top: 22px;
+
+        .bl-btn {
+            flex: 1 1 0;
+            min-width: 0;
+            cursor: pointer;
+        }
+
+        // The outline style is made for links: on a <button> the legacy
+        // base styles would give it a light grey fill (unreadable sand text).
+        .bl-btn--outline {
+            background: transparent;
+        }
+    }
+}
+
+@keyframes bl-cookies-in {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.bl-reduced-motion({
+    .bl-cookies {
+        animation: none;
+    }
+});
+
+// "Cookie settings" in the footer's legal row: looks like the links there.
+.bl-footer__cookies {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    color: @bl-sky;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+        text-decoration: underline;
+        text-underline-offset: 4px;
+    }
+
+    &[hidden] {
+        display: none;
+    }
+}
+
+@media @bl-md {
+    .bl-cookies {
+        left: 12px;
+        right: 12px;
+        bottom: 12px;
+        width: auto;
+        max-width: none;
+        padding: 22px 20px 20px;
+    }
+
+    // The banner spans the screen bottom: "back to top" waits until it's answered.
+    html.bl-cookies-open .bl-to-top {
+        display: none;
+    }
+}

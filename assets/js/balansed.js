@@ -131,20 +131,291 @@
         if (!btn) return;
         var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         var ticking = false;
+        var footer = document.querySelector('.bl-footer');
+        var gap = null;
         btn.hidden = false;
         function update() {
             ticking = false;
             btn.classList.toggle('is-shown', window.pageYOffset > window.innerHeight * 1.8);
+            // Never over the footer's links: once the footer comes up, the
+            // button rides up with its top edge.
+            if (gap === null) gap = parseFloat(getComputedStyle(btn).bottom) || 40;
+            var lift = footer ? window.innerHeight - footer.getBoundingClientRect().top + 20 : 0;
+            btn.style.bottom = lift > gap ? lift + 'px' : '';
         }
         window.addEventListener('scroll', function () {
             if (!ticking) { ticking = true; requestAnimationFrame(update); }
         }, { passive: true });
+        window.addEventListener('resize', function () {
+            // Its own spacing differs on phones: measure it again.
+            btn.style.bottom = '';
+            gap = null;
+            update();
+        });
         btn.addEventListener('click', function () {
             window.scrollTo({ top: 0, behavior: reduce ? 'auto' : 'smooth' });
             var brand = document.querySelector('.bl-header__brand');
             if (brand) brand.focus({ preventScroll: true });
         });
         update();
+    }
+
+    /*
+     * Cookie banner (partials/balansed/cookie-banner.htm): shown while the
+     * visitor hasn't chosen (window.pensoftMatomo - the Pensoft.Matomo
+     * consent API - has no state yet), and again from "Cookie settings" in
+     * the footer. Accept / Reject are handled by the plugin
+     * (data-matomo-consent); its "pensoft-matomo-consent" event closes the
+     * banner and the choice is announced. Not a modal: the page stays usable.
+     */
+    function initCookieBanner() {
+        var banner = document.querySelector('[data-bl-cookies]');
+        var api = window.pensoftMatomo;
+        if (!banner || !api) return;
+        var opener = document.querySelector('[data-bl-cookies-open]');
+        var root = document.documentElement;
+        var reopened = false;
+
+        function show(fromFooter) {
+            reopened = !!fromFooter;
+            banner.hidden = false;
+            root.classList.add('bl-cookies-open');
+            if (opener) opener.setAttribute('aria-expanded', 'true');
+            // Focus only when asked for from the footer, never on page load.
+            if (fromFooter) banner.focus();
+        }
+        function hide() {
+            var hadFocus = banner.contains(document.activeElement);
+            banner.hidden = true;
+            root.classList.remove('bl-cookies-open');
+            if (opener) opener.setAttribute('aria-expanded', 'false');
+            // Focus must not vanish with the banner: back to "Cookie
+            // settings", or (first visit) to the main content, unscrolled.
+            if (reopened && opener) {
+                opener.focus();
+            } else if (hadFocus) {
+                var main = document.getElementById('layout-content');
+                if (main) main.focus({ preventScroll: true });
+            }
+            reopened = false;
+        }
+
+        if (opener) {
+            opener.hidden = false;
+            opener.setAttribute('aria-expanded', 'false');
+            opener.addEventListener('click', function () { show(true); });
+        }
+        // Escape closes it again, once a choice has been made before.
+        banner.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && api.state()) hide();
+        });
+        document.addEventListener('pensoft-matomo-consent', function (e) {
+            hide();
+            if (window.a11yAnnounce) {
+                window.a11yAnnounce(e.detail && e.detail.state === 'accepted' ? 'Cookies accepted.' : 'Cookies rejected.');
+            }
+        });
+
+        if (!api.state()) show(false);
+    }
+
+    /*
+     * Deliberation Toolkit, "Who is it for?" (data-bl-tk-who): the names
+     * and the lines between them come one by one, top to bottom, in step
+     * with the scroll - Citizens, its line, Policymakers, its line ... A
+     * name fades and rises in; a line draws (stroke-dashoffset, pathLength 1).
+     * It runs from the map entering the screen through the section's hold
+     * (data-bl-hold: it stays pinned, the next section waiting below), done
+     * at 60% of the hold - complete before the next section slides over it.
+     * Without a hold (no stacking): until the map's bottom is at 90% of the
+     * screen. Scrolling back takes it back; it eases toward the scroll like
+     * the other drawings. Without JS / with "reduce motion": all shown (CSS).
+     */
+    function initTkWho() {
+        var map = document.querySelector('[data-bl-tk-who]');
+        if (!map || !('IntersectionObserver' in window)) return;
+        if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+        var START = 0.95;   // begins when the map's top is at 95% of the screen
+        var END = 0.9;      // without a hold: done when its bottom is at 90%
+        var HOLD = 0.6;     // with a hold: done at this share of it
+        var LAG = 0.05;     // never more than this far behind the scroll - under half of a step
+        var SMOOTH = 0.15;  // how fast it catches up with the scroll (0..1)
+        var WORD = 0.6;     // a name's share of the scroll, next to a line's 1
+        var section = map.closest('section');
+
+        var items = Array.prototype.slice.call(map.querySelectorAll('.bl-tk-who__item'));
+        var lines = Array.prototype.slice.call(map.querySelectorAll('.bl-tk-who__line path'));
+        // The order: name 1, line 1, name 2, line 2 ... name 4.
+        var steps = [];
+        items.forEach(function (el, i) {
+            steps.push({ el: el, word: true, size: WORD });
+            if (lines[i]) steps.push({ el: lines[i], word: false, size: 1 });
+        });
+        var total = steps.reduce(function (a, s) { return a + s.size; }, 0);
+        var at = 0;
+        steps.forEach(function (s) { s.from = at / total; at += s.size; s.to = at / total; });
+
+        map.classList.add('is-scrolled');   // CSS: start hidden / undrawn
+        var current = 0, raf = null, visible = false;
+
+        function ease(t) { return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2; }
+
+        function target() {
+            var vh = window.innerHeight, r = map.getBoundingClientRect();
+            var spacer = section && section.nextElementSibling;
+            if (spacer && spacer.classList.contains('bl-stack-hold') && spacer.offsetHeight) {
+                // In page scroll positions, measured from the spacer (it never
+                // sticks): the map keeps its distance to the section's bottom,
+                // which the spacer follows.
+                var y = window.pageYOffset;
+                var spacerTop = spacer.getBoundingClientRect().top + y;
+                var mapTop = spacerTop - (section.getBoundingClientRect().bottom - r.top);
+                var y0 = mapTop - vh * START;
+                var y1 = spacerTop - vh + spacer.offsetHeight * HOLD;
+                return y1 > y0 ? Math.max(0, Math.min(1, (y - y0) / (y1 - y0))) : 1;
+            }
+            var from = vh * START, to = vh * END - r.height;   // map top at these points
+            return from > to ? Math.max(0, Math.min(1, (from - r.top) / (from - to))) : 1;
+        }
+
+        function render(p) {
+            steps.forEach(function (s) {
+                var k = ease(Math.max(0, Math.min(1, (p - s.from) / (s.to - s.from))));
+                if (s.word) {
+                    s.el.style.opacity = k.toFixed(3);
+                    s.el.style.translate = '0 ' + ((1 - k) * 18).toFixed(1) + 'px';
+                } else {
+                    s.el.style.strokeDashoffset = (1 - k).toFixed(4);
+                }
+            });
+        }
+
+        function frame() {
+            raf = null;
+            var goal = target();
+            current += (goal - current) * SMOOTH;
+            // Fast scrolling: catch up, so it can't still be running when
+            // the next section slides over - and once the scroll is past
+            // its end (or before its start), be there at once.
+            current = Math.max(goal - LAG, Math.min(goal + LAG, current));
+            if (goal >= 1 || goal <= 0) current = goal;
+            if (Math.abs(goal - current) < 0.0005) current = goal;
+            render(current);
+            if (current !== goal) raf = requestAnimationFrame(frame);
+        }
+        function kick() { if (!raf) raf = requestAnimationFrame(frame); }
+
+        new IntersectionObserver(function (entries) {
+            visible = entries[0].isIntersecting;
+            if (visible) kick();
+        }).observe(map);
+        // Kept going while the page is scrolled past it (e.g. a jump down
+        // the page), so it is never left half done.
+        window.addEventListener('scroll', function () { if (visible || current < 1) kick(); }, { passive: true });
+        window.addEventListener('resize', kick);
+
+        current = target();
+        render(current);
+    }
+
+    /*
+     * Deliberation Toolkit motion, started by the scroll (CSS in
+     * pages/toolkit.less, "Motion"):
+     *  - the intro card (.bl-tk-card) plays once the visitor scrolls while
+     *    it is on screen - not on load. If they don't scroll at all, it
+     *    plays after 3s anyway, so nobody is left with an empty card;
+     *  - "Why it matters" (.bl-tk-why) plays once its top is above 75% of
+     *    the screen;
+     *  - the steps come one by one in step with the scroll: each card's
+     *    share follows its own top on the screen, the later columns a little
+     *    behind the earlier ones - left to right in the row (where the
+     *    higher cards would otherwise come first), top to bottom on phones.
+     * Without JS / with "reduce motion": everything shown, nothing moves.
+     */
+    function initTkMotion() {
+        var card = document.querySelector('.bl-tk-card');
+        var why = document.querySelector('.bl-tk-why');
+        var list = document.querySelector('.bl-tk-steps');
+        if (!card && !why && !list) return;
+        var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (reduce || !('IntersectionObserver' in window)) {
+            [card, why].forEach(function (el) { if (el) el.classList.add('is-playing'); });
+            return;
+        }
+        function play(el) { if (el) el.classList.add('is-playing'); }
+
+        // "Why it matters": once its top is above 75% of the screen.
+        if (why) {
+            var whyIo = new IntersectionObserver(function (entries) {
+                if (entries[0].isIntersecting) { play(why); whyIo.disconnect(); }
+            }, { rootMargin: '0px 0px -25% 0px' });
+            whyIo.observe(why);
+        }
+
+        // The card: once scrolled over (or 3s on screen without a scroll).
+        if (card) {
+            var onScreen = false, scrolled = false, timer = null;
+            var check = function () {
+                if (card.classList.contains('is-playing')) return;
+                if (onScreen && scrolled) { play(card); clearTimeout(timer); }
+            };
+            window.addEventListener('scroll', function onScroll() {
+                scrolled = true;
+                check();
+                if (card.classList.contains('is-playing')) window.removeEventListener('scroll', onScroll);
+            }, { passive: true });
+            new IntersectionObserver(function (entries) {
+                onScreen = entries[0].isIntersecting;
+                if (onScreen && !timer) timer = setTimeout(function () { play(card); }, 3000);
+                check();
+            }, { rootMargin: '0px 0px -15% 0px' }).observe(card);
+        }
+
+        // The steps, in step with the scroll.
+        if (list) {
+            var cards = Array.prototype.slice.call(list.querySelectorAll('.bl-tk-step'));
+            var FROM = 0.95, SPAN = 0.35, STAGGER = 0.35;   // in screen heights
+            var raf = null;
+            var ease = function (t) { return 1 - Math.pow(1 - t, 3); };
+            var render = function () {
+                raf = null;
+                var vh = window.innerHeight;
+                var cols = getComputedStyle(list).gridTemplateColumns.split(' ').filter(Boolean).length || 1;
+                cards.forEach(function (c, i) {
+                    var top = c.getBoundingClientRect().top - (parseFloat(c.style.translate.split(' ')[1]) || 0);
+                    var k = (vh * FROM - top) / (vh * SPAN) - (i % cols) * STAGGER;
+                    k = ease(Math.max(0, Math.min(1, k)));
+                    c.style.opacity = k < 1 ? k.toFixed(3) : '';
+                    c.style.translate = k < 1 ? '0 ' + ((1 - k) * 40).toFixed(1) + 'px' : '';
+                });
+            };
+            var kick = function () { if (!raf) raf = requestAnimationFrame(render); };
+            window.addEventListener('scroll', kick, { passive: true });
+            window.addEventListener('resize', kick);
+            render();
+        }
+    }
+
+    /*
+     * Deliberation Toolkit steps (data-bl-tk-step): each card's button opens
+     * and closes it (.is-open, aria-expanded) - for touch and keyboard; with
+     * a mouse the card also opens on hover (CSS). Escape closes an open one.
+     */
+    function initTkSteps() {
+        var cards = Array.prototype.slice.call(document.querySelectorAll('[data-bl-tk-step]'));
+        cards.forEach(function (card) {
+            var btn = card.querySelector('.bl-tk-step__toggle');
+            if (!btn) return;
+            function set(open) {
+                card.classList.toggle('is-open', open);
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            }
+            btn.addEventListener('click', function () { set(!card.classList.contains('is-open')); });
+            card.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape' && card.classList.contains('is-open')) set(false);
+            });
+        });
     }
 
     function initSearch() {
@@ -205,7 +476,7 @@
         '.bl-hero__title', '.bl-page-hero__title', '.bl-statement', '.bl-h2', '.bl-together__title',
         '.bl-success__title', '.bl-follow__text', '.bl-evidence__text',
         '.bl-regions__lead', '.bl-result__claim', '.bl-will__text',
-        '.bl-article__related-title', '.bl-region__h'
+        '.bl-article__related-title', '.bl-region__h', '.bl-tk-card__title'
     ].join(',');
 
     // Statements revealed word by word with a fade (motion.less, "Lines"),
@@ -788,14 +1059,9 @@
                 var from = JSON.parse(sessionStorage.getItem(FROM) || 'null');
                 if (from && from.slug === slug) rect = from.rect;
             } catch (err) {}
-            if (!rect) {
-                // Not opened from the overview: where the active circle sits
-                // there (desktop layout: stage 1100px wide at y=96, circle
-                // 18.18cqw centred 9.09cqw from its top).
-                if (window.innerWidth < 1200) return;   // stacked layout - a plain link
-                var cq = Math.min(1100, region.clientWidth) / 100, w = 18.18 * cq;
-                rect = { x: region.clientWidth / 2 - w / 2, y: 96 + 9.09 * cq - w / 2, w: w };
-            }
+            // Not opened from the overview: where its circle will be depends
+            // on the texts above the ring - a plain link.
+            if (!rect) return;
             e.preventDefault();
             if (region.classList.contains('is-leaving')) return;
             region.classList.add('is-leaving');
@@ -1486,14 +1752,19 @@
         // it is a scroll-driven CSS animation (.bl-held-next, motion.less)
         // that runs in step with the scrolling; set here per frame instead,
         // it would lag a frame behind and the section would bounce.
+        // data-bl-hold-alone: held without the next section waiting in view
+        // below it - that one simply stays after the spacer, out of sight,
+        // so nothing has to move with the scroll during the hold (a shift
+        // can lag a frame and make the section shake; Deliberation Toolkit).
         var scrollDriven = !!(window.CSS && CSS.supports && CSS.supports('animation-timeline: scroll()'));
+        function shiftsNext(s) { return s.hasAttribute('data-bl-hold') && !s.hasAttribute('data-bl-hold-alone'); }
         sections.forEach(function (s, i) {
             if (!s.hasAttribute('data-bl-hold')) return;
             var spacer = document.createElement('div');
             spacer.className = 'bl-stack-hold';
             spacer.setAttribute('aria-hidden', 'true');
             s.parentNode.insertBefore(spacer, s.nextSibling);
-            if (scrollDriven && sections[i + 1]) sections[i + 1].classList.add('bl-held-next');
+            if (scrollDriven && sections[i + 1] && shiftsNext(s)) sections[i + 1].classList.add('bl-held-next');
         });
 
         // A section's own background colour (transparent ones sit on navy),
@@ -1527,7 +1798,7 @@
                 sections.forEach(function (s, i) {
                     var next = sections[i + 1];
                     var spacer = s.nextElementSibling;
-                    if (!next || !s.hasAttribute('data-bl-hold') || !spacer || !spacer.classList.contains('bl-stack-hold')) return;
+                    if (!next || !shiftsNext(s) || !spacer || !spacer.classList.contains('bl-stack-hold')) return;
                     var h = s.offsetHeight;
                     var from = spacer.getBoundingClientRect().top + y - Math.min(0, vh - h) - h;
                     next.style.setProperty('--hold-shift', -spacer.offsetHeight + 'px');
@@ -1548,7 +1819,7 @@
             // (shifted up over the spacer) until the spacer has scrolled by.
             sections.forEach(function (s, i) {
                 var next = sections[i + 1];
-                if (scrollDriven || !next || !s.hasAttribute('data-bl-hold')) return;
+                if (scrollDriven || !next || !shiftsNext(s)) return;
                 var shift = parseFloat(next.getAttribute('data-bl-shift')) || 0;
                 var natural = next.getBoundingClientRect().top - shift;
                 var below = s.getBoundingClientRect().top + s.offsetHeight - built[i];
@@ -2016,6 +2287,10 @@
 
     initHeader();
     initToTop();
+    initCookieBanner();
+    initTkWho();
+    initTkSteps();
+    initTkMotion();
     initDrawer();
     initSearch();
     initReveal();

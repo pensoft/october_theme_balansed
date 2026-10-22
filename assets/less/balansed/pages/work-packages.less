@@ -240,8 +240,10 @@
         color: @bl-sky;
     }
 
-    &__title {
-        margin-bottom: 10px;
+    // ("& &__title" to beat the base "body.bl h2 { margin: 0 }", which
+    // otherwise sets the text right under the title.)
+    & &__title {
+        margin: 0 0 18px;
         padding-right: 40px;
         font-size: 28px;
         line-height: 1.25;
@@ -249,6 +251,8 @@
     }
 
     // Rich text from the backend; lists get the design's blue bullets.
+    // The intro line gets room under the title, the bullet points sit
+    // close together as one list.
     &__body {
         max-width: 687px;
         font-family: @bl-font-body;
@@ -257,14 +261,21 @@
         line-height: 1.45;
         letter-spacing: -0.64px;
 
-        > * + * {
-            margin-top: 25px;
+        // (".bl-wp-dialog .bl-wp-dialog__body" to beat "body.bl p { margin: 0 }".)
+        .bl-wp-dialog & > * + * {
+            margin-top: 14px;
+        }
+
+        // Empty paragraphs the editor leaves behind (<p><br></p>): no gap.
+        .bl-wp-dialog & > p:empty,
+        .bl-wp-dialog & > p:has(> br:only-child) {
+            display: none;
         }
 
         ul {
             display: flex;
             flex-direction: column;
-            gap: 25px;
+            gap: 10px;
             margin: 0;
             padding: 0;
             list-style: none;

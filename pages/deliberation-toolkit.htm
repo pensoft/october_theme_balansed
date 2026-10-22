@@ -2,7 +2,7 @@ url = "/deliberation-toolkit"
 layout = "default"
 title = "Deliberation Toolkit"
 is_hidden = 0
-meta_description = "The BALANSED Deliberation Toolkit is coming soon."
+meta_description = "The BALANSED Deliberation Toolkit is coming soon: an online space where the science meets the people it's meant to serve - citizens, policymakers, researchers and businesses."
 robot_index = "index"
 robot_follow = "follow"
 
@@ -10,10 +10,104 @@ robot_follow = "follow"
 ==
 {% component 'siteSearchInclude' %}
 {#
-    Deliberation Toolkit (linked from the main menu): a placeholder until the
-    toolkit is released, matching the "Deliberation Toolkit (Coming Soon)"
-    button on the homepage. The layout adds the banner and the sand band.
+    BALANSED Deliberation Toolkit - "coming soon" page (Figma: Deliberation
+    Toolkit Page, BAL-34): banner with a loader; on navy the intro card (the
+    toolkit's tile grid around "You.") and who it is for (names joined by
+    lines drawn as the page scrolls); on light blue the four steps and why it
+    matters (the leaves line). The layout's pages list (bl_designed) lets it
+    render its own banner and sections.
+    Styles: assets/less/balansed/pages/toolkit.less
 #}
-<h2>Coming soon</h2>
-<p>The BALANSED Deliberation Toolkit will help communities, researchers and decision-makers weigh land and sea choices together, bringing scientific evidence and lived experience into the same conversation.</p>
-<p>Read how we are <a href="{{ 'news'|page({ id: 'building-the-balansed-deliberation-toolkit' }) }}">building the BALANSED Deliberation Toolkit</a>, or explore our <a href="{{ 'study-regions'|page({}, false) }}">study regions</a> in the meantime.</p>
+{% set tk = 'assets/images/balansed/toolkit/' %}
+{% partial 'balansed/page-hero' title='Deliberation Toolkit' soon='coming soon' %}
+
+{# --------------------------------------------------- NAVY: intro + who #}
+{# data-bl-hold: once scrolled to its end it stays a screen's worth of
+   scrolling (initStack), so "Who is it for?" is complete before the next
+   section slides over it. data-bl-hold-alone: the next section waits out
+   of sight meanwhile (not peeking in below), so it stays perfectly still. #}
+<section class="bl-tk" data-bl-hold="1" data-bl-hold-alone aria-label="About the Deliberation Toolkit">
+    <div class="bl-wrap">
+        {# The card: texts left and right, the tile grid in the middle. #}
+        <div class="bl-tk-card">
+            <h2 class="bl-tk-card__title">Where the science meets the people <span class="bl-thin">it's meant to serve.</span></h2>
+            <p class="bl-tk-card__note">An online space, with your own password-protected account.</p>
+            <p class="bl-tk-card__claim">This isn't a report. It's a place to <span class="bl-thin">talk and share.</span></p>
+
+            {# The toolkit in a picture: people's tiles around "You.", two of
+               them talking (dots), two cursors at work. Sizes in cqw of the
+               445px design box, so it scales as one piece. Decorative. #}
+            <div class="bl-tk-grid" aria-hidden="true">
+                <img class="bl-tk-grid__base" src="{{ (tk ~ 'tile-grid.svg')|theme }}" alt="">
+                <span class="bl-tk-grid__tile bl-tk-grid__tile--1"><img src="{{ (tk ~ 'woman-speaking.jpg')|theme }}" alt=""><svg class="bl-tk-grid__dots" viewBox="0 0 32 11" focusable="false"><circle cx="3" cy="3" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="29" cy="3" r="3"/></svg></span>
+                <span class="bl-tk-grid__tile bl-tk-grid__tile--2"><img src="{{ (tk ~ 'conference-room.jpg')|theme }}" alt=""></span>
+                <span class="bl-tk-grid__tile bl-tk-grid__tile--3"><img src="{{ (tk ~ 'meeting.jpg')|theme }}" alt=""></span>
+                <span class="bl-tk-grid__tile bl-tk-grid__tile--4"><img src="{{ (tk ~ 'laptop-typing.jpg')|theme }}" alt=""><svg class="bl-tk-grid__dots" viewBox="0 0 32 11" focusable="false"><circle cx="3" cy="3" r="3"/><circle cx="16" cy="8" r="3"/><circle cx="29" cy="3" r="3"/></svg></span>
+                <span class="bl-tk-grid__you">You.</span>
+
+                <span class="bl-tk-grid__cursor bl-tk-grid__cursor--coordinator">{% partial 'balansed/toolkit-cursor' %}</span>
+                <span class="bl-tk-grid__label bl-tk-grid__label--coordinator">Project coordinator</span>
+                <span class="bl-tk-grid__cursor bl-tk-grid__cursor--researcher">{% partial 'balansed/toolkit-cursor' %}</span>
+                <span class="bl-tk-grid__label bl-tk-grid__label--researcher">Researcher</span>
+            </div>
+        </div>
+
+        {# Who it is for: four names, a hand-drawn line from each to the
+           next. As the visitor scrolls, they come one by one from top to
+           bottom - name, line, name, line ... (data-bl-tk-who, initTkWho).
+           Positions in cqw of the 613px design box. #}
+        <div class="bl-tk-who">
+            <h2 class="bl-tk-who__title">Who is it for? Anyone with a <span class="bl-thin">stake in the answer.</span></h2>
+            <div class="bl-tk-who__map" data-bl-tk-who>
+                <ul class="bl-tk-who__list">
+                    <li class="bl-tk-who__item bl-tk-who__item--1">Citizens.</li>
+                    <li class="bl-tk-who__item bl-tk-who__item--2">Policymakers.</li>
+                    <li class="bl-tk-who__item bl-tk-who__item--3">Researchers.</li>
+                    <li class="bl-tk-who__item bl-tk-who__item--4">Businesses.</li>
+                </ul>
+                <span class="bl-tk-who__line bl-tk-who__line--1" aria-hidden="true"><svg viewBox="0 0 260 68" fill="none" focusable="false"><path class="bl-line" pathLength="1" d="M2.57118 1.00026C-10.8294 48.0545 65.1103 44.4715 93.6705 35.497C102.049 32.8641 106.35 29.7672 103.121 27.3488C101.04 25.7899 97.0128 29.653 93.6705 35.497C84.2078 52.0419 80.2309 84.4633 141.414 54.6725C175.373 38.1375 180.527 -6.67905 234.939 21.3809C245.884 27.0252 262.899 46.7467 257.038 63.2738"/></svg></span>
+                <span class="bl-tk-who__line bl-tk-who__line--2" aria-hidden="true"><svg viewBox="0 0 183 80" fill="none" focusable="false"><path class="bl-line" pathLength="1" d="M10.1414 79.0002C-7.04675 68.6006 3.15312 36.2369 14.9902 29.3569C62.5315 1.72483 122.69 74.199 167.382 40.6134C177.038 33.3576 187.156 15.1797 179.031 1.00024"/></svg></span>
+                <span class="bl-tk-who__line bl-tk-who__line--3" aria-hidden="true"><svg viewBox="0 0 260 68" fill="none" focusable="false"><path class="bl-line" pathLength="1" d="M2.57118 1.00026C-10.8294 48.0545 65.1103 44.4715 93.6705 35.497C102.049 32.8641 106.35 29.7672 103.121 27.3488C101.04 25.7899 97.0128 29.653 93.6705 35.497C84.2078 52.0419 80.2309 84.4633 141.414 54.6725C175.373 38.1375 180.527 -6.67905 234.939 21.3809C245.884 27.0252 262.899 46.7467 257.038 63.2738"/></svg></span>
+            </div>
+        </div>
+    </div>
+</section>
+
+{# ------------------------------------------- LIGHT BLUE: steps + why #}
+<section class="bl-tk-grows" aria-labelledby="tk-steps-title">
+    <div class="bl-wrap">
+        <h2 class="bl-tk-grows__title" id="tk-steps-title">How it grows, step by step</h2>
+        {# Rising steps, each a little higher than the one before. Each card
+           opens (Figma: the cards' second variant) on hover, or with its
+           button - tap, click, Enter - growing downwards and pushing the
+           section on (initTkSteps). The text under the title is always in the
+           page, so screen readers have it either way. #}
+        {% set bl_steps = [
+            { title: 'Six local spaces,<br> first.', more: 'One for each of our 8 study regions (including the 2 cross-regional study regions). Built around how that community actually wants to talk and share information about it.' },
+            { title: 'Real conversation, not a comment box.', more: 'Discussion threads. Feedback forms. Simple, visual ways to see the science behind the decisions.' },
+            { title: 'Online and in-person, together.', more: 'What happens on the platform feeds into real workshops. What happens in the workshops feeds back into the platform. Nothing here is a snapshot. It\'s a live conversation.' },
+            { title: 'Then, all of<br> Europe.', more: 'Later in the project, it opens up. Public. Pan-European. Any EU region can join - not just our original eight.' },
+        ] %}
+        <ol class="bl-tk-steps">
+            {% for step in bl_steps %}
+            <li class="bl-tk-step bl-tk-step--{{ loop.index }}" data-bl-tk-step>
+                <h3 class="bl-tk-step__text">{{ step.title|raw }}</h3>
+                <div class="bl-tk-step__more" id="tk-step-{{ loop.index }}-more"><p>{{ step.more }}</p></div>
+                <button type="button" class="bl-tk-step__toggle" aria-expanded="false" aria-controls="tk-step-{{ loop.index }}-more">
+                    <span class="sr-only">More about: {{ step.title|striptags }}</span>
+                    <span class="bl-tk-step__badge" aria-hidden="true">{% partial 'balansed/icon' name='arrow-up-right' size=22 stroke=1.5 %}</span>
+                </button>
+            </li>
+            {% endfor %}
+        </ol>
+
+        <h2 class="bl-tk-grows__title bl-tk-why__title">Why it matters</h2>
+        <div class="bl-tk-why">
+            <p class="bl-tk-why__text">Most tools like this stop at one pilot region, <span class="bl-thin">then disappear.</span></p>
+            <p class="bl-tk-why__text bl-tk-why__text--right">We're building ours <span class="bl-thin">to last</span> - so anyone, anywhere in Europe, can pick it up long after BALANSED ends.</p>
+        </div>
+    </div>
+    {# The leaves growing out of one long line - revealed from left to
+       right once in view. Decorative. #}
+    <div class="bl-tk-why__leaves" aria-hidden="true"><img src="{{ (tk ~ 'leaves.svg')|theme }}" alt=""></div>
+</section>

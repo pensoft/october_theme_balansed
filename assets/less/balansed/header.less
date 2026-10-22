@@ -4,7 +4,8 @@
 // ===========================================================================
 
 // It stays on screen while the page scrolls: once scrolled (.is-stuck,
-// initHeader) it moves up and sits on a blurred glass bar.
+// initHeader) it becomes a slim solid navy bar with a smaller logo, so it
+// hides as little of the page as possible (BAL-33, "option 2").
 .bl-header {
     position: fixed;
     top: 0;
@@ -14,7 +15,7 @@
     padding: 70px 70px 0;
     color: @bl-sand;
     pointer-events: none;   // let the hero underneath stay interactive
-    transition: padding .35s @bl-ease;
+    transition: padding .35s @bl-ease, background-color .3s ease;
 
     &__inner {
         display: flex;
@@ -24,19 +25,64 @@
         max-width: 1298px + 2 * 71px;
         margin: 0 auto;
         padding: 0;
-        border-radius: 20px;
-        transition: padding .35s @bl-ease, background-color .35s ease, -webkit-backdrop-filter .35s ease, backdrop-filter .35s ease;
+        transition: padding .35s @bl-ease;
+    }
+
+    // The logo shrinks with it (63px mark -> 42px; bar about 64px tall).
+    .bl-logo__mark,
+    .bl-logo__mark svg,
+    .bl-logo__word {
+        transition: width .35s @bl-ease, height .35s @bl-ease, font-size .35s @bl-ease, border-width .35s @bl-ease;
     }
 
     &.is-stuck {
-        padding-top: 16px;
+        padding-top: 0;
+        background: @bl-navy;
+        pointer-events: auto;
 
         .bl-header__inner {
-            padding: 14px 16px 14px 24px;
-            background: rgba(0, 22, 41, .38);
-            -webkit-backdrop-filter: blur(20px);
-            backdrop-filter: blur(20px);
-            pointer-events: auto;
+            padding: 11px 0;
+        }
+
+        .bl-logo {
+            gap: 5px;
+
+            &__mark {
+                width: 42px;
+                height: 42px;
+                border-width: 2.3px;
+
+                svg {
+                    width: 24px;
+                    height: 26px;
+                }
+            }
+
+            &__word {
+                font-size: 25px;
+            }
+        }
+
+        // On navy: the navy search button turns sand so it stays visible.
+        .bl-search {
+            height: 42px;
+
+            &__btn {
+                height: 34px;
+                background: @bl-sand;
+                color: @bl-navy;
+
+                &:hover,
+                &:focus-visible {
+                    background: @bl-white;
+                    color: @bl-navy;
+                }
+            }
+        }
+
+        .bl-menu-btn {
+            width: 42px;
+            height: 42px;
         }
     }
 
@@ -73,7 +119,7 @@
 });
 
 // -- Back to top (layouts/default.htm, initToTop) -----------------------------
-// A glass circle at the bottom right, shown a few sections down the page.
+// A grey circle at the bottom right, shown a few sections down the page.
 .bl-to-top {
     position: fixed;
     right: 40px;
@@ -88,9 +134,10 @@
     padding: 0;
     border: 1.5px solid rgba(255, 255, 255, .35);
     border-radius: 50%;
-    background: linear-gradient(180deg, rgba(120, 128, 134, .75), rgba(40, 48, 56, .85));
-    -webkit-backdrop-filter: blur(12px);
-    backdrop-filter: blur(12px);
+    // Solid fill, no backdrop-filter: Chrome clipped the blurred fill along
+    // the edge of the (scaled, sticky) section underneath, cutting off the
+    // top of the circle (BAL-33).
+    background: linear-gradient(180deg, #737B81, #2F3740);
     box-shadow: 0 4px 18px rgba(0, 22, 41, .25);
     color: @bl-sand;
     cursor: pointer;
@@ -481,11 +528,10 @@ html.bl-js .bl-nav__item--parent:not(.is-open) {
         padding-top: 24px;
 
         &.is-stuck {
-            padding: 10px 12px 0;
+            padding-top: 0;
 
             .bl-header__inner {
-                padding: 8px 8px 8px 14px;
-                border-radius: 16px;
+                padding: 9px 0;
             }
         }
     }
@@ -559,6 +605,24 @@ html.bl-js .bl-nav__item--parent:not(.is-open) {
             &__word {
                 font-size: 22px;
                 letter-spacing: -0.66px;
+            }
+        }
+
+        // Scrolled: smaller still.
+        &.is-stuck .bl-logo {
+            &__mark {
+                width: 36px;
+                height: 36px;
+                border-width: 2px;
+
+                svg {
+                    width: 20px;
+                    height: 22px;
+                }
+            }
+
+            &__word {
+                font-size: 20px;
             }
         }
     }

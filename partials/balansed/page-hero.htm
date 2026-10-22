@@ -13,6 +13,9 @@
               then a visually identical <p> so the page keeps one H1
     fade    - pass true when navy content follows (no sand band): the photo
               fades into navy at the bottom (Figma: Work packages)
+    soon    - optional text after the title with a spinning loader between
+              ("Deliberation Toolkit  *  coming soon", Figma: Deliberation
+              Toolkit page); part of the heading for screen readers
 #}
 {# Banner: the coastline video (poster: the matching photo; played by
    initReveal while on screen, the poster with "reduce motion"), or the
@@ -29,7 +32,14 @@
             {% if parent %}<a href="{{ parent.url }}">{{ parent.title }}</a> / {% endif %}{{ crumb }}
         </span>
         {% endif %}
-        {% if heading is defined and heading == false %}
+        {% if soon %}
+        {# Title, loader and "coming soon" in one row; one heading. #}
+        <h1 class="bl-page-hero__soon" id="page-title">
+            <span class="bl-page-hero__title">{{ title }}</span>
+            <svg class="bl-loader" width="90" height="90" viewBox="0 0 90 90" fill="none" aria-hidden="true" focusable="false"><path d="M45 11.25V22.5M45 67.5V78.75M22.5 45H11.25M78.75 45H67.5M21.1377 21.1377L29.0991 29.0991M60.9082 60.9082L68.8623 68.8623M68.8696 21.1304L60.9155 29.0845M29.0918 60.9082L21.1304 68.8696" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span class="bl-page-hero__title"><span class="sr-only"> - </span>{{ soon }}</span>
+        </h1>
+        {% elseif heading is defined and heading == false %}
         <p class="bl-page-hero__title">{{ title }}</p>
         {% else %}
         <h1 class="bl-page-hero__title" id="page-title">{{ title }}</h1>

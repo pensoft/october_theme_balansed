@@ -85,6 +85,59 @@
     }
 }
 
+// soon="..." (Deliberation Toolkit): title, loader and "coming soon" in a row.
+.bl-page-hero__soon {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 12px 35px;
+    margin: -16px 0 0;   // the 90px loader is taller than the text line
+    font-weight: 400;
+
+    // One row on desktop, with the design's tight tracking.
+    .bl-page-hero__title {
+        letter-spacing: -2.3px;
+        white-space: nowrap;
+    }
+}
+
+// Room for the whole row (the banner's text column is 900px).
+.bl-page-hero__inner:has(.bl-page-hero__soon) {
+    max-width: 1000px;
+}
+
+// The loader's eight ticks turn round in steps, like a spinner.
+.bl-loader {
+    flex: none;
+    width: 90px;
+    height: 90px;
+    color: @bl-sky;
+    animation: bl-loader-spin 1.6s steps(8) infinite;
+}
+
+@keyframes bl-loader-spin {
+    to { transform: rotate(360deg); }
+}
+
+.bl-reduced-motion({
+    .bl-loader {
+        animation: none;
+    }
+});
+
+@media @bl-md {
+    .bl-page-hero__soon {
+        gap: 8px 18px;
+        margin-top: -8px;
+    }
+
+    .bl-loader {
+        width: 54px;
+        height: 54px;
+    }
+}
+
 // The title stays white over every page's own heading rules (the reset
 // "body.bl h1", legacy page styles) - including the word spans that
 // .bl-words splits it into for the reveal animation.

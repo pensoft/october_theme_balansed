@@ -67,10 +67,11 @@
 }
 
 // -- Overview ------------------------------------------------------------------------
+// The texts sit centred above the ring (designer's "different layout",
+// BAL-32): beside it they ran into its circles at some screen widths.
 .bl-regions {
     .bl-section-top(86px);
     z-index: 1;
-    min-height: 850px;
     padding: 70px 70px 80px;
     background: @bl-sand;
     color: @bl-navy;
@@ -78,50 +79,40 @@
     &__intro {
         position: relative;
         z-index: 4;
-        display: grid;
-        grid-template-columns: minmax(0, 390px) 1fr minmax(0, 375px);
-        grid-template-areas:
-            "eyebrow eyebrow eyebrow"
-            "left . right";
-        row-gap: 26px;
-        max-width: 1300px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 20px;
+        max-width: 760px;
         margin: 0 auto;
-        pointer-events: none;   // the ring underneath stays clickable
+        text-align: center;
     }
 
     &__eyebrow {
-        grid-area: eyebrow;
+        margin-bottom: 4px;
         line-height: 1.25;
         letter-spacing: -0.8px;
     }
 
-    // Kept small enough to stay clear of the circles below it.
     &__lead {
-        grid-area: left;
         font-family: @bl-font-display;
         font-size: 22px;
         line-height: 1.3;
         letter-spacing: -0.8px;
-
-        &--right {
-            grid-area: right;
-        }
     }
 
-    // Ring + globe, 1100 x 680 design px, top at y=96 of the section.
+    // Ring + globe, 1100 x 680 design px, under the texts.
     &__stage {
         --cx: 50%;
         --cy: 44.49cqw;
         --dr: 21.8cqw;
         --ds: 5.45cqw;
-        position: absolute;
-        top: 96px;
-        left: 50%;
+        position: relative;
         width: 1100px;
         max-width: 100%;
         aspect-ratio: 1100 / 680;
+        margin: 48px auto 0;
         container-type: inline-size;
-        transform: translateX(-50%);
     }
 
     &__globe,
@@ -473,7 +464,8 @@
 
         &--1 { top: 1.6cqw;  left: 2cqw;    width: 40cqw; }
         &--2 { top: .6cqw;   left: 46.4cqw; width: 21.25cqw; }
-        &--3 { top: 25.6cqw; left: 43.9cqw; width: 11.9cqw; }
+        // 140px (BAL-32; was 95px), placed as in the designer's screenshots.
+        &--3 { top: 24.5cqw; left: 42.75cqw; width: 17.5cqw; }
     }
 
     &__text {
@@ -539,28 +531,10 @@
 // ===========================================================================
 @media (max-width: 1199px) {
     .bl-regions {
-        min-height: 0;
         padding: 56px @bl-gutter 72px;
 
-        &__intro {
-            grid-template-columns: minmax(0, 1fr);
-            grid-template-areas: none;
-            row-gap: 20px;
-            max-width: 720px;
-        }
-
-        &__eyebrow,
-        &__lead,
-        &__lead--right {
-            grid-area: auto;
-        }
-
         &__stage {
-            position: relative;
-            top: auto;
-            left: auto;
-            margin: 40px auto 0;
-            transform: none;
+            margin-top: 40px;
         }
     }
 
@@ -796,7 +770,7 @@ html.bl-motion .bl-region:not(.is-entering) {
 }
 
 @keyframes bl-region-photo-3 {
-    from { opacity: 0; transform: translate(26.4cqw, 27.2cqw) scale(.15) rotate(-15deg); }
+    from { opacity: 0; transform: translate(24.75cqw, 25.5cqw) scale(.15) rotate(-15deg); }
     35%  { opacity: 1; }
     to   { opacity: 1; transform: none; }
 }

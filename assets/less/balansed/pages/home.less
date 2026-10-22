@@ -860,12 +860,15 @@
         text-align: center;
     }
 
+    // A size container: the goal text inside scales with it (cqw), so it
+    // stays clear of the ticks when the ring is made smaller to fit the screen.
     &__ring {
         position: relative;
         width: 543px;
         max-width: 100%;
         aspect-ratio: 543 / 554;
         margin: 43px auto 0;
+        container-type: inline-size;
     }
 
     &__ticks {
@@ -888,18 +891,20 @@
         }
     }
 
+    // Centred in the ring's hole (the ticks' inner ends are 73% of its
+    // width across), a little above the middle. Sizes in cqw of the ring,
+    // capped at the design's px: 1cqw = 5.43px on the full 543px ring.
     &__goal {
         position: absolute;
-        top: percentage(167 / 554);
+        top: 45%;
         left: 50%;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 15px;
-        width: 280px;
-        max-width: 56%;
+        gap: ~"clamp(8px, 2.76cqw, 15px)";
+        width: ~"min(280px, 51.6cqw)";
         text-align: center;
-        transform: translateX(-50%);
+        transform: translate(-50%, -50%);
     }
 
     &__by {
@@ -908,13 +913,13 @@
         align-items: center;
         margin: 0;
         font-family: @bl-font-display;
-        font-size: 20px;
+        font-size: ~"clamp(13px, 3.68cqw, 20px)";
         line-height: 1.25;
         letter-spacing: -1px;
 
         // "2030" in the project blue.
         strong {
-            font-size: 46px;
+            font-size: ~"clamp(26px, 8.47cqw, 46px)";
             font-weight: 400;
             letter-spacing: -0.46px;
             color: @bl-blue;
@@ -934,7 +939,7 @@
         grid-area: ~"1 / 1";
         margin: 0;
         font-family: @bl-font-display;
-        font-size: 20px;
+        font-size: ~"clamp(13px, 3.68cqw, 20px)";
         line-height: 1.35;
         letter-spacing: -1px;
         opacity: 0;

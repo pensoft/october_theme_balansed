@@ -9,12 +9,6 @@ start = 1
 activeNode = 0
 numberOfLevels = 1
 
-[cookieConsent]
-message = "This website uses cookies to ensure you get the best experience on our website."
-dismiss = "Got it!"
-learnMore = "Opt-out here"
-link = "/privacy-policy#cookies"
-theme = "dark-bottom"
 ==
 <?php
 use BenFreke\MenuManager\Models\Menu;
@@ -29,7 +23,6 @@ function onStart()
 }
 ?>
 ==
-{% component 'cookieConsent' %}
 
 {#
     BALANSED footer (same on every page): logo + quick links (Menu Manager
@@ -64,6 +57,9 @@ function onStart()
 
     <div class="bl-footer__legal">
         <a href="{{ 'privacy-policy'|page }}">Privacy Policy</a>
+        {# Reopens the cookie banner to change the choice (initCookieBanner);
+           shown only when the banner is on the page. #}
+        <button type="button" class="bl-footer__cookies" data-bl-cookies-open aria-controls="bl-cookies" hidden>Cookie settings</button>
         <span class="bl-footer__credit">
             Designed and powered by
             <a href="https://pensoft.net/" target="_blank" rel="noopener noreferrer">

@@ -1,0 +1,852 @@
+// ===========================================================================
+//  Deliberation Toolkit - pages/deliberation-toolkit.htm (BAL-34)
+//  Figma: "Deliberation Toolkit Page" (1440 wide). Navy section: intro card
+//  + who it is for; light-blue section: the steps + why it matters.
+//  The tile grid (445 x 455) and the "who" map (613 x 433) are sized in cqw
+//  of their own box, so each scales as one piece.
+// ===========================================================================
+
+@bl-tk-ease: cubic-bezier(.3, 1.3, .5, 1);   // a small overshoot when things pop in
+
+// -- Navy section ----------------------------------------------------------------
+.bl-tk {
+    .bl-section-top(86px);
+    z-index: 1;
+    padding: 72px 0 115px;
+    background: @bl-navy;
+    color: @bl-sky;
+}
+
+// The intro card: blue gradient, texts left and right, the tiles centred.
+.bl-tk-card {
+    position: relative;
+    display: grid;
+    grid-template-columns: minmax(0, 310px) 1fr minmax(0, 289px);
+    grid-template-areas:
+        "title . ."
+        "note  . claim";
+    grid-template-rows: 1fr auto;
+    min-height: 543px;
+    padding: 83px 82px;
+    overflow: hidden;
+    border-radius: 55px;
+    background: linear-gradient(221.93deg, @bl-navy 21.88%, @bl-blue 114.17%);
+
+    // ("& &__x" to beat the base "body.bl h2 / p" reset.)
+    & &__title,
+    & &__claim {
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: 36px;
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -1.8px;
+        color: @bl-sky;
+    }
+
+    & &__title {
+        grid-area: title;
+    }
+
+    & &__claim {
+        grid-area: claim;
+        align-self: end;
+    }
+
+    & &__note {
+        grid-area: note;
+        align-self: end;
+        margin: 0 0 10px;
+        font-family: @bl-font-body;
+        font-size: 22px;
+        font-weight: 300;
+        line-height: 1.25;
+        letter-spacing: -1.1px;
+        // 65% (Figma: opacity) as the colour, so the fade-in can run to 1.
+        color: fade(@bl-sky, 65%);
+    }
+
+    .bl-tk-grid {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 445px;
+        transform: translate(-50%, -50%);
+    }
+}
+
+// -- The tile grid -------------------------------------------------------------
+// Positions: the Figma ones in px / 4.45 (1cqw = 4.45px at full size).
+.bl-tk-grid {
+    position: relative;
+    aspect-ratio: 445 / 455;
+    container-type: inline-size;
+
+    // ("body.bl" in front, below: the base "body.bl img { max-width: 100% }"
+    // would shrink it - it is a little wider than its box by design.)
+    body.bl & &__base {
+        position: absolute;
+        top: 0;
+        left: -1.12cqw;
+        width: 102.25cqw;
+        max-width: none;
+        height: auto;
+    }
+
+    &__tile,
+    &__you {
+        position: absolute;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    &__tile {
+        width: 19.1cqw;
+        height: 19.1cqw;
+        border: 1px solid @bl-sky;
+        border-radius: 3.37cqw;
+        background: @bl-navy;
+
+        img {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        &--1 { top: 20.22cqw; left: 30.34cqw; img { opacity: .35; } }
+        &--2 { top: 20.22cqw; left: 50.56cqw; img { opacity: .65; } }
+        &--3 { top: 62.92cqw; left: 30.34cqw; img { opacity: .65; } }
+        &--4 { top: 62.92cqw; left: 50.56cqw; img { opacity: .35; } }
+    }
+
+    // Someone typing: the three dots.
+    &__dots {
+        position: absolute;
+        top: 8.31cqw;
+        left: 5.84cqw;
+        width: 7.19cqw;
+        height: 2.47cqw;
+        overflow: visible;
+        fill: @bl-sky;
+    }
+
+    &__you {
+        top: 40.45cqw;
+        left: 39.33cqw;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 21.35cqw;
+        height: 21.35cqw;
+        border: .28cqw solid @bl-sky;
+        border-radius: 4.16cqw;
+        background: @bl-blue;
+        font-family: @bl-font-display;
+        font-size: 5.84cqw;
+        line-height: 1.25;
+        letter-spacing: -.29cqw;
+        color: @bl-sky;
+    }
+
+    &__cursor {
+        position: absolute;
+        display: block;
+        width: 5.39cqw;
+        height: 5.39cqw;
+
+        svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+
+        // The pointer's tip is at its top right; the researcher's is turned
+        // to point up-left (Figma).
+        &--coordinator { top: 39.1cqw;  left: 27.19cqw; }
+        &--researcher  { top: 84.49cqw; left: 66.07cqw; transform: scaleX(-1); }
+    }
+
+    &__label {
+        position: absolute;
+        padding: 1.8cqw 3.37cqw;
+        border-radius: @bl-pill;
+        background: @bl-sky;
+        font-family: @bl-font-display;
+        font-size: ~"max(11px, 3.37cqw)";
+        line-height: 1.25;
+        letter-spacing: -.17cqw;
+        color: @bl-blue;
+        white-space: nowrap;
+
+        &--coordinator { top: 43.15cqw; left: -9.21cqw; }
+        &--researcher  { top: 87.64cqw; left: 70.11cqw; }
+    }
+}
+
+// -- Who is it for ---------------------------------------------------------------
+.bl-tk-who {
+    max-width: 768px;
+    margin: 65px auto 0;
+
+    // ("& &__title" to beat the base "body.bl h2" reset.)
+    & &__title {
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: 36px;
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -1.8px;
+        text-align: center;
+        color: @bl-sky;
+    }
+
+    // The names and lines (Figma px / 6.13: 1cqw = 6.13px at full size).
+    &__map {
+        position: relative;
+        width: 613px;
+        max-width: 100%;
+        aspect-ratio: 613 / 433;
+        margin: 45px auto 0;
+        container-type: inline-size;
+    }
+
+    &__list {
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+
+    // (".bl-tk-who .bl-tk-who__item" to beat "body.bl li".)
+    & &__item {
+        position: absolute;
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: 5.87cqw;
+        line-height: 1.25;
+        letter-spacing: -.29cqw;
+        white-space: nowrap;
+
+        &--1 { top: 0;        left: 6.69cqw; }
+        &--2 { top: 22.51cqw; left: 52.69cqw; }
+        &--3 { top: 43.39cqw; left: 6.69cqw; }
+        &--4 { top: 63.3cqw;  left: 60.2cqw; }
+    }
+
+    // Each line in its Figma box, the drawing turned to its angle there.
+    &__line {
+        position: absolute;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+
+        svg {
+            flex: none;
+            overflow: visible;
+        }
+
+        // Drawn by stroke-dashoffset from initTkWho (pathLength="1":
+        // 1 = hidden, 0 = drawn); fully drawn without it.
+        path {
+            stroke: @bl-sky;
+            stroke-opacity: .35;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 1;
+            stroke-dashoffset: 0;
+        }
+
+        &--1,
+        &--3 {
+            width: 44.19cqw;
+            height: 19.43cqw;
+
+            svg {
+                width: 42.74cqw;
+                height: 11.91cqw;
+                transform: rotate(10.4deg);
+            }
+        }
+
+        &--1 { top: 5.71cqw;  left: 19.58cqw; }
+        &--3 { top: 47.63cqw; left: 30.67cqw; }
+
+        &--2 {
+            top: 30.67cqw;
+            left: 32.79cqw;
+            width: 29.53cqw;
+            height: 12.72cqw;
+
+            svg {
+                width: 100%;
+                height: 100%;
+                transform: rotate(180deg);
+            }
+        }
+    }
+}
+
+// -- Light-blue section: steps + why --------------------------------------------
+.bl-tk-grows {
+    .bl-section-top(50px);
+    z-index: 2;
+    padding: 70px 0 78px;
+    overflow: hidden;
+    background: @bl-sky;
+    color: @bl-navy;
+
+    // ("& &__title" to beat the base "body.bl h2" reset.)
+    & &__title {
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: 36px;
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -1.8px;
+        text-align: center;
+        color: inherit;
+    }
+
+    & .bl-tk-why__title {
+        margin-top: 87px;
+    }
+}
+
+// Four cards, each a step higher than the one before (Figma offsets).
+.bl-tk-steps {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 300px));
+    justify-content: space-between;
+    align-items: start;
+    max-width: 1275px;
+    margin: 45px auto 0;
+    padding: 0;
+    list-style: none;
+}
+
+// A card: 250px, opening to 425px (Figma's second variant) - downwards, the
+// title staying put (--t: its top in Figma), the text under it at 230px.
+// The row is only as tall as its tallest card, so an opening card pushes
+// "Why it matters" down with it.
+.bl-tk-step {
+    --bl-step: @bl-blue;
+    --t: 149px;
+    position: relative;
+    height: 250px;
+    margin: 0;
+    overflow: hidden;   // the text under the title, while the card opens
+    // Square top-right corner: the notch covers it, and a rounded one would
+    // leave a hairline of the card's colour along the notch's edge.
+    border-radius: @bl-radius-card 0 @bl-radius-card @bl-radius-card;
+    background: var(--bl-step);
+    color: @bl-sky;
+    transition: height .55s @bl-ease;
+
+    &--1 { --bl-step: @bl-blue;  --t: 149px; margin-top: 122px; }
+    &--2 { --bl-step: @bl-green; --t: 79px;  margin-top: 91px; }
+    &--3 { --bl-step: @bl-brown; --t: 100px; margin-top: 45px; }
+    &--4 { --bl-step: @bl-teal;  --t: 149px; margin-top: 0; }
+
+    // ("& &__text" to beat the base "body.bl h3" reset.)
+    & &__text {
+        position: absolute;
+        top: var(--t);
+        left: 28px;
+        width: 216px;   // Figma 210px; Sora renders a touch wider here
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: 28px;
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -1.4px;
+        color: inherit;
+    }
+
+    // The text under the title: there all along, shown as the card opens.
+    &__more {
+        position: absolute;
+        top: 230px;
+        left: 28px;
+        width: 209px;
+        opacity: 0;
+        translate: 0 10px;
+        transition: opacity .3s ease, translate .45s @bl-ease;
+
+        // ("&__more p" in "body.bl" to beat the base "body.bl p" reset.)
+        body.bl & p {
+            margin: 0;
+            font-family: @bl-font-body;
+            font-size: 18px;
+            font-weight: 400;
+            line-height: 1.25;
+            letter-spacing: -.36px;
+            color: inherit;
+        }
+    }
+
+    // The whole card is the button (tap / click / keyboard); its badge is
+    // the arrow in the notch.
+    &__toggle {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        margin: 0;
+        padding: 0;
+        border: 0;
+        border-radius: inherit;
+        background: none;
+        cursor: pointer;
+
+        &:focus-visible {
+            outline: 3px solid @bl-navy;
+            outline-offset: 3px;
+        }
+    }
+
+    // Open: on hover (with a mouse), while the button has keyboard focus, or
+    // opened with it (.is-open, initTkSteps). Not on any focus: a card
+    // clicked shut would stay open while its button keeps the focus.
+    &.is-open,
+    &:has(.bl-tk-step__toggle:focus-visible) {
+        .bl-tk-step-open();
+    }
+
+    @media (hover: hover) {
+        &:hover {
+            .bl-tk-step-open();
+        }
+    }
+
+    // The arrow in the top-right notch (Figma: light-blue tab, round below,
+    // holding a 38px circle in the card's colour).
+    &__badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 64px;
+        height: 59px;
+        border-radius: 0 0 900px 900px;
+        background: @bl-sky;
+
+        &::before {
+            content: "";
+            position: absolute;
+            top: 7px;
+            left: 13px;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--bl-step);
+        }
+
+        svg {
+            position: absolute;
+            top: 15px;
+            left: 21px;
+            color: @bl-sky;
+            transition: rotate .45s @bl-ease;
+        }
+    }
+}
+
+// The open card (Figma: 425px tall, the arrow turned to point down-left).
+.bl-tk-step-open() {
+    height: 425px;
+
+    .bl-tk-step__more {
+        opacity: 1;
+        translate: 0 0;
+        transition: opacity .45s ease .12s, translate .55s @bl-ease .08s;
+    }
+
+    .bl-tk-step__badge svg {
+        rotate: 173.75deg;
+    }
+}
+
+// The same on phones, where the card is as tall as its text.
+.bl-tk-step-open-sm() {
+    height: auto;
+
+    .bl-tk-step__more {
+        grid-template-rows: 1fr;
+        margin-top: 14px;
+        opacity: 1;
+    }
+}
+
+// -- Why it matters -------------------------------------------------------------
+.bl-tk-why {
+    position: relative;
+    display: flex;
+    justify-content: space-between;
+    gap: 40px;
+    min-height: 275px;
+    margin-top: 45px;
+
+    // ("& &__text" to beat the base "body.bl p" reset.)
+    & &__text {
+        position: relative;
+        z-index: 1;
+        max-width: 445px;
+        margin: 0;
+        font-family: @bl-font-display;
+        font-size: 28px;
+        line-height: 1.25;
+        letter-spacing: -1.4px;
+
+        &--right {
+            max-width: 492px;
+            text-align: right;
+        }
+    }
+
+    // The leaves on their long line: 1704px wide, placed against the page
+    // centre as in the design (its left edge 799px left of it); the section
+    // crops the ends.
+    &__leaves {
+        position: relative;
+        height: 0;
+    }
+}
+
+// ("body.bl" to beat the base "body.bl img { max-width: 100% }", which
+// would shrink the drawing to the screen width.)
+body.bl .bl-tk-why__leaves img {
+    position: absolute;
+    top: -260px;        // up into the texts' row (Figma: 14.6px under their top)
+    left: 50%;
+    width: 1704px;
+    max-width: none;
+    height: auto;
+    margin-left: -799px;
+    opacity: .65;
+}
+
+// -- Motion (only with JS and no "reduce motion", like the rest of the site) --
+// Started by the scroll, not on load (initTkMotion, balansed.js):
+//  - the intro card plays once the visitor scrolls over it (.is-playing);
+//  - "Why it matters" plays once its block is well on screen (.is-playing);
+//  - the steps come one by one as the row is scrolled through (inline
+//    opacity / translate from the script, in step with the scroll).
+
+// The card: its title rises word by word; the claim on the right slides in
+// from the right, the note on the left from the left; the tiles pop in one
+// after another, then "You.", then the people's cursors.
+html.bl-motion .bl-tk-card:not(.is-playing) {
+    .bl-tk-card__title .bl-w > span {
+        translate: 0 110%;
+        animation: none;
+    }
+
+    .bl-tk-card__note,
+    .bl-tk-card__claim,
+    .bl-tk-grid__tile,
+    .bl-tk-grid__you,
+    .bl-tk-grid__cursor,
+    .bl-tk-grid__label {
+        opacity: 0;
+        animation: none;
+    }
+
+    .bl-tk-grid__tile,
+    .bl-tk-grid__you {
+        scale: .7;
+    }
+}
+
+html.bl-motion .bl-tk-card.is-playing {
+    .bl-tk-card__title .bl-w > span {
+        animation: bl-word .9s @bl-motion-ease ~"calc(var(--w, 0) * 45ms + 120ms)" both;
+    }
+
+    .bl-tk-card__claim {
+        animation: bl-from-right 1.2s @bl-motion-ease .35s both;
+    }
+
+    .bl-tk-card__note {
+        animation: bl-from-left 1.2s @bl-motion-ease .5s both;
+    }
+
+    .bl-tk-grid__tile,
+    .bl-tk-grid__you {
+        transition: opacity .5s ease, scale .7s @bl-tk-ease;
+    }
+
+    .bl-tk-grid__tile--1 { transition-delay: .2s; }
+    .bl-tk-grid__tile--2 { transition-delay: .3s; }
+    .bl-tk-grid__tile--4 { transition-delay: .4s; }
+    .bl-tk-grid__tile--3 { transition-delay: .5s; }
+    .bl-tk-grid__you { transition-delay: .7s; }
+
+    .bl-tk-grid__cursor,
+    .bl-tk-grid__label {
+        transition: opacity .5s ease 1.1s;
+    }
+
+    // Then the two people get to work, each pointer with its label: moving
+    // to a spot, resting, moving on - out of step with each other ...
+    .bl-tk-grid__cursor--coordinator,
+    .bl-tk-grid__label--coordinator {
+        animation: bl-tk-coordinator 4.4s 1.6s infinite;
+    }
+
+    .bl-tk-grid__cursor--researcher,
+    .bl-tk-grid__label--researcher {
+        animation: bl-tk-researcher 5.2s 2.3s infinite;
+    }
+
+    // ... and keep typing: the dots hop up one after another.
+    .bl-tk-grid__dots circle {
+        animation: bl-tk-typing 1.3s ease-in-out infinite;
+
+        &:nth-child(2) { animation-delay: .15s; }
+        &:nth-child(3) { animation-delay: .3s; }
+    }
+}
+
+// "Why it matters": the left text from the left, the right one from the
+// right, and the leaves line growing from left to right under them.
+html.bl-motion {
+    .bl-tk-why:not(.is-playing) .bl-tk-why__text {
+        opacity: 0;
+        animation: none;
+    }
+
+    .bl-tk-why.is-playing .bl-tk-why__text {
+        animation: bl-from-left 1.2s @bl-motion-ease .1s both;
+
+        &--right {
+            animation-name: bl-from-right;
+            animation-delay: .3s;
+        }
+    }
+
+    .bl-tk-grows .bl-tk-why__leaves img {
+        clip-path: inset(0 100% 0 0);
+    }
+
+    .bl-tk-grows:has(.bl-tk-why.is-playing) .bl-tk-why__leaves img {
+        clip-path: inset(0 0 0 0);
+        transition: clip-path 2.6s @bl-ease .25s;
+    }
+}
+
+// The people at work: each cursor (with its label) glides to a spot, rests,
+// moves on and comes back - its own route over the tiles, each move eased.
+@keyframes bl-tk-coordinator {
+    0%, 12%  { translate: 0 0;            animation-timing-function: cubic-bezier(.6, 0, .3, 1); }
+    32%, 46% { translate: 5cqw -4cqw;     animation-timing-function: cubic-bezier(.6, 0, .3, 1); }
+    64%, 76% { translate: 1.5cqw 4.5cqw;  animation-timing-function: cubic-bezier(.6, 0, .3, 1); }
+    94%, 100% { translate: 0 0; }
+}
+
+@keyframes bl-tk-researcher {
+    0%, 10%  { translate: 0 0;            animation-timing-function: cubic-bezier(.6, 0, .3, 1); }
+    28%, 42% { translate: -6cqw -5cqw;    animation-timing-function: cubic-bezier(.6, 0, .3, 1); }
+    60%, 72% { translate: -1cqw -9cqw;    animation-timing-function: cubic-bezier(.6, 0, .3, 1); }
+    90%, 100% { translate: 0 0; }
+}
+
+// Someone typing (a chat "typing" indicator): the dots hop up and light up
+// one after another, then rest for a moment.
+@keyframes bl-tk-typing {
+    0%, 45%, 100% { transform: translateY(0);    opacity: .45; }
+    18%           { transform: translateY(-3px); opacity: 1; }
+}
+
+.bl-reduced-motion({
+    .bl-tk-grid__cursor,
+    .bl-tk-grid__label,
+    .bl-tk-grid__dots circle {
+        animation: none !important;
+    }
+});
+
+// -- Responsive -------------------------------------------------------------------
+// Below 1280px the card stacks: title, tiles, then the two texts.
+@media @bl-xl {
+    .bl-tk-card {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 36px;
+        min-height: 0;
+        padding: 56px 40px;
+        text-align: center;
+
+        // Title, tiles, claim, note - centred, one under the other.
+        & &__title,
+        & &__claim {
+            max-width: 560px;
+            align-self: center;
+        }
+
+        & &__claim {
+            order: 2;
+        }
+
+        & &__note {
+            order: 3;
+            max-width: 420px;
+            margin: 0;
+            align-self: center;
+        }
+
+        .bl-tk-grid {
+            order: 1;
+            position: relative;
+            top: auto;
+            left: auto;
+            width: 445px;
+            max-width: 82%;   // room for the coordinator's label, which sits off its left edge
+            transform: none;
+        }
+    }
+
+    .bl-tk-steps {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 25px;
+        max-width: 625px;
+    }
+
+    // Two columns: a single step up from the left card to the right one.
+    .bl-tk-step {
+        &--1, &--3 { margin-top: 40px; }
+        &--2, &--4 { margin-top: 0; }
+    }
+
+    .bl-tk-why {
+        & &__text {
+            max-width: 40%;
+        }
+    }
+}
+
+@media @bl-md {
+    .bl-tk {
+        padding: 48px 0 90px;
+    }
+
+    .bl-tk-card {
+        gap: 28px;
+        padding: 40px 22px;
+        border-radius: 32px;
+
+        & &__title,
+        & &__claim {
+            font-size: 28px;
+            letter-spacing: -1.2px;
+        }
+
+        & &__note {
+            font-size: 18px;
+            letter-spacing: -.6px;
+        }
+    }
+
+    .bl-tk-who {
+        margin-top: 56px;
+
+        & &__title {
+            font-size: 28px;
+            letter-spacing: -1.2px;
+        }
+
+        &__map {
+            margin-top: 32px;
+        }
+    }
+
+    .bl-tk-grows {
+        padding-top: 56px;
+
+        & &__title {
+            font-size: 28px;
+            letter-spacing: -1.2px;
+        }
+
+        & .bl-tk-why__title {
+            margin-top: 64px;
+        }
+    }
+
+    .bl-tk-steps {
+        grid-template-columns: minmax(0, 1fr);
+        max-width: 360px;
+        margin-top: 32px;
+    }
+
+    // Phones: as tall as their text; the text under the title slides open
+    // below it (grid rows 0fr -> 1fr), no fixed heights.
+    .bl-tk-step {
+        height: auto;
+        padding: 96px 28px 28px;
+
+        &--1, &--2, &--3, &--4 { margin-top: 0; }
+
+        & &__text {
+            position: static;
+            width: auto;
+            max-width: 260px;
+            font-size: 24px;
+            letter-spacing: -1px;
+        }
+
+        &__more {
+            position: static;
+            display: grid;
+            grid-template-rows: 0fr;
+            width: auto;
+            margin-top: 0;
+            translate: none;
+            transition: grid-template-rows .45s @bl-ease, margin-top .45s @bl-ease, opacity .3s ease;
+
+            body.bl & p {
+                min-height: 0;
+                overflow: hidden;
+            }
+        }
+
+        &.is-open,
+        &:has(.bl-tk-step__toggle:focus-visible) {
+            .bl-tk-step-open-sm();
+        }
+
+        @media (hover: hover) {
+            &:hover {
+                .bl-tk-step-open-sm();
+            }
+        }
+    }
+
+    // Texts one under the other, the leaves below them.
+    .bl-tk-why {
+        flex-direction: column;
+        gap: 24px;
+        min-height: 0;
+        margin-top: 32px;
+        text-align: center;
+
+        & &__text,
+        & &__text--right {
+            max-width: none;
+            font-size: 22px;
+            letter-spacing: -.8px;
+            text-align: center;
+        }
+
+        &__leaves {
+            height: 200px;
+            margin-top: 24px;
+        }
+    }
+
+    // The leaf centred under the texts (it sits at x~754 of the drawing).
+    body.bl .bl-tk-why__leaves img {
+        top: -30px;
+        margin-left: -754px;
+    }
+}
