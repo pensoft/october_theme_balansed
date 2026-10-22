@@ -19,39 +19,36 @@ function onStart()
 {
     // Contacts are Pensoft.Cardprofiles profiles in the "Contacts" category
     // (slug "contacts"), in backend order: Names, Position (the role, e.g.
-    // "Project manager" or "Press inquiries"), Email, avatar (the photo),
-    // and the organisation - the linked Partner, else Department. Until
-    // there are any, a short note is shown instead.
+    // "Project manager" or "Press contact"), Email and avatar (the photo).
+    // Until there are any, the project coordinator is shown.
     $category = \Pensoft\Cardprofiles\Models\Category::where('slug', 'contacts')->first();
     $profiles = $category
-        ? Profiles::with(['avatar', 'partner'])->where('category_id', $category->id)->orderBy('sort_order')->get()
+        ? Profiles::with('avatar')->where('category_id', $category->id)->orderBy('sort_order')->get()
         : collect();
-    $this['contacts'] = $profiles->map(function ($p) {
-        $name = trim((string) $p->names);
-        // Initials for the placeholder circle when there is no photo yet.
-        $words = preg_split('/\s+/u', $name, -1, PREG_SPLIT_NO_EMPTY);
-        $initials = '';
-        foreach ($words ? [reset($words), end($words)] : [] as $w) {
-            $initials .= mb_strtoupper(mb_substr($w, 0, 1));
-        }
+    $contacts = $profiles->map(function ($p) {
         return [
-            'name' => $name,
+            'name' => trim((string) $p->names),
             'role' => trim((string) $p->position),
-            'org' => $p->partner ? ($p->partner->instituion ?: $p->partner->title) : trim((string) $p->department),
             'email' => trim((string) $p->email),
             // Original file (thumbnails can't be written on this server yet).
             'photo' => $p->avatar ? $p->avatar->getPath() : null,
-            'initials' => count($words) > 1 ? $initials : mb_substr($initials, 0, 1),
         ];
     })->all();
+    $this['contacts'] = $contacts ?: [[
+        'name' => 'Berien Elbersen',
+        'role' => 'Project coordinator',
+        'email' => 'berien.elbersen@wur.nl',
+    ]];
 }
 ?>
 ==
 {% component 'siteSearchInclude' %}
 {#
-    BALANSED Contact: the project's contact people (cards: photo or
-    initials, role, name, organisation, email), then the contact form when
-    its component renders one.
+    BALANSED Contact (Figma 569:2320): on the sand panel, centred, two to a
+    row, each contact person - photo, role, name, email - then the
+    project's social buttons
+    (theme settings, Social Media tab). Then the contact form when its
+    component renders one.
     Styles: assets/less/balansed/pages/contact.less
 #}
 {% partial 'balansed/page-hero' crumb='Get in touch' title='Contact' %}
@@ -59,27 +56,17 @@ function onStart()
 <section class="bl-news-page bl-contact-page" aria-labelledby="contacts-heading">
     <div class="bl-wrap">
         <h2 class="sr-only" id="contacts-heading">Project contacts</h2>
-        {% if contacts|length %}
         <ul class="bl-contacts">
             {% for c in contacts %}
             <li class="bl-contact">
-                {% if c.photo %}
-                <img class="bl-contact__photo" src="{{ c.photo }}" alt="" width="160" height="160" loading="lazy">
-                {% else %}
-                <span class="bl-contact__photo bl-contact__photo--initials" aria-hidden="true">{{ c.initials }}</span>
-                {% endif %}
+                {% if c.photo %}<img class="bl-contact__photo" src="{{ c.photo }}" alt="" width="220" height="220" loading="lazy">{% endif %}
                 {% if c.role %}<p class="bl-contact__role">{{ c.role }}</p>{% endif %}
                 <h3 class="bl-contact__name">{{ c.name }}</h3>
-                {% if c.org %}<p class="bl-contact__org">{{ c.org }}</p>{% endif %}
-                {% if c.email %}
-                <a class="bl-contact__email" href="mailto:{{ c.email }}">{% partial 'balansed/icon' name='mail' size=18 %}<span>{{ c.email }}</span></a>
-                {% endif %}
+                {% if c.email %}<a class="bl-contact__email" href="mailto:{{ c.email }}">{{ c.email }}</a>{% endif %}
             </li>
             {% endfor %}
         </ul>
-        {% else %}
-        <p class="bl-empty">Contact details will follow soon.</p>
-        {% endif %}
+        {% partial 'balansed/socials' %}
 
         {# Only shown when the contact-form component actually renders a form. #}
         {% set bl_form %}{% component 'SimpleContactFormComponent' %}{% endset %}

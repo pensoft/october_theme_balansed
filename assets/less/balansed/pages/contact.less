@@ -1,15 +1,30 @@
 // ===========================================================================
-//  Contact - pages/contact.htm
-//  Contact people as navy cards on sand (photo or initials, role, name,
-//  organisation, email), then the contact form.
+//  Contact - pages/contact.htm (Figma 569:2320)
+//  On the sand panel, centred, two to a row: each contact person (photo,
+//  role, name, email); then the project's round social buttons and the
+//  contact form.
 //  The section itself is .bl-news-page (pages/news.less).
 // ===========================================================================
 
+.bl-contact-page {
+    padding: 80px 0;
+    text-align: center;
+
+    .bl-social {
+        justify-content: center;
+        gap: 10px;
+        margin-top: 35px;
+    }
+}
+
+// Two to a row (each as wide as its texts), every row centred.
 .bl-contacts {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-    gap: 24px;
-    margin: 0;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 35px;
+    max-width: 640px;
+    margin: 0 auto;
     padding: 0;
     list-style: none;
 }
@@ -17,88 +32,63 @@
 .bl-contact {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 6px;
+    align-items: center;
+    gap: 10px;
     min-width: 0;
-    padding: 32px 28px 30px;
-    border-radius: @bl-radius-card;
-    background: @bl-navy;
-    color: @bl-sand;
+    max-width: 100%;
+    margin: 0;
+    color: @bl-navy;
 
-    &__photo {
-        width: 120px;
-        height: 120px;
-        margin-bottom: 18px;
-        border-radius: 50%;
+    // ("& &__photo" to beat the base "body.bl img" reset.)
+    & &__photo {
+        display: block;
+        width: 220px;
+        height: 220px;
+        margin-bottom: 15px;   // 25px to the role, with the gap
+        border-radius: 15px;
+        background: @bl-navy;
         object-fit: cover;
-
-        // No photo yet: the person's initials on green.
-        &--initials {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: @bl-green;
-            font-family: @bl-font-display;
-            font-size: 38px;
-            letter-spacing: -1px;
-            color: @bl-sand;
-        }
     }
 
-    // (".bl-contact .bl-contact__x" to beat the base "body.bl h3 / p" reset.)
+    // (".bl-contact .bl-contact__x" to beat the base "body.bl h3 / p / a" rules.)
     & &__role {
         font-family: @bl-font-body;
-        font-size: 15px;
-        font-weight: 400;
-        line-height: 1.35;
-        letter-spacing: .2px;
+        font-size: 20px;
+        font-weight: 300;
+        line-height: 1.25;
+        letter-spacing: -0.8px;
         text-transform: uppercase;
-        color: @bl-sky;
     }
 
     & &__name {
+        margin: 0;
         font-family: @bl-font-display;
-        font-size: 24px;
+        font-size: 28px;
         font-weight: 400;
         line-height: 1.25;
-        letter-spacing: -0.8px;
+        letter-spacing: -1.4px;
         color: inherit;
     }
 
-    & &__org {
-        font-family: @bl-font-body;
-        font-size: 17px;
-        font-weight: 300;
-        line-height: 1.4;
-    }
-
-    &__email {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
+    & &__email {
         max-width: 100%;
-        margin-top: 12px;
-        font-family: @bl-font-body;
-        font-size: 17px;
-        color: inherit;
+        font-family: @bl-font-display;
+        font-size: 22px;
+        font-weight: 400;
+        line-height: 1.25;
+        letter-spacing: -1.1px;
+        color: @bl-blue;
         text-decoration: underline;
-        text-underline-offset: 3px;
-
-        svg {
-            flex: none;
-        }
-
-        span {
-            overflow-wrap: anywhere;
-        }
+        text-underline-position: from-font;
+        overflow-wrap: anywhere;
 
         &:hover,
         &:focus-visible {
-            color: @bl-sky;
+            color: @bl-navy;
         }
 
         &:focus-visible {
-            outline: 2px solid @bl-sky;
+            outline: 2px solid @bl-blue;
             outline-offset: 3px;
         }
     }
@@ -107,6 +97,7 @@
 .bl-contact-form {
     max-width: 760px;
     margin: 80px auto 0;
+    text-align: left;
 
     .bl-h2 {
         margin-bottom: 32px;
@@ -114,7 +105,37 @@
 }
 
 @media @bl-md {
+    // (".bl-news-page.bl-contact-page" to beat the phone padding of .bl-news-page.)
+    .bl-news-page.bl-contact-page {
+        padding: 48px 0 56px;
+    }
+
+    .bl-contacts {
+        flex-direction: column;
+        align-items: center;
+        gap: 40px;
+    }
+
     .bl-contact {
-        padding: 26px 22px 24px;
+        gap: 8px;
+
+        & &__photo {
+            width: 180px;
+            height: 180px;
+        }
+
+        & &__role {
+            font-size: 17px;
+        }
+
+        & &__name {
+            font-size: 24px;
+            letter-spacing: -1px;
+        }
+
+        & &__email {
+            font-size: 19px;
+            letter-spacing: -0.8px;
+        }
     }
 }
